@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovelTube - Premium Reading Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Poppins', sans-serif; }
+        .bg-reading { background-color: #FDFBF7; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scroll-width: none; }
+    </style>
+</head>
+<body class="bg-reading text-slate-800 antialiased overflow-x-hidden">
+
+    <nav class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0">
+                    <a href="index.html" class="text-xl md:text-2xl font-bold text-indigo-600 tracking-wide">Novel<span class="text-slate-900">Tube</span></a>
+                </div>
+                <div class="hidden md:flex space-x-8 font-medium">
+                    <a href="index.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1">Home</a>
+                    <a href="#categories" class="text-slate-600 hover:text-indigo-600 transition">Categories</a>
+                    <a href="upload.html" class="text-slate-600 hover:text-indigo-600 transition">+ Upload Novel</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-btn" class="text-slate-700 hover:text-indigo-600 focus:outline-none p-1">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div> 
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 px-4 pt-2 pb-4 space-y-2 shadow-lg">
+            <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 bg-indigo-50">Home</a>
+            <a href="#categories" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Categories</a>
+            
+        </div>
+    </nav>
+
+    <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 text-center">
+        <h1 class="text-2xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+            Welcome to <span class="text-indigo-600">NovelTube</span>
+        </h1>
+        <p class="mt-1.5 max-w-xl mx-auto text-xs md:text-sm text-slate-600 leading-relaxed px-2">
+            Yahan aapko milenge behtareen aur dilchasp Urdu novels aik hi jagah par.
+        </p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-16 w-full overflow-hidden" id="categories">
+        
+        <div id="dynamic-categories-wrapper" class="space-y-8 w-full">
+            <p class="text-xs text-slate-400 p-3 italic text-center">Novels aur categories load ho rahe hain... 🚀</p>
+        </div>
+
+        <hr class="border-slate-200">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <section id="about" class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                <h2 class="text-base font-bold text-slate-900 mb-1.5">About us</h2>
+                 <p class="text-slate-600 text-xs leading-relaxed">NovelTube aik aesa platform hai jahan hum aapke liye chuninda aur dilchasp urdu novels jama karte hain.</p>
+            </section>
+            <section id="contact" class="bg-slate-900 text-white p-5 rounded-xl shadow-md flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold mb-2 text-indigo-400">Contact us</h2>
+                     <div class="space-y-2 text-xs">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-indigo-400 font-medium">Email:</span>
+                             <a href="mailto:hamza.ali.com122@gmail.com" class="text-slate-200 underline">hamza.ali.com122@gmail.com</a>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-emerald-400 font-medium">WhatsApp:</span>
+                             <a href="https://wa.me/03700933073" target="_blank" class="text-slate-200 font-mono">0370 0933073</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        
+        // Mobile Menu Toggle
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+        // Slider Scroll Function
+        function scrollSlider(containerId, direction) {
+            const container = document.getElementById(containerId);
+            const scrollStep = 230; 
+            if (direction === 'left') { container.scrollLeft -= scrollStep; } 
+            else { container.scrollLeft += scrollStep; }
+        }
+
+        // ================= 🔥 LIVE DYNAMIC AUTO-GENERATING CATEGORY SYSTEM =================
+        async function fetchRealNovels() {
+            const wrapper = document.getElementById('dynamic-categories-wrapper');
+
+            try {
+                const response = await fetch('/api/novels');
+                const novels = await response.json(); 
+
+                if (Array.isArray(novels) && novels.length > 0) {
+                    wrapper.innerHTML = ""; // Loader saaf karein
+
+                    // Object banayein data group karne ke liye
+                    const groupedCategories = {};
+
+                    // 1. Saare novels ko unki dynamic category ke mutabiq group karein
+                    novels.forEach(novel => {
+                        const catName = novel.category || "Newly Uploaded";
+                        if (!groupedCategories[catName]) {
+                            groupedCategories[catName] = [];
+                        }
+                        groupedCategories[catName].push(novel);
+                    });
+
+                    // 2. Har category ke liye alag Section aur Slider HTML render karein
+                    Object.keys(groupedCategories).forEach(categoryTitle => {
+                        const categoryNovels = groupedCategories[categoryTitle];
+                        
+                        // Id unique banane ke liye spaces khatam karein (e.g. "Newly Uploaded" -> "newly-uploaded-slider")
+                        const safeSliderId = categoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') + "-slider";
+
+                        // Star colors dynamic lagane ke liye chota logical tool
+                        let starColor = "text-indigo-500";
+                        if(categoryTitle.toLowerCase().includes('romantic') || categoryTitle.toLowerCase().includes('romance')) starColor = "text-rose-500";
+                        if(categoryTitle.toLowerCase().includes('trending')) starColor = "text-amber-500";
+
+                        // Cards HTML compile karein is category ke liye
+                        let cardsHTML = "";
+                        categoryNovels.forEach(novel => {
+                            let innerCoverHTML = "";
+                            if (novel.coverImage || novel.image) {
+                                innerCoverHTML = `<img src="${novel.coverImage || novel.image}" alt="Novel Cover" class="w-full h-full object-cover block">`;
+                            } else {
+                                innerCoverHTML = `
+                                    <div class="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 p-2 flex flex-col justify-between text-white text-center select-none">
+                                        <span class="text-[9px] font-bold tracking-widest uppercase opacity-75">NovelTube</span>
+                                        <span class="text-[11px] font-bold line-clamp-3 leading-tight my-auto px-0.5">${novel.title}</span>
+                                        <span class="text-[8px] opacity-90 truncate">By: ${novel.author || 'Writer'}</span>
+                                    </div>
+                                `;
+                            }
+
+                            cardsHTML += `
+                                 <a href="novel-detail.html?id=${novel._id}" class="w-[105px] h-[155px] sm:w-[130px] sm:h-[190px] md:w-[140px] md:h-[205px] flex-shrink-0 bg-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition duration-200 snap-start cursor-pointer border border-slate-100 flex items-center justify-center group relative">
+                                    ${innerCoverHTML}
+                                    <div class="absolute inset-0 bg-slate-900/80 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-center items-center p-1.5 text-center">
+                                        <p class="text-[10px] md:text-xs font-bold text-white line-clamp-2 px-0.5">${novel.title}</p>
+                                        <p class="text-[8px] md:text-[9px] text-indigo-300 truncate w-full mt-0.5">By ${novel.author}</p>
+                                    </div>
+                                </a>
+                            `;
+                        });
+
+                        // Poora section wrapper automatic append karein
+                        wrapper.innerHTML += `
+                            <section class="w-full">
+                                <div class="flex justify-between items-center mb-3 px-0.5">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="text-sm ${starColor}">★</span>
+                                        <h2 class="text-base md:text-xl font-bold text-slate-900 capitalize">${categoryTitle}</h2>
+                                    </div>
+                                    <div class="hidden sm:flex space-x-1.5">
+                                        <button onclick="scrollSlider('${safeSliderId}', 'left')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">←</button>
+                                        <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">→</button>
+                                    </div>  
+                                </div>
+                                <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-3 scrollbar-hide snap-x scroll-smooth w-full">
+                                    ${cardsHTML}
+                                </div>
+                            </section>
+                        `;
+                    });
+
+                } else {
+                    wrapper.innerHTML = `<p class="text-xs text-slate-400 p-3 italic text-center">Koi novel nahi mila. Admin page se upload karein! 📚</p>`;
+                }
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                wrapper.innerHTML = `<p class="text-xs text-rose-500 p-3 font-medium text-center">Server se connect nahi ho paa raha. Check karein backend server chal raha hai?</p>`;
+            }
+        }
+
+        window.onload = fetchRealNovels;
+    </script>
+</body>
+</html>

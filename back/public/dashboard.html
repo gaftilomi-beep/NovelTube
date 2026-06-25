@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard & Analytics - NovelTube</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-100 p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Top Navigation Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-center bg-slate-800 p-6 rounded-2xl border border-slate-700 gap-4 shadow-xl">
+            <div>
+                <h1 class="text-2xl font-black text-indigo-400">🎛️ NovelTube Management Center</h1>
+                <p class="text-xs text-slate-400 mt-0.5">Live Traffic, Views Tracker aur Book Studio Control</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">← Website Home</a>
+                <a href="upload.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload New Novel</a>
+            </div>
+        </div>
+
+        <!-- 📊 LIVE ANALYTICS COUNTER CARDS -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Card 1: Total Views -->
+            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Novel Views</p>
+                <h3 class="text-2xl font-black text-indigo-400 mt-1" id="statTotalViews">0</h3>
+                <p class="text-[9px] text-emerald-400 mt-0.5">▲ Live updates</p>
+            </div>
+            <!-- Card 2: Active Users -->
+            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 shadow-md relative overflow-hidden">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Users Logged In Now</p>
+                <h3 class="text-2xl font-black text-emerald-400 mt-1 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping absolute top-5 right-5"></span>
+                    <span id="statActiveUsers">0</span>
+                </h3>
+                <p class="text-[9px] text-slate-400 mt-0.5">Currently reading on site</p>
+            </div>
+            <!-- Card 3: Total Accounts -->
+            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registered Members</p>
+                <h3 class="text-2xl font-black text-white mt-1" id="statTotalUsers">0</h3>
+                <p class="text-[9px] text-indigo-300 mt-0.5">Total accounts created</p>
+            </div>
+            <!-- Card 4: Total Books -->
+            <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Novels Live</p>
+                <h3 class="text-2xl font-black text-amber-400 mt-1" id="statTotalNovels">0</h3>
+                <p class="text-[9px] text-slate-400 mt-0.5">Published books list</p>
+            </div>
+        </div>
+
+        <h2 class="text-lg font-black text-slate-300 pt-2 flex items-center gap-2">📂 Your Library & Individual Views</h2>
+
+        <!-- Main Content Area: Grid of All Novels -->
+        <div id="adminNovelsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <p class="text-slate-400 italic text-sm text-center col-span-full py-10">Data secure load ho raha hai... ⏳</p>
+        </div>
+    </div>
+
+    <!-- 🌟 MODAL BOX: Next Chapter Upload -->
+    <div id="chapterModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="font-black text-indigo-400 text-lg">➕ Add Next Chapter</h3>
+                <button onclick="closeChapterModal()" class="text-slate-400 hover:text-white font-bold text-lg cursor-pointer">✖</button>
+            </div>
+            <p class="text-xs text-slate-300 font-medium bg-slate-900/60 p-2.5 rounded-lg border border-slate-700" id="modalNovelTitle">Novel Name: Loading...</p>
+            <form id="addChapterForm" class="space-y-4">
+                <input type="hidden" id="modalNovelId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Chapter Title</label>
+                    <input type="text" id="nextChapterTitle" required placeholder="e.g., Chapter 2" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Select Chapter PDF File</label>
+                    <input type="file" id="nextChapterFile" accept=".pdf" required class="w-full mt-2 text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                </div>
+                <button type="submit" id="modalSubmitBtn" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold p-3 rounded-xl text-xs transition tracking-wide cursor-pointer">
+                    Upload & Save Chapter 🚀
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 1. FETCH LIVE SYSTEM ANALYTICS
+        async function fetchSystemAnalytics() {
+            try {
+                const response = await fetch('/api/novels/admin/analytics');
+                const data = await response.json();
+                
+                if(response.ok) {
+                    document.getElementById('statTotalViews').innerText = data.totalViews.toLocaleString();
+                    document.getElementById('statActiveUsers').innerText = data.activeOnlineUsers;
+                    document.getElementById('statTotalUsers').innerText = data.registeredUsers;
+                    document.getElementById('statTotalNovels').innerText = data.totalNovels;
+                }
+            } catch (err) {
+                console.error("Analytics failed to load", err);
+            }
+        }
+
+        // 2. LOAD ALL NOVELS WITH INDIVIDUAL VIEWS
+        async function loadAdminDashboard() {
+            const gridContainer = document.getElementById('adminNovelsGrid');
+            try {
+                const response = await fetch('http://localhost:5001/api/novels');
+                const novels = await response.json();
+
+                if(!Array.isArray(novels) || novels.length === 0) {
+                    gridContainer.innerHTML = `<p class="text-slate-500 italic text-center col-span-full py-10">Website par koi novel nahi mila!</p>`;
+                    return;
+                }
+
+                gridContainer.innerHTML = ""; 
+
+                novels.forEach(novel => {
+                    const totalChapters = novel.chapters ? novel.chapters.length : 0;
+                    const novelViews = novel.views || 0; // Capture views safely
+                    
+                    let chapterActionBtn = "";
+                    if(novel.hasChapters) {
+                        chapterActionBtn = `
+                            <button onclick="openChapterModal('${novel._id}', '${novel.title}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg font-bold text-[10px] transition cursor-pointer">
+                                ➕ Add Next Chap (${totalChapters})
+                            </button>
+                        `;
+                    } else {
+                        chapterActionBtn = `<span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded-md border border-amber-500/30">Single Book</span>`;
+                    }
+
+                    gridContainer.innerHTML += `
+                        <div class="bg-slate-800 rounded-xl p-4 border border-slate-700 flex space-x-4 shadow-md relative items-start hover:border-slate-600 transition">
+                            <img src="${novel.coverImage || 'https://via.placeholder.com/80x120'}" class="w-20 h-28 object-cover rounded-lg bg-slate-900 border border-slate-700 flex-shrink-0">
+                            
+                            <div class="flex-1 min-w-0 flex flex-col justify-between h-28">
+                                <div class="relative">
+                                    <!-- 👀 INDIVIDUAL VIEW COUNTER BADGE -->
+                                    <span class="absolute top-0 right-0 text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded-full">
+                                        👁️ ${novelViews} views
+                                    </span>
+                                    
+                                    <h2 class="text-sm font-black text-white truncate max-w-[65%]">${novel.title}</h2>
+                                    <p class="text-[11px] text-indigo-300 truncate font-semibold mt-0.5">By: ${novel.author || 'Unknown'}</p>
+                                    <p class="text-[10px] text-slate-400 bg-slate-900/50 inline-block px-1.5 py-0.5 rounded-md mt-1 border border-slate-700/60">Category: ${novel.category || 'General'}</p>
+                                </div>
+                                
+                                <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/50">
+                                    ${chapterActionBtn}
+                                    <button onclick="deleteNovel('${novel._id}')" class="text-rose-400 hover:text-rose-500 text-xs font-bold px-2 py-1 transition cursor-pointer">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error(error);
+                gridContainer.innerHTML = `<p class="text-rose-400 font-semibold text-center col-span-full">Server connection error!</p>`;
+            }
+        }
+
+        // 3. DELETE FUNCTIONALITY
+        async function deleteNovel(id) {
+            if(confirm("⚠ Kya aap waqai is novel ko delete karna chahte hain?")) {
+                try {
+                    const response = await fetch(`http://localhost:5001/api/novels/${id}`, { method: 'DELETE' });
+                    if(response.ok) {
+                        alert("🗑️ Deleted successfully!");
+                        initDashboard();
+                    }
+                } catch (error) { alert("Delete failed"); }
+            }
+        }
+
+        // 4. MODAL CONTROLS
+        function openChapterModal(id, title) {
+            document.getElementById('modalNovelId').value = id;
+            document.getElementById('modalNovelTitle').innerText = `Novel Name: ${title}`;
+            document.getElementById('chapterModal').classList.remove('hidden');
+            document.getElementById('nextChapterTitle').focus();
+        }
+        function closeChapterModal() {
+            document.getElementById('chapterModal').classList.add('hidden');
+            document.getElementById('addChapterForm').reset();
+        }
+
+        // 5. SUBMIT NEXT CHAPTER
+        document.getElementById('addChapterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('modalNovelId').value;
+            const submitBtn = document.getElementById('modalSubmitBtn');
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('chapterTitle', document.getElementById('nextChapterTitle').value);
+            formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
+
+            try {
+                const response = await fetch(`http://localhost:5001/api/novels/${id}/add-chapter`, { method: 'POST', body: formData });
+                if(response.ok) {
+                    alert("🎉 Chapter Added!");
+                    closeChapterModal();
+                    initDashboard();
+                }
+            } catch (error) { alert("Upload failed"); }
+            finally { submitBtn.disabled = false; }
+        });
+
+        // Combined Initializer
+        function initDashboard() {
+            fetchSystemAnalytics();
+            loadAdminDashboard();
+        }
+
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>

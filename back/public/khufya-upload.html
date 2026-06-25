@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Upload - NovelTube</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-100 flex items-center justify-center p-4 md:p-8">
+
+    <div class="w-full max-w-2xl bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 space-y-6">
+        
+        <div class="text-center">
+            <h2 class="text-2xl font-black tracking-tight text-indigo-400">📚 Novel Studio</h2>
+            <p class="text-xs text-slate-400 mt-1">PC se files upload karein aur chapters ki list banayein</p>
+        </div>
+
+        <form id="masterUploadForm" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Novel Name</label>
+                    <input type="text" id="title" required class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Writer Name</label>
+                    <input type="text" id="author" placeholder="e.g., Nimra Ahmed" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase">About Novel</label>
+                <textarea id="description" required class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white h-20 focus:outline-indigo-500" placeholder="Novel ki kahani..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Cover Image (PC File)</label>
+                    <input type="file" id="coverImage" accept="image/*" required class="w-full mt-1 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Status</label>
+                    <select id="status" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
+                        <option value="Completed">Completed</option>
+                        <option value="Ongoing">Ongoing</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-900/40 border border-slate-700 rounded-xl space-y-3">
+                <label class="block text-xs font-bold text-slate-400 uppercase">Novel Category</label>
+                <select id="categorySelect" onchange="toggleCustomCategory()" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500 font-medium">
+                    <option value="Trending Novels">Trending Novels</option>
+                    <option value="Newly Uploaded">Newly Uploaded</option>
+                    <option value="Romantic Novels">Romantic Novels</option>
+                    <option value="CREATE_NEW">➕ + Create New Category...</option>
+                </select>
+                
+                <input type="text" id="customCategoryInput" placeholder="Type new category name (e.g., Action, Suspense, Horror)" class="hidden w-full mt-2 p-2.5 bg-slate-900 border-2 border-indigo-500 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder-slate-500">
+            </div>
+
+            <div class="p-4 bg-indigo-950/40 border border-indigo-900/60 rounded-xl">
+                <label class="block text-xs font-bold text-indigo-400 uppercase">Kya is novel ke Chapters hain?</label>
+                <select id="hasChapters" onchange="toggleFormLogic()" class="w-full mt-1.5 p-2.5 bg-slate-900 border border-indigo-800 font-bold rounded-xl text-sm text-indigo-300 focus:outline-indigo-500">
+                    <option value="no">No (Single Book PDF)</option>
+                    <option value="yes">Yes (Multiple Chapters)</option>
+                </select>
+            </div>
+
+            <div id="singlePdfSection" class="p-4 bg-slate-900/50 border border-slate-700 rounded-xl">
+                <label class="block text-xs font-bold text-slate-400 uppercase">Upload Full Novel PDF (PC File)</label>
+                <input type="file" id="mainPdf" accept=".pdf" required class="w-full mt-2 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer">
+            </div>
+
+            <div id="chapterSection" class="hidden p-4 bg-slate-900/80 border border-dashed border-slate-600 rounded-xl space-y-4">
+                <p class="text-xs font-black text-indigo-400 uppercase tracking-wider">➕ Add Chapters One by One</p>
+               
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400">Chapter Title</label>
+                        <input type="text" id="chapterTitleInput" placeholder="e.g., Chapter 1" class="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400">Chapter PDF (PC File)</label>
+                        <input type="file" id="chapterPdfInput" accept=".pdf" class="w-full mt-1 text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
+                    </div>
+                </div>
+
+                <button type="button" onclick="addChapterToArray()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold p-2 rounded-xl text-xs transition cursor-pointer">
+                    + Add This Chapter To List
+                </button>
+
+                <div class="pt-2">
+                    <p class="text-xs font-bold text-slate-400 mb-2">Added Chapters List:</p>
+                    <div id="addedChaptersContainer" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <p class="text-xs text-slate-500 italic">Abhi tak koi chapter add nahi kiya.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-black p-3.5 rounded-xl transition text-sm shadow-lg tracking-wide cursor-pointer">
+                Publish Novel 🚀
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Global Array jo saare chapters ka data hold karega
+        let uploadedChaptersList = [];
+
+        // 1. TOGGLE LOGIC: Fields ko chupana aur validations handle karna
+        function toggleFormLogic() {
+            const hasChapters = document.getElementById('hasChapters').value;
+            const singleSection = document.getElementById('singlePdfSection');
+            const chapterSection = document.getElementById('chapterSection');
+            const mainPdfInput = document.getElementById('mainPdf');
+
+            if (hasChapters === 'yes') {
+                singleSection.classList.add('hidden');
+                mainPdfInput.removeAttribute('required');
+                mainPdfInput.value = ""; // clear single file selection
+                chapterSection.classList.remove('hidden');
+            } else {
+                singleSection.classList.remove('hidden');
+                mainPdfInput.setAttribute('required', 'true');
+                chapterSection.classList.add('hidden');
+                uploadedChaptersList = []; // list khali kardo
+                renderChaptersList();
+            }
+        }
+
+        // 2. NEW CATEGORY INPUT BOX TOGGLE
+        function toggleCustomCategory() {
+            const select = document.getElementById('categorySelect');
+            const customInput = document.getElementById('customCategoryInput');
+            
+            if (select.value === 'CREATE_NEW') {
+                customInput.classList.remove('hidden'); // Box dikhao
+                customInput.focus();                    // Cursor box ke andar bhej do
+            } else {
+                customInput.classList.add('hidden');    // Box dubara chupao
+                customInput.value = '';                 // Likhi hui value clear karo
+            }
+        }
+
+        // 3. LIST BUILDER LOGIC: Chapter ko array mein add karna aur screen par dikhana
+        function addChapterToArray() {
+            const titleInput = document.getElementById('chapterTitleInput');
+            const fileInput = document.getElementById('chapterPdfInput');
+
+            if (!titleInput.value || !fileInput.files[0]) {
+                alert("Galti! Pehle chapter ka naam likhein aur file select karein.");
+                return;
+            }
+
+            // Chapter object bana kar global list mein push karna
+            uploadedChaptersList.push({
+                title: titleInput.value,
+                file: fileInput.files[0] 
+            });
+
+            // Screen par list ko update karna
+            renderChaptersList();
+
+            // Inputs ko khali kar dena
+            titleInput.value = "";
+            fileInput.value = "";
+        }
+
+        // List ko UI par draw karne wala function
+        function renderChaptersList() {
+            const container = document.getElementById('addedChaptersContainer');
+
+            if (uploadedChaptersList.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic">Abhi tak koi chapter add nahi kiya.</p>`;
+                return;
+            }
+
+            container.innerHTML = "";
+            uploadedChaptersList.forEach((ch, index) => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-700/50 p-2 rounded-lg text-xs border border-slate-600">
+                        <span class="font-medium truncate max-w-[70%]">📄 ${ch.title} <span class="text-[10px] text-slate-400">(${Math.round(ch.file.size/1024)} KB)</span></span>
+                        <button type="button" onclick="removeChapter(${index})" class="text-rose-400 hover:text-rose-500 font-bold px-1 transition cursor-pointer">Mitao ✖</button>
+                    </div>
+                `;
+            });
+        }
+
+        // List se chapter remove karne ka function
+        function removeChapter(index) {
+            uploadedChaptersList.splice(index, 1);
+            renderChaptersList();
+        }
+
+        // 4. MAIN FORM SUBMIT ACTION (BACKEND TRANSMISSION)
+        document.getElementById('masterUploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const hasChaptersValue = document.getElementById('hasChapters').value;
+            if (hasChaptersValue === 'yes' && uploadedChaptersList.length === 0) {
+                alert("Galti! Aapne 'Chapters: Yes' select kiya hai lekin koi chapter list mein add nahi kiya.");
+                return;
+            }
+
+            // Button ko loading state mein le kar jaana
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Publishing Novel & Files... Please Wait... ⏳";
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('author', document.getElementById('author').value || 'Unknown Writer');
+            formData.append('description', document.getElementById('description').value);
+            formData.append('status', document.getElementById('status').value);
+            formData.append('hasChapters', hasChaptersValue === 'yes');
+
+            // 🔥 CATEGORY CHECK Logic:
+            let finalCategory = document.getElementById('categorySelect').value;
+            if (finalCategory === 'CREATE_NEW') {
+                finalCategory = document.getElementById('customCategoryInput').value.trim();
+                
+                if (!finalCategory) {
+                    alert("Galti! Please apni naye category ka naam box mein type karein.");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
+                    return;
+                }
+            }
+            formData.append('category', finalCategory); // Send to backend
+
+            // Cover File
+            const coverImageFile = document.getElementById('coverImage').files[0];
+            formData.append('coverImage', coverImageFile);
+
+            if (hasChaptersValue === 'no') {
+                const mainPdfFile = document.getElementById('mainPdf').files[0];
+                formData.append('mainPdf', mainPdfFile);
+            } else {
+                uploadedChaptersList.forEach((ch) => {
+                    formData.append(`chapterTitles`, ch.title);
+                    formData.append(`chapterFiles`, ch.file);
+                });
+            }
+
+            try {
+                // Request sending to backend
+                const response = await fetch('/api/novels', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('🎉 Mubarak ho! Saare chapters aur files ke sath novel upload ho gaya!');
+                    location.reload(); 
+                } else {
+                    const errData = await response.json();
+                    alert('❌ Galti: ' + (errData.error || 'Upload nahi ho saka.'));
+                }
+            } catch (error) {
+                console.error(error);
+                alert('❌ Server se rabta nahi ho saka. Terminal check karein!');
+            } finally {
+                // Button ko back normal state pe laana
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
+            }
+        });
+    </script>
+</body>
+</html>
