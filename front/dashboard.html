@@ -108,7 +108,7 @@
         async function loadAdminDashboard() {
             const gridContainer = document.getElementById('adminNovelsGrid');
             try {
-                const response = await fetch('http://localhost:5001/api/novels');
+                const response = await fetch('https://noveltube.onrender.com');
                 const novels = await response.json();
 
                 if(!Array.isArray(novels) || novels.length === 0) {
