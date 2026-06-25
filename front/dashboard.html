@@ -170,7 +170,7 @@
         async function deleteNovel(id) {
             if(confirm("⚠ Kya aap waqai is novel ko delete karna chahte hain?")) {
                 try {
-                    const response = await fetch(`http://localhost:5001/api/novels/${id}`, { method: 'DELETE' });
+                    const response = await fetch(`https://noveltube.onrender.com/api/novels/${id}`, { method: 'DELETE' });
                     if(response.ok) {
                         alert("🗑️ Deleted successfully!");
                         initDashboard();
@@ -203,7 +203,7 @@
             formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
 
             try {
-                const response = await fetch(`http://localhost:5001/api/novels/${id}/add-chapter`, { method: 'POST', body: formData });
+                const response = await fetch(`https://noveltube.onrender.com/api/novels/${id}/add-chapter`, { method: 'POST', body: formData });
                 if(response.ok) {
                     alert("🎉 Chapter Added!");
                     closeChapterModal();
