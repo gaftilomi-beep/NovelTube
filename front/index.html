@@ -105,7 +105,7 @@
             const wrapper = document.getElementById('dynamic-categories-wrapper');
 
             try {
-                const response = await fetch('/api/novels');
+                const response = await fetch('https://noveltube.onrender.com/api/novels');
                 const novels = await response.json(); 
 
                 if (Array.isArray(novels) && novels.length > 0) {

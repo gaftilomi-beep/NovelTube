@@ -68,7 +68,7 @@
 
             try {
                 // 2. API se Data Mangwana
-                const response = await fetch(`/api/novels/${novelId}`);
+                const response = await fetch(`https://noveltube.onrender.com/api/novels/${novelId}`);
                 if (!response.ok) throw new Error('Novel nahi mila');
                 
                 const novel = await response.getJson ? await response.json() : await response.json(); // Clean json parsing
