@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reading Page - NovelTube</title>
+    <title>Chapter 1: Dil ki pehli dastak - NovelTube</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,187 +11,147 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        /* Urdu Text styling for premium look */
         .urdu-text { 
             font-family: 'Noto Nastaliq Urdu', 'Inter', serif; 
             line-height: 2.8;
             direction: rtl;
         }
+        /* Active theme button border */
         .active-theme { border-color: #4f46e5 !important; }
     </style>
 </head>
 <body id="reading-body" class="bg-[#FDFBF7] text-slate-800 antialiased">
 
-    <div id="loading-screen" class="fixed inset-0 bg-[#FDFBF7] flex items-center justify-center z-50 p-4">
-        <div id="loading-text" class="text-center text-slate-600 font-medium max-w-md">
-            Novel load ho rahi hai... ⏳
-        </div>
-    </div>
-
-    <nav id="reading-nav" class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-            <a id="backBtn" href="javascript:history.back()" class="text-slate-600 hover:text-indigo-600 transition font-bold text-lg">←</a>
-            <span id="navTitle" class="text-xs md:text-sm font-medium text-slate-500 truncate max-w-[180px]">Loading...</span>
-            <span id="logoText" class="font-black text-indigo-600 text-sm">NovelTube 📖</span>
+    <nav class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm transition-colors duration-300" id="reading-nav">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <a href="novel-detail.html" class="text-slate-600 hover:text-indigo-600 transition font-bold text-lg" id="back-btn">←</a>
+                <span class="text-xs md:text-sm font-medium text-slate-500 truncate max-w-[180px] sm:max-w-none" id="nav-title">Dil-e-Nadaan Ki Sharat - Ch 1</span>
+            </div>
+            <a href="index.html" class="text-lg font-bold text-indigo-600 tracking-wide">Novel<span class="text-slate-900" id="logo-text">Tube</span></a>
         </div>
     </nav>
 
-    <main id="main-content" class="hidden max-w-3xl mx-auto px-4 py-6 space-y-6">
+    <div class="max-w-2xl mx-auto px-4 mt-4">
+        <div class="bg-white border border-slate-100 p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs transition-colors duration-300" id="toolbar">
+            
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-medium mr-1">Text Size:</span>
+                <button onclick="changeFontSize('decrease')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 w-8 h-8 rounded-lg font-bold active:scale-95 transition">-A</button>
+                <button onclick="changeFontSize('increase')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 w-8 h-8 rounded-lg font-bold active:scale-95 transition">+A</button>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-medium mr-1">Theme:</span>
+                <button onclick="setTheme('light')" id="theme-light" class="w-7 h-7 rounded-full bg-[#FDFBF7] border-2 border-slate-300 active-theme" title="Light Mode"></button>
+                <button onclick="setTheme('sepia')" id="theme-sepia" class="w-7 h-7 rounded-full bg-[#F4ECD8] border-2 border-transparent" title="Sepia Mode"></button>
+                <button onclick="setTheme('dark')" id="theme-dark" class="w-7 h-7 rounded-full bg-[#121212] border-2 border-transparent" title="Dark Mode"></button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-2xl mx-auto px-4 py-8 space-y-6">
         
-        <div id="toolbar" class="bg-white border border-slate-100 p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div class="flex items-center gap-2">
-                <button onclick="changeTheme('light')" class="w-6 h-6 rounded-full bg-[#FDFBF7] border border-slate-300 active-theme" title="Light Theme"></button>
-                <button onclick="changeTheme('sepia')" class="w-6 h-6 rounded-full bg-[#F4ECD8] border border-slate-300" title="Sepia Theme"></button>
-                <button onclick="changeTheme('dark')" class="w-6 h-6 rounded-full bg-slate-900 border border-slate-700" title="Dark Theme"></button>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="changeFontSize(-2)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold">- A</button>
-                <span id="fontSizeDisplay" class="font-medium text-slate-600">100%</span>
-                <button onclick="changeFontSize(2)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold">+ A</button>
-            </div>
+        <div class="text-center space-y-1 border-b border-slate-200/60 pb-4" id="header-border">
+            <h1 class="text-xl md:text-2xl font-bold" id="chapter-title">Chapter 1</h1>
+            <p class="text-sm text-indigo-600 font-medium" id="chapter-subtitle">Dil ki pehli dastak</p>
         </div>
 
-        <div class="space-y-4">
-            <h1 id="chapterTitle" class="text-xl md:text-2xl font-bold text-slate-800 text-center py-2"></h1>
-            <hr class="border-slate-100">
-            
-            <div id="story-content" class="urdu-text text-right text-slate-800 space-y-6 px-1 tracking-wide text-lg md:text-xl">
-                </div>
+        <div id="story-content" class="urdu-text text-[19px] text-right text-slate-800 space-y-6 px-1 tracking-wide">
+            <p>
+                یہ کہانی زندگی کے ان موڑ کی ہے جہاں انسان خود کو بے بس پاتا ہے۔ شام کے سائے گہرے ہو رہے تھے اور سرد ہوا کے جھونکے کھڑکی کے پردوں کو ہلا رہے تھے۔ وہ کمرے میں خاموش بیٹھی کسی گہرے سوچ میں ڈوبی ہوئی تھی۔
+            </p>
+            <p>
+                دل کی دھڑکنیں جیسے کہہ رہی تھیں کہ کچھ بدلنے والا ہے۔ زندگی نے ہمیشہ اسے آزمائشوں میں ڈالا تھا، لیکن اس بار کا امتحان کچھ الگ تھا، کچھ زیادہ ہی مشکل۔ اس نے گہرا سانس لیا اور چائے کا کپ میز پر رکھ دیا۔
+            </p>
+            <p>
+                "کیا یہ فیصلہ صحیح ہوگا؟" اس نے خود سے سوال کیا۔ باہر گلی میں گاڑی رکنے کی آواز آئی، اور اس کا دل ایک پل کے لیے جیسے تھم سا گیا۔ محبت اور فرض کے بیچ کی یہ جنگ اب ایک نیا رخ لینے والی تھی۔
+            </p>
         </div>
+
+        <div class="flex justify-between items-center pt-8 border-t border-slate-200/60 gap-4" id="footer-border">
+            <button class="flex-1 text-center bg-slate-100 text-slate-400 text-xs md:text-sm px-4 py-3 rounded-xl font-medium cursor-not-allowed" disabled>
+                ← Previous
+            </button>
+
+            <a href="#" class="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm px-4 py-3 rounded-xl font-medium shadow-sm active:scale-95 transition">
+                Next Chapter →
+            </a>
+        </div>
+
     </main>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const novelId = urlParams.get('novelId');
-        const chapterId = urlParams.get('chapterId');
-
-        let currentSize = 20; 
-
-        async function fetchChapterDetails() {
-            const loadingText = document.getElementById('loading-text');
-            try {
-                if (!novelId) {
-                    if (loadingText) loadingText.innerHTML = "❌ Invalid Link! Novel ID missing.";
-                    return;
-                }
-
-                if (loadingText) {
-                    loadingText.innerHTML = "Server se rabta ho raha hai, content load ho raha hai... ⏳<br><span class='text-xs text-slate-400'>(Free server jagne mein thoda waqt lag sakta hai)</span>";
-                }
-
-                const storyContent = document.getElementById('story-content');
-                const chapterTitle = document.getElementById('chapterTitle');
-                const navTitle = document.getElementById('navTitle');
-
-                if (chapterId) {
-                    // CASE A: Multi-chapter novel text standard flow
-                    const response = await fetch(`https://noveltube.onrender.com/api/novels/${novelId}/chapters/${chapterId}`);
-                    if (!response.ok) throw new Error('Chapter content fetch failed');
-                    
-                    const data = await response.json();
-
-                    chapterTitle.innerText = data.chapterTitle;
-                    navTitle.innerText = data.chapterTitle;
-                    document.title = `${data.chapterTitle} - NovelTube`;
-
-                    storyContent.innerHTML = data.chapterContent || "Is chapter ka content abhi upload nahi hua.";
-                } else {
-                    // CASE B: Single full novel PDF embedded premium flow
-                    const response = await fetch(`https://noveltube.onrender.com/api/novels/${novelId}`);
-                    if (!response.ok) throw new Error('Novel details fetch failed');
-                    
-                    const data = await response.json();
-
-                    chapterTitle.innerText = data.title;
-                    navTitle.innerText = data.title;
-                    document.title = `${data.title} - NovelTube`;
-
-                    // Remove text formatting for cleaner iframe display setup
-                    storyContent.className = "w-full space-y-4 pt-2";
-                    storyContent.innerHTML = `
-                        <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
-                            <iframe src="${data.mainPdf}" class="w-full h-[75vh] rounded-xl border-none" allow="autoplay"></iframe>
-                        </div>
-                        <div class="text-center pt-2">
-                            <a href="${data.mainPdf}" download="${data.title}.pdf" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition shadow-md">
-                                📥 Download Full PDF Novel
-                            </a>
-                        </div>
-                    `;
-
-                    // Hide text toolbars when showing a raw PDF view
-                    const toolbar = document.getElementById('toolbar');
-                    if (toolbar) toolbar.classList.add('hidden');
-                }
-
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('hidden');
-
-            } catch (error) {
-                console.error(error);
-                if (loadingText) {
-                    loadingText.innerHTML = `
-                        <div class="space-y-3 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-sm mx-auto">
-                            <p class="text-red-600 font-bold">❌ Connection Error!</p>
-                            <p class="text-xs text-slate-500">Data load nahi ho saka. Refresh karein ya internet check karein.</p>
-                            <button onclick="window.location.reload()" class="bg-indigo-600 text-white text-xs px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700 transition">Try Again 🔄</button>
-                        </div>
-                    `;
-                }
-            }
-        }
+        // Current Font Size Tracker
+        let currentSize = 19;
+        const storyContent = document.getElementById('story-content');
 
         function changeFontSize(action) {
-            currentSize += action;
-            if(currentSize < 14) currentSize = 14;
-            if(currentSize > 36) currentSize = 36;
-            document.getElementById('story-content').style.fontSize = currentSize + 'px';
-            document.getElementById('fontSizeDisplay').innerText = Math.round((currentSize/20)*100) + '%';
+            if (action === 'increase' && currentSize < 30) {
+                currentSize += 2;
+            } else if (action === 'decrease' && currentSize > 15) {
+                currentSize -= 2;
+            }
+            storyContent.style.fontSize = currentSize + 'px';
         }
 
-        function changeTheme(theme) {
+        // Theme Switcher Logic
+        function setTheme(theme) {
             const body = document.getElementById('reading-body');
             const nav = document.getElementById('reading-nav');
             const toolbar = document.getElementById('toolbar');
-            const storyContent = document.getElementById('story-content');
-            const backBtn = document.getElementById('backBtn');
-            const navTitle = document.getElementById('navTitle');
-            const logoText = document.getElementById('logoText');
-            const chapterTitle = document.getElementById('chapterTitle');
+            const backBtn = document.getElementById('back-btn');
+            const navTitle = document.getElementById('nav-title');
+            const logoText = document.getElementById('logo-text');
+            const chapterTitle = document.getElementById('chapter-title');
+            const chapterSubtitle = document.getElementById('chapter-subtitle');
+            
+            // Remove active borders from theme buttons
+            document.getElementById('theme-light').classList.remove('active-theme');
+            document.getElementById('theme-sepia').classList.remove('active-theme');
+            document.getElementById('theme-dark').classList.remove('active-theme');
 
-            document.querySelectorAll('#toolbar button').forEach(btn => btn.classList.remove('active-theme'));
-            event.target.classList.add('active-theme');
+            // Add active border to selected button
+            document.getElementById('theme-' + theme).classList.add('active-theme');
 
-            if(theme === 'dark') {
-                body.className = "bg-slate-950 text-slate-200 antialiased";
-                nav.className = "bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-md";
-                toolbar.className = "bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs";
-                if(chapterId) storyContent.className = "urdu-text text-right text-slate-200 space-y-6 px-1 tracking-wide";
-                backBtn.className = "text-slate-400 hover:text-indigo-400 transition font-bold text-lg";
-                navTitle.className = "text-xs md:text-sm font-medium text-slate-400 truncate max-w-[180px]";
-                logoText.className = "text-indigo-400 font-black text-sm";
-                chapterTitle.className = "text-xl md:text-2xl font-bold text-slate-100 text-center py-2";
-            } else if(theme === 'sepia') {
-                body.className = "bg-[#F4ECD8] text-[#3a2d1c] antialiased";
-                nav.className = "bg-[#EFE5CD] border-b border-[#dfd3b6] sticky top-0 z-40 shadow-sm";
-                toolbar.className = "bg-[#EFE5CD] border border-[#dfd3b6] p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs";
-                if(chapterId) storyContent.className = "urdu-text text-right text-[#3a2d1c] space-y-6 px-1 tracking-wide";
+            if (theme === 'dark') {
+                body.className = "bg-[#121212] text-gray-300 antialiased";
+                nav.className = "bg-[#1a1a1a] border-b border-neutral-800 sticky top-0 z-50 shadow-sm transition-colors duration-300";
+                toolbar.className = "bg-[#1a1a1a] border border-neutral-800 p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs transition-colors duration-300";
+                storyContent.className = "urdu-text text-right text-gray-200 space-y-6 px-1 tracking-wide";
+                
+                backBtn.className = "text-gray-400 hover:text-indigo-400 transition font-bold text-lg";
+                navTitle.className = "text-xs md:text-sm font-medium text-gray-400 truncate max-w-[180px]";
+                logoText.className = "text-white";
+                chapterTitle.className = "text-xl md:text-2xl font-bold text-white";
+            } 
+            else if (theme === 'sepia') {
+                body.className = "bg-[#F4ECD8] text-[#433422] antialiased";
+                nav.className = "bg-[#EFE5CD] border-b border-[#dfd3b6] sticky top-0 z-50 shadow-sm transition-colors duration-300";
+                toolbar.className = "bg-[#EFE5CD] border border-[#dfd3b6] p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs transition-colors duration-300";
+                storyContent.className = "urdu-text text-right text-[#3a2d1c] space-y-6 px-1 tracking-wide";
+                
                 backBtn.className = "text-[#5c4a34] hover:text-indigo-700 transition font-bold text-lg";
                 navTitle.className = "text-xs md:text-sm font-medium text-[#705b42] truncate max-w-[180px]";
-                logoText.className = "text-[#3a2d1c] font-black text-sm";
-                chapterTitle.className = "text-xl md:text-2xl font-bold text-[#3a2d1c] text-center py-2";
-            } else {
+                logoText.className = "text-[#3a2d1c]";
+                chapterTitle.className = "text-xl md:text-2xl font-bold text-[#3a2d1c]";
+            } 
+            else {
+                // Light mode reset
                 body.className = "bg-[#FDFBF7] text-slate-800 antialiased";
-                nav.className = "bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm";
-                toolbar.className = "bg-white border border-slate-100 p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs";
-                if(chapterId) storyContent.className = "urdu-text text-right text-slate-800 space-y-6 px-1 tracking-wide text-lg md:text-xl";
+                nav.className = "bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm transition-colors duration-300";
+                toolbar.className = "bg-white border border-slate-100 p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs transition-colors duration-300";
+                storyContent.className = "urdu-text text-right text-slate-800 space-y-6 px-1 tracking-wide";
+                
                 backBtn.className = "text-slate-600 hover:text-indigo-600 transition font-bold text-lg";
                 navTitle.className = "text-xs md:text-sm font-medium text-slate-500 truncate max-w-[180px]";
-                logoText.className = "text-indigo-600 font-black text-sm";
-                chapterTitle.className = "text-xl md:text-2xl font-bold text-slate-800 text-center py-2";
+                logoText.className = "text-slate-900";
+                chapterTitle.className = "text-xl md:text-2xl font-bold text-slate-900";
             }
+            // Maintain text size state
+            storyContent.style.fontSize = currentSize + 'px';
         }
-
-        window.onload = fetchChapterDetails;
     </script>
 </body>
 </html>

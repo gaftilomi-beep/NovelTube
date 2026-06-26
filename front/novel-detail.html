@@ -19,93 +19,106 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 items-center md:items-start">
                 <img id="novelCover" src="" alt="Cover" class="w-44 h-60 object-cover rounded-xl shadow-md border border-slate-100 flex-shrink-0">
                 
-                <div class="flex-1 text-center md:text-left space-y-3">
-                    <h1 id="novelTitle" class="text-2xl md:text-3xl font-black text-slate-800"></h1>
-                    <p id="novelDescription" class="text-sm text-slate-600 leading-relaxed"></p>
+                <div class="flex-1 text-center md:text-left space-y-2">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                        <h1 id="novelTitle" class="text-3xl font-black text-slate-900 tracking-tight"></h1>
+                        <span id="novelStatus" class="px-2.5 py-1 text-xs font-bold rounded-full"></span>
+                    </div>
+                    <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700"></span></p>
                     
-                    <div id="singleSection" class="hidden flex flex-wrap gap-3 justify-center md:justify-start pt-2">
-                        <a id="readOnlineBtn" href="#" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition shadow-md flex items-center gap-2">
-                            Read Online 📖
-                        </a>
-                        <a id="downloadBtn" href="#" download target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition shadow-md flex items-center gap-2">
-                            Download Full Novel 📥
-                        </a>
+                    <div class="pt-2">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">About Novel:</h3>
+                        <p id="novelDescription" class="text-sm text-slate-600 mt-1 leading-relaxed"></p>
                     </div>
                 </div>
             </div>
 
-            <div id="chaptersSection" class="hidden space-y-4">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
-                    📚 Available Chapters
-                </h2>
-                <div id="chaptersList" class="grid gap-3 sm:grid-cols-2">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                
+                <div id="singleNovelSection" class="hidden text-center py-6 space-y-4">
+                    <h2 class="text-lg font-bold text-slate-800">📖 Full Novel Reading Options</h2>
+                    <p class="text-xs text-slate-500">Yeh novel mukammal aik hi file mein available hai.</p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <a id="readOnlineBtn" href="" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-sm transition">Read Online</a>
+                        <a id="downloadBtn" href="" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl shadow-sm transition">Download Full PDF</a>
                     </div>
+                </div>
+
+                <div id="chaptersSection" class="hidden space-y-4">
+                    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">📑 Episodes / Chapters List</h2>
+                    <div id="chaptersList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        </div>
+                </div>
+
             </div>
 
         </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const novelId = urlParams.get('novelId');
-
         async function fetchNovelDetails() {
+            // 1. URL se Novel ki ID nikalna (?id=64f12...)
+            const urlParams = new URLSearchParams(window.location.search);
+            const novelId = urlParams.get('id');
+
+            if (!novelId) {
+                document.getElementById('loading').innerHTML = "❌ Novel ID nahi mili URL mein!";
+                return;
+            }
+
             try {
-                if (!novelId) {
-                    document.getElementById('loading').innerHTML = "❌ Invalid Link! Novel ID missing.";
-                    return;
+                // 2. API se Data Mangwana
+                const response = await fetch(`https://noveltube.onrender.com/api/novels/${novelId}`);
+                if (!response.ok) throw new Error('Novel nahi mila');
+                
+                const novel = await response.getJson ? await response.json() : await response.json(); // Clean json parsing
+
+                // 3. Basic Information ko HTML mein set karna
+                document.getElementById('novelCover').src = novel.coverImage;
+                document.getElementById('novelTitle').innerText = novel.title;
+                document.getElementById('novelAuthor').innerText = novel.author;
+                document.getElementById('novelDescription').innerText = novel.description;
+                
+                // Status Badge Handle Karna
+                const statusBadge = document.getElementById('novelStatus');
+                statusBadge.innerText = novel.status;
+                if(novel.status === 'Ongoing') {
+                    statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800";
+                } else {
+                    statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
                 }
 
-                const response = await fetch(`https://noveltube.onrender.com/api/novels/${novelId}`);
-                if (!response.ok) throw new Error('Novel details load nahi ho sakeen');
-                
-                const novel = await response.json();
-
-                // Inject basic info
-                document.getElementById('novelCover').src = novel.coverUrl || 'https://via.placeholder.com/176x240';
-                document.getElementById('novelTitle').innerText = novel.title;
-                document.getElementById('novelDescription').innerText = novel.description || "Is novel ki koi description nahi hai.";
-                document.title = `${novel.title} - NovelTube`;
-
+                // 4. 🔥 CORE LOGIC: Checking hasChapters Condition
+                const singleSection = document.getElementById('singleNovelSection');
                 const chaptersSection = document.getElementById('chaptersSection');
-                const singleSection = document.getElementById('singleSection');
-                const chaptersList = document.getElementById('chaptersList');
 
-                // Check standard conditions
-                if (novel.hasChapters && novel.chapters && novel.chapters.length > 0) {
-                    // Novel with chapters
+                if (novel.hasChapters === true || (novel.chapters && novel.chapters.length > 0)) {
+                    // CONDITION B TRUE: Chapters hain! Single section chupa do, chapters dikhao
                     singleSection.classList.add('hidden');
                     chaptersSection.classList.remove('hidden');
 
-                    chaptersList.innerHTML = '';
-                    novel.chapters.forEach(ch => {
-                        const downloadLink = ch.chapterFile || '#'; 
+                    const listContainer = document.getElementById('chaptersList');
+                    listContainer.innerHTML = ""; // Pehle se majood text saaf karo
 
-                        chaptersList.innerHTML += `
-                            <div class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-100 transition">
-                                <span class="text-sm font-bold text-slate-700">${ch.chapterTitle}</span>
-                                <div class="flex items-center gap-2">
-                                    <a href="reading-page.html?novelId=${novelId}&chapterId=${ch._id}" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-medium transition shadow-sm">
-                                        Read 📖
-                                    </a>
-                                    <a href="${downloadLink}" download="${ch.chapterTitle}.pdf" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-medium transition shadow-sm ${ch.chapterFile ? '' : 'hidden'}">
-                                        📥 Download
-                                    </a>
-                                </div>
-                            </div>
+                    // Saare chapters par loop chala kar buttons banana
+                    novel.chapters.forEach((ch, index) => {
+                        listContainer.innerHTML += `
+                            <a href="${ch.chapterPdf}" target="_blank" class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 rounded-xl transition group">
+                                <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-900">${ch.chapterTitle}</span>
+                                <span class="text-xs bg-white text-slate-400 group-hover:text-indigo-600 px-2 py-1 rounded-md border border-slate-100 font-medium">Read 📖</span>
+                            </a>
                         `;
                     });
                 } else {
-                    // Single novel without chapters
+                    // CONDITION A TRUE: Single Novel hai! Chapters chupa do, buttons set karo
                     chaptersSection.classList.add('hidden');
                     singleSection.classList.remove('hidden');
 
-                    // FIX: Ab PDF open nahi hoga, balkay reading-page par redirect hoga!
-                    document.getElementById('readOnlineBtn').href = `reading-page.html?novelId=${novelId}`;
-                    document.getElementById('downloadBtn').href = novel.mainPdf || '#';
+                    document.getElementById('readOnlineBtn').href = novel.mainPdf;
+                    document.getElementById('downloadBtn').href = novel.mainPdf;
                 }
 
-                // Show main container
+                // Loading khatam karo aur content dikhao
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('novelContainer').classList.remove('hidden');
 
@@ -115,6 +128,7 @@
             }
         }
 
+        // Page load hote hi function ko chalana
         window.onload = fetchNovelDetails;
     </script>
 </body>
