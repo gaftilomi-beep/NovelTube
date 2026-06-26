@@ -2,19 +2,27 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2; // 🔥 Cloudinary SDK
 const Novel = require('../models/Novel'); // Model ka path
 
 const router = express.Router();
 
-// 📂 Ensure 'uploads' folder exists automatically
+// ☁️ Cloudinary Configuration (Jo aapne .env mein set kiya hy)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// 📂 Ensure temporary 'uploads' folder exists automatically
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
 
-// ⚙️ Multer Configuration (PC se file save karne ke liye)
+// ⚙️ Multer Configuration (Temporary local staging ke liye)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Is folder mein files save hongi
+        cb(null, 'uploads/'); 
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -33,24 +41,50 @@ router.post('/', upload.fields([
     try {
         const { title, author, description, status, hasChapters, chapterTitles, category } = req.body;
 
+        // A. Cover Image Upload to Cloudinary
         let coverImageUrl = '';
         if (req.files && req.files['coverImage']) {
-            coverImageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.files['coverImage'][0].filename}`;
+            const file = req.files['coverImage'][0];
+            const result = await cloudinary.uploader.upload(file.path, {
+                folder: 'noveltube/covers',
+                resource_type: 'image'
+            });
+            coverImageUrl = result.secure_url; // Permanent Cloud Link
+            fs.unlinkSync(file.path); // Local temporary file delete karein
         }
 
+        // B. Main Single PDF Upload to Cloudinary
         let mainPdfUrl = '';
         if (hasChapters === 'false' && req.files && req.files['mainPdf']) {
-            mainPdfUrl = `${req.protocol}://${req.get('host')}/uploads/${req.files['mainPdf'][0].filename}`;
+            const file = req.files['mainPdf'][0];
+            const result = await cloudinary.uploader.upload(file.path, {
+                folder: 'noveltube/pdfs',
+                resource_type: 'auto' // Auto-detect PDF format
+            });
+            mainPdfUrl = result.secure_url;
+            fs.unlinkSync(file.path); // Local temporary file delete karein
         }
 
-        // Chapters processing logic
+        // C. Multiple Chapters Upload to Cloudinary
         let finalChapters = [];
         if (hasChapters === 'true' && req.files && req.files['chapterFiles']) {
             const titlesArray = Array.isArray(chapterTitles) ? chapterTitles : [chapterTitles];
-            finalChapters = req.files['chapterFiles'].map((file, index) => ({
-                chapterTitle: titlesArray[index] || `Chapter ${index + 1}`,
-                chapterPdf: `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
-            }));
+            
+            // Loop chala kar aik aik karke saari files upload hongi
+            for (let index = 0; index < req.files['chapterFiles'].length; index++) {
+                const file = req.files['chapterFiles'][index];
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder: 'noveltube/chapters',
+                    resource_type: 'auto'
+                });
+                
+                finalChapters.push({
+                    chapterTitle: titlesArray[index] || `Chapter ${index + 1}`,
+                    chapterPdf: result.secure_url
+                });
+                
+                fs.unlinkSync(file.path); // Upload hote hi local file saaf
+            }
         }
 
         // Save to MongoDB
@@ -59,7 +93,7 @@ router.post('/', upload.fields([
             author: author || 'Unknown Writer',
             description,
             status,
-            category: category || 'Newly Uploaded', // 🔥 Dynamic Category Feature
+            category: category || 'Newly Uploaded',
             hasChapters: hasChapters === 'true',
             coverImage: coverImageUrl,
             mainPdf: hasChapters === 'true' ? '' : mainPdfUrl,
@@ -67,29 +101,27 @@ router.post('/', upload.fields([
         });
 
         await newNovel.save();
-        res.status(201).json({ message: '🎉 Novel published successfully!', data: newNovel });
+        res.status(201).json({ message: '🎉 Novel Cloudinary par kamyabi se publish ho gaya!', data: newNovel });
 
     } catch (error) {
         console.error("🔥 Server Error:", error);
-        res.status(500).json({ error: 'Database mein save nahi ho saka!', details: error.message });
+        res.status(500).json({ error: 'Database ya Cloudinary par save nahi ho saka!', details: error.message });
     }
 });
 
 // 📤 2. GET ROUTE: Saare novels homepage par dikhane ke liye
 router.get('/', async (req, res) => {
     try {
-        const novels = await Novel.find().sort({ _id: -1 }); // Naye novels pehle dikhenge
+        const novels = await Novel.find().sort({ _id: -1 });
         res.status(200).json(novels);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 📤 3. GET SINGLE NOVEL ROUTE: ID ke zariye novel detail page ke liye
 // 📤 3. GET SINGLE NOVEL ROUTE: Open hote hi view count +1 karo
 router.get('/:id', async (req, res) => {
     try {
-        // 🚀 findByIdAndUpdate ke zariye views ko automatic increment ($inc) karein
         const novel = await Novel.findByIdAndUpdate(
             req.params.id, 
             { $inc: { views: 1 } }, 
@@ -104,7 +136,8 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-// 🗑️ 4. DELETE ROUTE: Novel ko hamesha ke liye mitaane ke liye
+
+// 🗑️ 4. DELETE ROUTE: Novel ko database se mitaane ke liye
 router.delete('/:id', async (req, res) => {
     try {
         const deletedNovel = await Novel.findByIdAndDelete(req.params.id);
@@ -126,8 +159,14 @@ router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) =
             return res.status(400).json({ error: 'Galti! Please chapter ki PDF file select karein.' });
         }
 
-        // Naye chapter ka file URL
-        const chapterPdfUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        // Single Chapter Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'noveltube/chapters',
+            resource_type: 'auto'
+        });
+        const chapterPdfUrl = result.secure_url;
+        
+        fs.unlinkSync(req.file.path); // Temporary local file delete karein
 
         // MongoDB ke array mein push ($push) karna
         const updatedNovel = await Novel.findByIdAndUpdate(
@@ -140,36 +179,34 @@ router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) =
                     }
                 }
             },
-            { new: true } // Taaki updated data wapis mile
+            { new: true }
         );
 
-        res.status(200).json({ message: '🎉 Naya chapter kamyabi se add ho gaya!', data: updatedNovel });
+        res.status(200).json({ message: '🎉 Naya chapter Cloudinary par save ho gaya!', data: updatedNovel });
     } catch (error) {
         console.error("🔥 Chapter Upload Error:", error);
         res.status(500).json({ error: 'Chapter save nahi ho saka!', details: error.message });
     }
 });
+
 // 📊 6. ANALYTICS ROUTE: Total Views aur User counts nikalne ke liye
 router.get('/admin/analytics', async (req, res) => {
     try {
         const novels = await Novel.find();
-        
-        // Saare novels ke views ko plus (+) karne ki logic
         let totalViews = 0;
         novels.forEach(n => {
             totalViews += (n.views || 0);
         });
 
-        // Live Analytics Package
         res.status(200).json({
             totalNovels: novels.length,
             totalViews: totalViews,
-            registeredUsers: 148, // Mock Data (Jab aap user signup banayenge ye dynamic ho jayega)
-            activeOnlineUsers: Math.floor(Math.random() * (25 - 5 + 1)) + 5 // Real-time simulation (5 se 25 users live)
+            registeredUsers: 148, 
+            activeOnlineUsers: Math.floor(Math.random() * (25 - 5 + 1)) + 5 
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-// 🔥 CRITICAL FIX: Router ko export karna zaroori hai taaki server.js crash na ho!
+
 module.exports = router;
