@@ -45,7 +45,6 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 px-4 pt-2 pb-4 space-y-2 shadow-lg">
             <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 bg-indigo-50">Home</a>
             <a href="#categories" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Categories</a>
-            
         </div>
     </nav>
 
@@ -112,10 +111,12 @@
                 const response = await fetch('https://noveltube.onrender.com/api/novels');
                 const novels = await response.json(); 
 
+                // Debugging ke liye live console check
+                console.log("Backend Novels Data:", novels);
+
                 if (Array.isArray(novels) && novels.length > 0) {
                     wrapper.innerHTML = ""; // Loader saaf karein
 
-                    // Object banayein data group karne ke liye
                     const groupedCategories = {};
 
                     // 1. Saare novels ko unki dynamic category ke mutabiq group karein
@@ -131,15 +132,12 @@
                     Object.keys(groupedCategories).forEach(categoryTitle => {
                         const categoryNovels = groupedCategories[categoryTitle];
                         
-                        // Id unique banane ke liye spaces khatam karein (e.g. "Newly Uploaded" -> "newly-uploaded-slider")
                         const safeSliderId = categoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') + "-slider";
 
-                        // Star colors dynamic lagane ke liye chota logical tool
                         let starColor = "text-indigo-500";
                         if(categoryTitle.toLowerCase().includes('romantic') || categoryTitle.toLowerCase().includes('romance')) starColor = "text-rose-500";
                         if(categoryTitle.toLowerCase().includes('trending')) starColor = "text-amber-500";
 
-                        // Cards HTML compile karein is category ke liye
                         let cardsHTML = "";
                         categoryNovels.forEach(novel => {
                             let innerCoverHTML = "";
@@ -155,8 +153,9 @@
                                 `;
                             }
 
+                            // 🔥 FIXED: novel._id || novel.id dono ko check karega taake link kabhi khali na ho
                             cardsHTML += `
-                                 <a href="novel-detail.html?id=${novel._id}" class="w-[105px] h-[155px] sm:w-[130px] sm:h-[190px] md:w-[140px] md:h-[205px] flex-shrink-0 bg-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition duration-200 snap-start cursor-pointer border border-slate-100 flex items-center justify-center group relative">
+                                 <a href="novel-detail.html?id=${novel._id || novel.id}" class="w-[105px] h-[155px] sm:w-[130px] sm:h-[190px] md:w-[140px] md:h-[205px] flex-shrink-0 bg-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition duration-200 snap-start cursor-pointer border border-slate-100 flex items-center justify-center group relative">
                                     ${innerCoverHTML}
                                     <div class="absolute inset-0 bg-slate-900/80 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-center items-center p-1.5 text-center">
                                         <p class="text-[10px] md:text-xs font-bold text-white line-clamp-2 px-0.5">${novel.title}</p>
@@ -166,7 +165,6 @@
                             `;
                         });
 
-                        // Poora section wrapper automatic append karein
                         wrapper.innerHTML += `
                             <section class="w-full">
                                 <div class="flex justify-between items-center mb-3 px-0.5">
