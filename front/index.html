@@ -45,6 +45,7 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 px-4 pt-2 pb-4 space-y-2 shadow-lg">
             <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 bg-indigo-50">Home</a>
             <a href="#categories" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Categories</a>
+            
         </div>
     </nav>
 
@@ -104,6 +105,7 @@
         }
 
         // ================= 🔥 LIVE DYNAMIC AUTO-GENERATING CATEGORY SYSTEM =================
+       // ================= 🔥 LIVE DYNAMIC AUTO-GENERATING CATEGORY SYSTEM =================
         async function fetchRealNovels() {
             const wrapper = document.getElementById('dynamic-categories-wrapper');
 
@@ -111,7 +113,6 @@
                 const response = await fetch('https://noveltube.onrender.com/api/novels');
                 const novels = await response.json(); 
 
-                // Debugging ke liye live console check
                 console.log("Backend Novels Data:", novels);
 
                 if (Array.isArray(novels) && novels.length > 0) {
@@ -153,13 +154,19 @@
                                 `;
                             }
 
-                            // 🔥 FIXED: novel._id || novel.id dono ko check karega taake link kabhi khali na ho
+                            // 🔥 NEW LAYOUT: Image upar aur Text niche set kar diya hy
                             cardsHTML += `
-                                 <a href="novel-detail.html?id=${novel._id || novel.id}" class="w-[105px] h-[155px] sm:w-[130px] sm:h-[190px] md:w-[140px] md:h-[205px] flex-shrink-0 bg-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:scale-[1.02] transition duration-200 snap-start cursor-pointer border border-slate-100 flex items-center justify-center group relative">
-                                    ${innerCoverHTML}
-                                    <div class="absolute inset-0 bg-slate-900/80 opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-center items-center p-1.5 text-center">
-                                        <p class="text-[10px] md:text-xs font-bold text-white line-clamp-2 px-0.5">${novel.title}</p>
-                                        <p class="text-[8px] md:text-[9px] text-indigo-300 truncate w-full mt-0.5">By ${novel.author}</p>
+                                 <a href="novel-detail.html?id=${novel._id || novel.id}" class="w-[105px] sm:w-[130px] md:w-[140px] flex-shrink-0 flex flex-col snap-start group cursor-pointer mb-2">
+                                    <div class="w-full h-[155px] sm:h-[190px] md:h-[205px] bg-slate-200 rounded-lg overflow-hidden shadow-sm border border-slate-100 flex items-center justify-center relative group-hover:shadow-md group-hover:scale-[1.01] transition duration-200">
+                                        ${innerCoverHTML}
+                                    </div>
+                                    <div class="mt-2 px-0.5 text-left">
+                                        <h3 class="text-[11px] sm:text-xs font-bold text-slate-800 line-clamp-1 leading-tight group-hover:text-indigo-600 transition" title="${novel.title}">
+                                            ${novel.title}
+                                        </h3>
+                                        <p class="text-[9px] sm:text-[10px] text-slate-500 truncate mt-0.5">
+                                            By ${novel.author || 'Unknown'}
+                                        </p>
                                     </div>
                                 </a>
                             `;
@@ -177,7 +184,7 @@
                                         <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">→</button>
                                     </div>  
                                 </div>
-                                <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-3 scrollbar-hide snap-x scroll-smooth w-full">
+                                <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide snap-x scroll-smooth w-full">
                                     ${cardsHTML}
                                 </div>
                             </section>
@@ -193,7 +200,6 @@
                 wrapper.innerHTML = `<p class="text-xs text-rose-500 p-3 font-medium text-center">Server se connect nahi ho paa raha. Check karein backend server chal raha hai?</p>`;
             }
         }
-
         window.onload = fetchRealNovels;
     </script>
 </body>
