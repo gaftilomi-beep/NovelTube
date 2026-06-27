@@ -13,181 +13,303 @@
         <div class="flex flex-col sm:flex-row justify-between items-center bg-slate-800 p-6 rounded-2xl border border-slate-700 gap-4 shadow-xl">
             <div>
                 <h1 class="text-2xl font-black text-indigo-400">🎛️ NovelTube Management Center</h1>
-                <p class="text-xs text-slate-400 mt-0.5">Live Traffic, Views Tracker aur Book Studio Control</p>
+                <p class="text-xs text-slate-400 mt-0.5">Live Traffic, Views Tracker aur User Control Studio</p>
             </div>
             <div class="flex space-x-3">
                 <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">← Website Home</a>
-                <a href="upload.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition">+ Upload Novel</a>
+                <a href="upload.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload Novel</a>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-400 font-medium">Total Novels Uploaded</p>
-                    <h2 id="totalNovelsCount" class="text-4xl font-black text-white mt-2">-</h2>
-                </div>
-                <div class="p-4 bg-indigo-600/10 text-indigo-400 rounded-xl text-2xl">📚</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Views</p>
+                <p id="statViews" class="text-2xl font-black text-indigo-400 mt-1">0</p>
             </div>
-
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-400 font-medium">Total Chapters Added</p>
-                    <h2 id="totalChaptersCount" class="text-4xl font-black text-white mt-2">-</h2>
-                </div>
-                <div class="p-4 bg-emerald-600/10 text-emerald-400 rounded-xl text-2xl">📖</div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Novels</p>
+                <p id="statNovels" class="text-2xl font-black text-emerald-400 mt-1">0</p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Chapters</p>
+                <p id="statChapters" class="text-2xl font-black text-amber-400 mt-1">0</p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Users</p>
+                <p id="statUsers" class="text-2xl font-black text-purple-400 mt-1">0</p>
             </div>
         </div>
 
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-4">
-                <div>
-                    <h2 class="text-lg font-bold text-white">Your Book Studio</h2>
-                    <p class="text-xs text-slate-400">Yahan se aap chapters add aur novels delete kar sakte hain</p>
-                </div>
+            <h2 class="text-xl font-bold text-indigo-400 border-b border-slate-700 pb-2">📚 Novels Studio</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase bg-slate-900/40">
+                            <th class="p-3">Cover</th>
+                            <th class="p-3">Novel Title</th>
+                            <th class="p-3">Chapters</th>
+                            <th class="p-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="novelsTableBody" class="text-sm divide-y divide-slate-700/50">
+                        </tbody>
+                </table>
             </div>
+        </div>
 
-            <div id="novelsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <p class="text-slate-400 text-sm">Novels load ho rahi hain...</p>
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="text-xl font-bold text-indigo-400">👥 User Management Center</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Registered users ko track karein, block karein ya delete karein.</p>
+                </div>
+                <span id="totalUsersCount" class="bg-indigo-950 text-indigo-400 text-xs font-bold px-3 py-1 rounded-full border border-indigo-800">0 Users</span>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase bg-slate-900/40">
+                            <th class="p-3">User ID</th>
+                            <th class="p-3">Username</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="text-sm divide-y divide-slate-700/50">
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-slate-500 text-xs">Loading users data...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
     </div>
 
-    <div id="chapterModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-md p-6 rounded-2xl shadow-2xl relative space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="text-base font-bold text-white">📖 Add New Chapter</h3>
-                <button onclick="closeChapterModal()" class="text-slate-400 hover:text-white font-bold text-xl cursor-pointer">&times;</button>
-            </div>
-            
-            <form id="addChapterForm" class="space-y-4">
-                <input type="hidden" id="modalNovelId">
-
+    <div id="chapterModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
+            <h3 class="text-lg font-bold text-indigo-400">➕ Add New Chapter</h3>
+            <input type="hidden" id="modalNovelId">
+            <form id="chapterForm" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1">Chapter Title (e.g., Chapter 1: The Beginning)</label>
-                    <input type="text" id="nextChapterTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Chapter Title / Number</label>
+                    <input type="text" id="nextChapterTitle" required placeholder="e.g., Chapter 15: Naya Safar" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
                 </div>
-
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1">Select Chapter File (.txt or document)</label>
-                    <input type="file" id="nextChapterFile" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600/20 file:text-indigo-400 hover:file:bg-indigo-600/30 cursor-pointer">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Chapter File (.txt)</label>
+                    <input type="file" id="nextChapterFile" required accept=".txt" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
                 </div>
-
-                <div class="flex space-x-3 pt-2">
-                    <button type="button" onclick="closeChapterModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-3 rounded-xl transition cursor-pointer">Cancel</button>
-                    <button type="submit" id="modalSubmitBtn" class="w-1/2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer">Save Chapter</button>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeChapterModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
+                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition">Save Chapter</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        const API_BASE_URL = 'https://noveltube.onrender.com/api';
+        
+        // 🔒 1. SECURE PASSWORD LOCK (Isko sabse upar paste karein)
+        async function checkAdminAccess() {
+            if (sessionStorage.getItem('admin_authenticated') === 'true') {
+                return; // Agar pehle se logged in hai toh dubara nahi maangega
+            }
 
-        // 1. FETCH SYSTEM ANALYTICS
-        function fetchSystemAnalytics() {
-            fetch(`${API_BASE_URL}/analytics`)
-                .then(res => {
-                    if (!res.ok) throw new Error("Analytics route available nahi hai");
-                    return res.json();
-                })
-                .then(data => {
-                    document.getElementById('totalNovelsCount').innerText = data.totalNovels || 0;
-                    document.getElementById('totalChaptersCount').innerText = data.totalChapters || 0;
-                })
-                .catch(err => {
-                    console.log("Analytics Fallback:", err.message);
-                    // Agar backend par route na ho toh safe fallback lagayein taaki page chalta rahe
-                    document.getElementById('totalNovelsCount').innerText = "-";
-                    document.getElementById('totalChaptersCount').innerText = "-";
+            const password = prompt("🔐 Admin Security: Khas Admin Password Darj Karein:");
+            
+            if (!password) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
                 });
-        }
+                const data = await response.json();
 
-        // 2. LOAD ADMIN DASHBOARD (NOVELS LIST)
-        function loadAdminDashboard() {
-            fetch(`${API_BASE_URL}/novels`)
-                .then(res => {
-                    if (!res.ok) throw new Error(`Server status: ${res.status}`);
-                    return res.json();
-                })
-                .then(novels => {
-                    const container = document.getElementById('novelsContainer');
-                    container.innerHTML = '';
-
-                    if (!novels || novels.length === 0) {
-                        container.innerHTML = `<p class="text-slate-400 text-sm col-span-full text-center py-4">Koi novel upload nahi hui abhi tak.</p>`;
-                        return;
-                    }
-
-                    novels.forEach(novel => {
-                        // Agar image localhost ki ho toh usay render live domain par badal dein
-                        let coverUrl = novel.coverImage;
-                        if (coverUrl && coverUrl.includes('http://localhost:5001')) {
-                            coverUrl = coverUrl.replace('http://localhost:5001', 'https://noveltube.onrender.com');
-                        }
-
-                        const card = document.createElement('div');
-                        card.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-between gap-4 shadow-md";
-                        card.innerHTML = `
-                            <div class="flex gap-4">
-                                <img src="${coverUrl || 'https://placehold.co/80x120'}" class="w-16 h-24 object-cover rounded-lg bg-slate-700 shadow">
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-bold text-white text-sm truncate">${novel.title}</h3>
-                                    <p class="text-xs text-slate-400 mt-1 line-clamp-2">${novel.description || 'No description provided.'}</p>
-                                    <p class="text-[10px] text-indigo-400 font-mono mt-2 bg-indigo-950/40 inline-block px-2 py-0.5 rounded border border-indigo-900/50">Chapters: ${novel.chapters ? novel.chapters.length : 0}</p>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2 text-center text-xs font-bold">
-                                <button onclick="openChapterModal('${novel._id}')" class="bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white p-2 rounded-lg transition cursor-pointer">+ Add Chap</button>
-                                <button onclick="deleteNovel('${novel._id}')" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white p-2 rounded-lg transition cursor-pointer">🗑️ Delete</button>
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    });
-                })
-                .catch(err => {
-                    console.error("Dashboard Load Error:", err);
-                    document.getElementById('novelsContainer').innerHTML = `
-                        <p class="text-rose-400 text-sm col-span-full text-center py-4">
-                            ❌ Data load nahi ho saka. (Backend live hone mein thoda time le sakta hai).
-                        </p>`;
-                });
-        }
-
-        // 3. DELETE NOVEL FUNCTION
-        function deleteNovel(id) {
-            if (confirm("Kya aap waqai yeh novel delete karna chahte hain?")) {
-                fetch(`${API_BASE_URL}/novels/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(res => {
-                    if (res.ok) {
-                        alert("🎉 Novel kamyabi se delete ho gayi!");
-                        initDashboard();
-                    } else {
-                        alert("❌ Delete karne mein koi masla aya.");
-                    }
-                })
-                .catch(err => {
-                    console.error("Delete Request Error:", err);
-                    alert("Server tak request nahi pohnchi.");
-                });
+                if (data.success) {
+                    sessionStorage.setItem('admin_authenticated', 'true');
+                } else {
+                    alert("❌ Galat Password! Access Denied.");
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.error("Security check failed:", error);
+                window.location.href = 'index.html';
             }
         }
 
-        // 4. MODAL CONTROLS
+        // Page load hote hi sab se pehle yeh check chalega
+        checkAdminAccess();
+
+
+        // 📝 2. AAPKA PURANA CODE (Yeh pehle se wahan maujood hai, isko nahi cherna)
+        const API_BASE_URL = window.location.origin.includes('localhost') ? 'https://noveltube.onrender.com/api' : '/api';
+        
+        
+            // ... aapka baqi saara purana code waise ka waisa hi niche rahega
+        // 🎯 FIXED: Ab ye 127.0.0.1, localhost aur Render live domain sab ko automatic handle karega
+
+
+        // 1. Analytics Load Karna
+        async function fetchSystemAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/analytics/system`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('statViews').innerText = data.totalViews || 0;
+                    document.getElementById('statNovels').innerText = data.totalNovels || 0;
+                    document.getElementById('statChapters').innerText = data.totalChapters || 0;
+                }
+            } catch (error) {
+                console.error("Analytics fetch error:", error);
+            }
+        }
+
+        // 2. Novels Data Populate Karna
+        async function loadAdminDashboard() {
+            const tableBody = document.getElementById('novelsTableBody');
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels`);
+                if (!response.ok) throw new Error("Failed to load novels");
+                const novels = await response.json();
+                
+                if (novels.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 text-xs">No novels found.</td></tr>`;
+                    return;
+                }
+
+                tableBody.innerHTML = novels.map(novel => `
+                    <tr class="hover:bg-slate-700/20 transition-colors">
+                        <td class="p-3">
+                            <img src="${novel.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Novel'">
+                        </td>
+                        <td class="p-3 font-semibold text-slate-200">${novel.title}</td>
+                        <td class="p-3 text-slate-400 text-xs">${novel.chapters ? novel.chapters.length : 0} Chapters</td>
+                        <td class="p-3 text-center">
+                            <button onclick="openChapterModal('${novel._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow transition">
+                                ➕ Add Chapter
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error("Error loading novels:", error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400 text-xs">Error loading novels data.</td></tr>`;
+            }
+        }
+
+        // 3. NAYA FEATURE: Users Fetch Karke Table Me Dikhana
+        async function loadUsers() {
+            const tableBody = document.getElementById('usersTableBody');
+            const countBadge = document.getElementById('totalUsersCount');
+            const statUsersElement = document.getElementById('statUsers');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/users`);
+                if (!response.ok) throw new Error("Users load nahi ho sakay");
+                
+                const users = await response.json();
+                countBadge.innerText = `${users.length} Users`;
+                if(statUsersElement) statUsersElement.innerText = users.length;
+                
+                if (users.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 text-xs">No users registered yet.</td></tr>`;
+                    return;
+                }
+                
+                tableBody.innerHTML = users.map(user => {
+                    const isBlocked = user.isBlocked || false;
+                    return `
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="p-3 font-mono text-xs text-slate-500">${user._id}</td>
+                            <td class="p-3 font-semibold text-slate-200">${user.username || 'N/A'}</td>
+                            <td class="p-3 text-slate-400 text-xs">${user.email}</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${isBlocked ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                                    ${isBlocked ? 'Blocked' : 'Active'}
+                                </span>
+                            </td>
+                            <td class="p-3 text-center space-x-2">
+                                <button onclick="toggleBlockUser('${user._id}', ${isBlocked})" class="px-2.5 py-1 text-xs font-bold rounded-lg transition ${isBlocked ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-amber-600 hover:bg-amber-500 text-white'}">
+                                    ${isBlocked ? 'Unblock' : 'Block'}
+                                </button>
+                                <button onclick="deleteUser('${user._id}')" class="px-2.5 py-1 text-xs font-bold bg-red-600 hover:bg-red-500 text-white rounded-lg transition">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error("Error loading users:", error);
+                tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400 text-xs">❌ Backend API check karein (/users route issue).</td></tr>`;
+            }
+        }
+
+        // 4. NAYA FEATURE: User Block/Unblock Logic
+        async function toggleBlockUser(userId, currentStatus) {
+            const action = currentStatus ? "unblock" : "block";
+            if (!confirm(`Kya aap is user ko pakka ${action} karna chahte hain?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}/toggle-block`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    alert(`🎉 User successfully ${action}ed!`);
+                    loadUsers(); // Table reload
+                } else {
+                    alert("❌ Action failed. Backend server logs check karein.");
+                }
+            } catch (error) {
+                console.error("Block status error:", error);
+                alert("Network error. Server chal raha hai?");
+            }
+        }
+
+        // 5. NAYA FEATURE: User Account Permanently Delete Karna
+        async function deleteUser(userId) {
+            if (!confirm("⚠️ WARNING: Kya aap is user ko permanently delete karna chahte hain? Ye action reverse nahi hoga!")) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert("🗑️ User profile has been deleted successfully!");
+                    loadUsers(); // Refresh data
+                } else {
+                    alert("❌ Deletion failed. Route verify karein.");
+                }
+            } catch (error) {
+                console.error("Delete user error:", error);
+                alert("Request verify karein.");
+            }
+        }
+
+        // Chapter Modal Opening (Existing)
         function openChapterModal(id) {
             document.getElementById('modalNovelId').value = id;
             document.getElementById('chapterModal').classList.remove('hidden');
         }
+
         function closeChapterModal() {
             document.getElementById('chapterModal').classList.add('hidden');
-            document.getElementById('addChapterForm').reset();
+            document.getElementById('chapterForm').reset();
         }
 
-        // 5. SUBMIT NEXT CHAPTER FORM SUBMISSION
-        document.getElementById('addChapterForm').addEventListener('submit', async function(e) {
+        // Chapter Form submit control (Existing)
+        document.getElementById('chapterForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('modalNovelId').value;
             const submitBtn = document.getElementById('modalSubmitBtn');
@@ -201,7 +323,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { 
                     method: 'POST', 
-                    body: formData 
+                    body: formData
                 });
                 if (response.ok) {
                     alert("🎉 Chapter Added Successfully!");
@@ -219,10 +341,11 @@
             }
         });
 
-        // Combined Initializer
+        // Initializer Updates
         function initDashboard() {
             fetchSystemAnalytics();
             loadAdminDashboard();
+            loadUsers(); // Page load hote hi users content list trigger karega
         }
 
         window.onload = initDashboard;

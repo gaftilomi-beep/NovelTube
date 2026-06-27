@@ -91,6 +91,19 @@
     </main>
 
     <script>
+
+        // Check karein ke kya user login hai ya nahi
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        // Agar token nahi mila, iska matlab user naya hai!
+        // Use auto-redirect kar dein auth.html ya login page par
+        window.location.href = "auth.html"; 
+    } else {
+        console.log("Welcome! User already logged in.");
+    }
+});
         
         // Mobile Menu Toggle
         const menuBtn = document.getElementById('menu-btn');
