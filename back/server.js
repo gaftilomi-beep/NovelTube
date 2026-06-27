@@ -88,6 +88,20 @@ app.get('/api/analytics/system', async (req, res) => {
     }
 });
 
+// 🔒 SECURE ADMIN PASSWORD VERIFICATION ENDPOINT
+app.post('/api/admin/verify', (req, res) => {
+    const { password } = req.body;
+    // Render se password uthaye ga, agar wahan na mile toh backup 'Hamza786' chalega
+    const securePassword = process.env.ADMIN_PASSWORD || "Hamza786"; 
+
+    if (password === securePassword) {
+        return res.json({ success: true });
+    } else {
+        return res.status(401).json({ success: false, error: "Galat Password!" });
+    }
+});
+
+
 // Port Listener[cite: 2]
 const PORT = process.env.PORT || 5001; //[cite: 2]
 app.listen(PORT, () => {
