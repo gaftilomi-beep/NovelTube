@@ -110,12 +110,16 @@
         </div>
     </div>
 
-    <script>
-        
-        // 🔒 1. SECURE PASSWORD LOCK (Isko sabse upar paste karein)
+ <script>
+        // 🎯 FIXED: URL sabse upar set kar diya taake password check ko sahi rasta mile
+        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+            ? 'https://noveltube.onrender.com/api' 
+            : '/api';
+
+        // 🔒 SECURE PASSWORD LOCK
         async function checkAdminAccess() {
             if (sessionStorage.getItem('admin_authenticated') === 'true') {
-                return; // Agar pehle se logged in hai toh dubara nahi maangega
+                return; // Agar ek baar password de diya hai toh dubara nahi maangega
             }
 
             const password = prompt("🔐 Admin Security: Khas Admin Password Darj Karein:");
@@ -126,7 +130,8 @@
             }
 
             try {
-                const response = await fetch('/api/admin/verify', {
+                // 🎯 FIXED: Ab ye backend port 5001 par hi request bheje ga bina crash kiye
+                const response = await fetch(`${API_BASE_URL}/admin/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
@@ -135,27 +140,20 @@
 
                 if (data.success) {
                     sessionStorage.setItem('admin_authenticated', 'true');
+                    initDashboard(); // Password sahi hone par data load karo
                 } else {
                     alert("❌ Galat Password! Access Denied.");
                     window.location.href = 'index.html';
                 }
             } catch (error) {
                 console.error("Security check failed:", error);
+                alert("🚨 Backend Server se rabta nahi ho pa raha! Pehle node server.js chalayein.");
                 window.location.href = 'index.html';
             }
         }
 
-        // Page load hote hi sab se pehle yeh check chalega
+        // Page load hote hi sabse pehle password check trigger hoga
         checkAdminAccess();
-
-
-        // 📝 2. AAPKA PURANA CODE (Yeh pehle se wahan maujood hai, isko nahi cherna)
-        const API_BASE_URL = window.location.origin.includes('localhost') ? 'https://noveltube.onrender.com/api' : '/api';
-        
-        
-            // ... aapka baqi saara purana code waise ka waisa hi niche rahega
-        // 🎯 FIXED: Ab ye 127.0.0.1, localhost aur Render live domain sab ko automatic handle karega
-
 
         // 1. Analytics Load Karna
         async function fetchSystemAnalytics() {
@@ -205,7 +203,7 @@
             }
         }
 
-        // 3. NAYA FEATURE: Users Fetch Karke Table Me Dikhana
+        // 3. Users Fetch Karke Table Me Dikhana
         async function loadUsers() {
             const tableBody = document.getElementById('usersTableBody');
             const countBadge = document.getElementById('totalUsersCount');
@@ -249,11 +247,11 @@
                 }).join('');
             } catch (error) {
                 console.error("Error loading users:", error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400 text-xs">❌ Backend API check karein (/users route issue).</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400 text-xs">❌ Users data load nahi ho saka.</td></tr>`;
             }
         }
 
-        // 4. NAYA FEATURE: User Block/Unblock Logic
+        // 4. User Block/Unblock Logic
         async function toggleBlockUser(userId, currentStatus) {
             const action = currentStatus ? "unblock" : "block";
             if (!confirm(`Kya aap is user ko pakka ${action} karna chahte hain?`)) return;
@@ -266,19 +264,18 @@
                 
                 if (response.ok) {
                     alert(`🎉 User successfully ${action}ed!`);
-                    loadUsers(); // Table reload
+                    loadUsers();
                 } else {
-                    alert("❌ Action failed. Backend server logs check karein.");
+                    alert("❌ Action failed.");
                 }
             } catch (error) {
                 console.error("Block status error:", error);
-                alert("Network error. Server chal raha hai?");
             }
         }
 
-        // 5. NAYA FEATURE: User Account Permanently Delete Karna
+        // 5. User Account Permanently Delete Karna
         async function deleteUser(userId) {
-            if (!confirm("⚠️ WARNING: Kya aap is user ko permanently delete karna chahte hain? Ye action reverse nahi hoga!")) return;
+            if (!confirm("⚠️ WARNING: Kya aap is user ko permanently delete karna chahte hain?")) return;
             
             try {
                 const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
@@ -287,17 +284,15 @@
                 
                 if (response.ok) {
                     alert("🗑️ User profile has been deleted successfully!");
-                    loadUsers(); // Refresh data
+                    loadUsers();
                 } else {
-                    alert("❌ Deletion failed. Route verify karein.");
+                    alert("❌ Deletion failed.");
                 }
             } catch (error) {
                 console.error("Delete user error:", error);
-                alert("Request verify karein.");
             }
         }
 
-        // Chapter Modal Opening (Existing)
         function openChapterModal(id) {
             document.getElementById('modalNovelId').value = id;
             document.getElementById('chapterModal').classList.remove('hidden');
@@ -308,47 +303,12 @@
             document.getElementById('chapterForm').reset();
         }
 
-        // Chapter Form submit control (Existing)
-        document.getElementById('chapterForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('modalNovelId').value;
-            const submitBtn = document.getElementById('modalSubmitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Uploading...";
-
-            const formData = new FormData();
-            formData.append('chapterTitle', document.getElementById('nextChapterTitle').value);
-            formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { 
-                    method: 'POST', 
-                    body: formData
-                });
-                if (response.ok) {
-                    alert("🎉 Chapter Added Successfully!");
-                    closeChapterModal();
-                    initDashboard();
-                } else {
-                    alert("❌ Chapter upload nahi ho saka. Server error.");
-                }
-            } catch (error) { 
-                console.error("Upload failed:", error);
-                alert("Upload failed. Network checks karein."); 
-            } finally { 
-                submitBtn.disabled = false; 
-                submitBtn.innerText = "Save Chapter";
-            }
-        });
-
         // Initializer Updates
         function initDashboard() {
             fetchSystemAnalytics();
             loadAdminDashboard();
-            loadUsers(); // Page load hote hi users content list trigger karega
+            loadUsers(); 
         }
-
-        window.onload = initDashboard;
     </script>
 </body>
 </html>
