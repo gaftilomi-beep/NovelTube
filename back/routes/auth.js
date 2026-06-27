@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/user');
 
 const router = express.Router();
 const JWT_SECRET = "aapka_koi_bhi_secret_key_ya_password"; // Isko baad mein .env mein dalenge
