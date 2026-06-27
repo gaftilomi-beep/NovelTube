@@ -1,38 +1,38 @@
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']); // ISP Block Torne Ke Liye
+dns.setServers(['8.8.8.8', '8.8.4.4']); // ISP Block Torne Ke Liye[cite: 2]
 
 const express = require('express');
-const mongoose = require('mongoose'); 
+const mongoose = require('mongoose'); // 🔥 Safe rendering aur dashboard queries ke liye
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path'); 
-const connectDB = require('./config/db.js');
-const User = require('./models/User'); // User model for dashboard operations
+const connectDB = require('./config/db.js'); //[cite: 2]
 
-dotenv.config();
-connectDB();
+dotenv.config(); //[cite: 2]
+connectDB(); //[cite: 2]
 
-const app = express();
+const app = express(); //[cite: 2]
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+// Middlewares[cite: 2]
+app.use(cors()); //[cite: 2]
+app.use(express.json()); //[cite: 2]
 
-// Frontend aur Uploads folders ka setup
-app.use(express.static(path.join(__dirname, 'front')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); 
+// Frontend aur Uploads folders ka setup[cite: 2]
+app.use(express.static(path.join(__dirname, 'front'))); //[cite: 2]
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); //[cite: 2]
 
-// 🛣️ ORIGINAL ROUTES CONNECTIVITY (Safe & Clean)
-app.use('/api/auth', require('./routes/auth'));               
-app.use('/api/novels', require('./routes/novelRoutes'));           
-app.use('/api/chapters', require('./routes/chapterRoutes'));   
+// 🛣️ ORIGINAL ROUTES CONNECTIVITY (Bilkul Mehfooz Aur Un-touched)[cite: 2]
+app.use('/api/auth', require('./routes/auth')); //[cite: 2]
+app.use('/api/novels', require('./routes/novelRoutes')); //[cite: 2]
+app.use('/api/chapters', require('./routes/chapterRoutes')); //[cite: 2]
 
-// 👥 NAYE ADMIN & USER MANAGEMENT ROUTES (Dashboard Se Perfectly Synced)
+// 👥 ADMIN & USER MANAGEMENT ROUTES (100% Crash Proof for Render)
 
 // 1. Saare Users Ka Data Dekhne Ke Liye
 app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find({}, '-password'); 
+        // Direct Mongoose model call bina kisi required file ke taake Render crash na ho
+        const users = await mongoose.model('User').find({}, '-password'); 
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: "Users list nahi mil saki" });
@@ -42,10 +42,10 @@ app.get('/api/users', async (req, res) => {
 // 2. User Ko Block / Unblock Karne Ke Liye
 app.patch('/api/users/:id/toggle-block', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await mongoose.model('User').findById(req.params.id);
         if (!user) return res.status(404).json({ error: "User nahi mila" });
 
-        user.isBlocked = !user.isBlocked; 
+        user.isBlocked = !user.isBlocked; // Status true/false flip
         await user.save();
         res.json({ message: "User status updated successfully!" });
     } catch (err) {
@@ -56,7 +56,7 @@ app.patch('/api/users/:id/toggle-block', async (req, res) => {
 // 3. User Ko Humesha Ke Liye Delete Karne Ke Liye
 app.delete('/api/users/:id', async (req, res) => {
     try {
-        await User.findByIdAndDelete(req.params.id);
+        await mongoose.model('User').findByIdAndDelete(req.params.id);
         res.json({ message: "User deleted successfully" });
     } catch (err) {
         res.status(500).json({ error: "User delete nahi ho saka" });
@@ -66,7 +66,7 @@ app.delete('/api/users/:id', async (req, res) => {
 // 4. Live Counter Stats (Total Novels, Chapters, Users)
 app.get('/api/analytics/system', async (req, res) => {
     try {
-        const totalUsers = await User.countDocuments();
+        const totalUsers = await mongoose.model('User').countDocuments();
         
         let totalNovels = 0;
         let totalChapters = 0;
@@ -88,8 +88,8 @@ app.get('/api/analytics/system', async (req, res) => {
     }
 });
 
-// Port Listener
-const PORT = process.env.PORT || 5001;
+// Port Listener[cite: 2]
+const PORT = process.env.PORT || 5001; //[cite: 2]
 app.listen(PORT, () => {
-    console.log(`🔥 Server is running smoothly on port ${PORT}`);
+    console.log(`🔥 Server is running smoothly on port ${PORT}`); //[cite: 2]
 });
