@@ -1,220 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6838616165368341"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6838616165368341" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-site-verification" content="gXq7_FNyqzuEOqHn8WIoI7ITsIJrtZhrjZjQAURfzo4" />
     <title>NovelTube - Premium Reading Platform</title>
-    <meta name="description" content="NovelTube par parhein behtareen romantic, suspense, aur adventure Urdu novels online bilkul muft.">
-    <meta name="keywords" content="Urdu Novels, Read Novels Online, NovelTube, Romantic Novels">
+    <meta name="description" content="NovelTube par parhein behtareen romantic, suspense, aur adventure Urdu novels aur articles online bilkul muft.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <style>
+        html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Poppins', sans-serif; }
-        .bg-reading { background-color: #FDFBF7; }
+        .heading-font { font-family: 'Poppins', sans-serif; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scroll-width: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-reading text-slate-800 antialiased overflow-x-hidden">
+<body class="bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white">
 
-    <nav class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm w-full">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0">
-                    <a href="index.html" class="text-xl md:text-2xl font-bold text-indigo-600 tracking-wide">Novel<span class="text-slate-900">Tube</span></a>
-                </div>
-                <div class="hidden md:flex space-x-8 font-medium">
-                    <a href="index.html" class="text-indigo-600 border-b-2 border-indigo-600 pb-1">Home</a>
-                    <a href="#categories" class="text-slate-600 hover:text-indigo-600 transition">Categories</a>
-                    
-                </div>
-                <div class="md:hidden">
-                    <button id="menu-btn" class="text-slate-700 hover:text-indigo-600 focus:outline-none p-1">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div> 
-        </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 px-4 pt-2 pb-4 space-y-2 shadow-lg">
-            <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 bg-indigo-50">Home</a>
-            <a href="#categories" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Categories</a>
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+            <a href="#" class="heading-font text-xl font-black tracking-tight text-indigo-600 flex items-center gap-1.5">
+                <span>⚡</span> NovelTube
+            </a>
             
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-600">
+                <a href="#" class="text-indigo-600 transition">Home</a>
+                <a href="#about-section" class="hover:text-indigo-600 transition">About Us</a>
+                <a href="#contact-section" class="hover:text-indigo-600 transition">Contact Us</a>
+            </nav>
+            
+            <div class="flex items-center space-x-2">
+                <a href="auth.html" id="joinBtn" class="text-xs font-bold bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition">Sign Up</a>
+            </div>
         </div>
-    </nav>
-
-    <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 text-center">
-        <h1 class="text-2xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-            Welcome to <span class="text-indigo-600">NovelTube</span>
-        </h1>
-        <p class="mt-1.5 max-w-xl mx-auto text-xs md:text-sm text-slate-600 leading-relaxed px-2">
-            Yahan aapko milenge behtareen aur dilchasp Urdu novels aik hi jagah par.
-        </p>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pb-16 w-full overflow-hidden" id="categories">
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-12">
         
-        <div id="dynamic-categories-wrapper" class="space-y-8 w-full">
-            <p class="text-xs text-slate-400 p-3 italic text-center">Novels aur categories load ho rahe hain... 🚀</p>
-        </div>
-
-        <hr class="border-slate-200">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <section id="about" class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
-                <h2 class="text-base font-bold text-slate-900 mb-1.5">About us</h2>
-                 <p class="text-slate-600 text-xs leading-relaxed">NovelTube aik aesa platform hai jahan hum aapke liye chuninda aur dilchasp urdu novels jama karte hain.</p>
-            </section>
-            <section id="contact" class="bg-slate-900 text-white p-5 rounded-xl shadow-md flex flex-col justify-between">
-                <div>
-                    <h2 class="text-base font-bold mb-2 text-indigo-400">Contact us</h2>
-                     <div class="space-y-2 text-xs">
-                        <div class="flex items-center space-x-3">
-                            <span class="text-indigo-400 font-medium">Email:</span>
-                             <a href="mailto:hamza.ali.com122@gmail.com" class="text-slate-200 underline">hamza.ali.com122@gmail.com</a>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-emerald-400 font-medium">WhatsApp:</span>
-                             <a href="https://wa.me/03700933073" target="_blank" class="text-slate-200 font-mono">0370 0933073</a>
-                        </div>
+        <section class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-6 md:p-10 text-white text-center space-y-4 relative overflow-hidden shadow-xl shadow-indigo-950/20">
+            <div class="relative z-10 max-w-2xl mx-auto space-y-3">
+                <span class="bg-indigo-500/20 text-indigo-300 text-[10px] uppercase font-black tracking-widest px-3 py-1 rounded-full border border-indigo-500/30">WELCOME TO NOVELTUBE v2</span>
+                <h1 class="heading-font text-3xl md:text-5xl font-black tracking-tight leading-tight">Explore Infinite Premium Stories & Articles</h1>
+                <p class="text-xs md:text-sm text-slate-300 max-w-md mx-auto">Parhein behtareen Urdu novels aur exclusive informative articles bina kisi rukawat ke, bilkul muft.</p>
+                
+                <div class="pt-4 max-w-md mx-auto relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        🔍
                     </div>
+                    <input type="text" id="globalSearchInput" oninput="performLiveFilterSearch()" placeholder="Search novel, article or writer name..." class="w-full pl-10 pr-4 py-3 bg-white text-slate-900 text-sm font-medium rounded-2xl shadow-lg border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
-            </section>
+            </div>
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl"></div>
+        </section>
+
+        <div id="dynamicFeedSectionsWrapper" class="space-y-8">
+            <p class="text-center text-slate-500 font-medium py-10">Fetching files stream from cloud network... ⏳</p>
         </div>
+
+        <hr class="border-slate-200/60 my-6">
+
+        <section id="about-section" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-xs space-y-3 scroll-mt-20">
+            <h2 class="heading-font text-xl font-bold tracking-tight text-indigo-600 flex items-center gap-2">
+                <span>📖</span> About NovelTube
+            </h2>
+            <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
+                Welcome to <strong>NovelTube</strong>! Hamari website par aapko milenge behtareen Urdu novels, romantic stories, suspense thrillers, aur exclusive informative articles bilkul muft. Hamara maqsad parhne walon ko ek premium, fast aur clean user interface dena hai jahan aap bina kisi mushkil ke apni pasand ke pakistani aur urdu literature ko parh aur download kar sakein.
+            </p>
+        </section>
+
+        <section id="contact-section" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-xs space-y-4 scroll-mt-20">
+            <h2 class="heading-font text-xl font-bold tracking-tight text-indigo-600 flex items-center gap-2">
+                <span>✉️</span> Contact Support
+            </h2>
+            <p class="text-xs md:text-sm text-slate-600">
+                Agar aapko kisi novel me error mile, apna novel hamari website par publish karwana ho, ya koi suggestion dena ho, toh aap kisi bhi waqt hamari team se rabta kar sakte hain:
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Official Email</span>
+                    <a href="mailto:support@noveltube.com" class="text-xs md:text-sm font-semibold text-indigo-600 hover:underline">hamza.ali.com122@gmail.com</a>
+                </div>
+                <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Whatsapp</span>
+                    <span class="text-xs md:text-sm font-semibold text-slate-700"> 03700933073 </span>
+                </div>
+            </div>
+        </section>
+
     </main>
 
+    <footer class="bg-white border-t border-slate-100 mt-12 py-6 text-center text-xs text-slate-400 font-medium">
+        &copy; 2026 NovelTube Network Platform. All rights reserved.
+    </footer>
+
     <script>
+        const API_BASE_URL = 'https://noveltube.onrender.com/api';
+        let allContentDataMasterArray = []; 
 
-        // Check karein ke kya user login hai ya nahi
-document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        // Agar token nahi mila, iska matlab user naya hai!
-        // Use auto-redirect kar dein auth.html ya login page par
-        window.location.href = "auth.html"; 
-    } else {
-        console.log("Welcome! User already logged in.");
-    }
-});
-        
-        // Mobile Menu Toggle
-        const menuBtn = document.getElementById('menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-
-        // Slider Scroll Function
-        function scrollSlider(containerId, direction) {
-            const container = document.getElementById(containerId);
-            const scrollStep = 230; 
-            if (direction === 'left') { container.scrollLeft -= scrollStep; } 
-            else { container.scrollLeft += scrollStep; }
-        }
-
-        // ================= 🔥 LIVE DYNAMIC AUTO-GENERATING CATEGORY SYSTEM =================
-       // ================= 🔥 LIVE DYNAMIC AUTO-GENERATING CATEGORY SYSTEM =================
         async function fetchRealNovels() {
-            const wrapper = document.getElementById('dynamic-categories-wrapper');
-
+            const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
             try {
-                const response = await fetch('https://noveltube.onrender.com/api/novels');
-                const novels = await response.json(); 
-
-                console.log("Backend Novels Data:", novels);
-
-                if (Array.isArray(novels) && novels.length > 0) {
-                    wrapper.innerHTML = ""; // Loader saaf karein
-
-                    const groupedCategories = {};
-
-                    // 1. Saare novels ko unki dynamic category ke mutabiq group karein
-                    novels.forEach(novel => {
-                        const catName = novel.category || "Newly Uploaded";
-                        if (!groupedCategories[catName]) {
-                            groupedCategories[catName] = [];
-                        }
-                        groupedCategories[catName].push(novel);
-                    });
-
-                    // 2. Har category ke liye alag Section aur Slider HTML render karein
-                    Object.keys(groupedCategories).forEach(categoryTitle => {
-                        const categoryNovels = groupedCategories[categoryTitle];
-                        
-                        const safeSliderId = categoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '-') + "-slider";
-
-                        let starColor = "text-indigo-500";
-                        if(categoryTitle.toLowerCase().includes('romantic') || categoryTitle.toLowerCase().includes('romance')) starColor = "text-rose-500";
-                        if(categoryTitle.toLowerCase().includes('trending')) starColor = "text-amber-500";
-
-                        let cardsHTML = "";
-                        categoryNovels.forEach(novel => {
-                            let innerCoverHTML = "";
-                            if (novel.coverImage || novel.image) {
-                                innerCoverHTML = `<img src="${novel.coverImage || novel.image}" alt="Novel Cover" class="w-full h-full object-cover block">`;
-                            } else {
-                                innerCoverHTML = `
-                                    <div class="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 p-2 flex flex-col justify-between text-white text-center select-none">
-                                        <span class="text-[9px] font-bold tracking-widest uppercase opacity-75">NovelTube</span>
-                                        <span class="text-[11px] font-bold line-clamp-3 leading-tight my-auto px-0.5">${novel.title}</span>
-                                        <span class="text-[8px] opacity-90 truncate">By: ${novel.author || 'Writer'}</span>
-                                    </div>
-                                `;
-                            }
-
-                            // 🔥 NEW LAYOUT: Image upar aur Text niche set kar diya hy
-                            cardsHTML += `
-                                 <a href="novel-detail.html?id=${novel._id || novel.id}" class="w-[105px] sm:w-[130px] md:w-[140px] flex-shrink-0 flex flex-col snap-start group cursor-pointer mb-2">
-                                    <div class="w-full h-[155px] sm:h-[190px] md:h-[205px] bg-slate-200 rounded-lg overflow-hidden shadow-sm border border-slate-100 flex items-center justify-center relative group-hover:shadow-md group-hover:scale-[1.01] transition duration-200">
-                                        ${innerCoverHTML}
-                                    </div>
-                                    <div class="mt-2 px-0.5 text-left">
-                                        <h3 class="text-[11px] sm:text-xs font-bold text-slate-800 line-clamp-1 leading-tight group-hover:text-indigo-600 transition" title="${novel.title}">
-                                            ${novel.title}
-                                        </h3>
-                                        <p class="text-[9px] sm:text-[10px] text-slate-500 truncate mt-0.5">
-                                            By ${novel.author || 'Unknown'}
-                                        </p>
-                                    </div>
-                                </a>
-                            `;
-                        });
-
-                        wrapper.innerHTML += `
-                            <section class="w-full">
-                                <div class="flex justify-between items-center mb-3 px-0.5">
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="text-sm ${starColor}">★</span>
-                                        <h2 class="text-base md:text-xl font-bold text-slate-900 capitalize">${categoryTitle}</h2>
-                                    </div>
-                                    <div class="hidden sm:flex space-x-1.5">
-                                        <button onclick="scrollSlider('${safeSliderId}', 'left')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">←</button>
-                                        <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">→</button>
-                                    </div>  
-                                </div>
-                                <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide snap-x scroll-smooth w-full">
-                                    ${cardsHTML}
-                                </div>
-                            </section>
-                        `;
-                    });
-
-                } else {
-                    wrapper.innerHTML = `<p class="text-xs text-slate-400 p-3 italic text-center">Koi novel nahi mila. Admin page se upload karein! 📚</p>`;
-                }
-
+                const response = await fetch(`${API_BASE_URL}/novels`);
+                if (!response.ok) throw new Error("Server failure code returned");
+                
+                allContentDataMasterArray = await response.json();
+                renderCategorizedDataUI(allContentDataMasterArray);
             } catch (error) {
                 console.error("Fetch Error:", error);
-                wrapper.innerHTML = `<p class="text-xs text-rose-500 p-3 font-medium text-center">Server se connect nahi ho paa raha. Check karein backend server chal raha hai?</p>`;
+                wrapper.innerHTML = `<p class="text-xs text-rose-500 p-3 font-medium text-center">Server se connect nahi ho paa raha.</p>`;
             }
         }
-        window.onload = fetchRealNovels;
+
+        function performLiveFilterSearch() {
+            const query = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+            
+            if(!query) {
+                renderCategorizedDataUI(allContentDataMasterArray);
+                return;
+            }
+
+            const filtered = allContentDataMasterArray.filter(item => {
+                const matchTitle = item.title ? item.title.toLowerCase().includes(query) : false;
+                const matchAuthor = item.author ? item.author.toLowerCase().includes(query) : false;
+                const matchCategory = item.category ? item.category.toLowerCase().includes(query) : false;
+                return matchTitle || matchAuthor || matchCategory;
+            });
+
+            renderCategorizedDataUI(filtered, true);
+        }
+
+        function renderCategorizedDataUI(itemsList, isSearching = false) {
+            const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
+            
+            if (itemsList.length === 0) {
+                wrapper.innerHTML = `<p class="text-xs text-slate-400 p-10 italic text-center">Koi matching novel ya article nahi mila! 📚</p>`;
+                return;
+            }
+
+            if (isSearching) {
+                let cardsHTML = itemsList.map(item => generateCardMarkup(item)).join('');
+                wrapper.innerHTML = `
+                    <section class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h2 class="heading-font text-lg font-bold tracking-tight text-slate-900">🔍 Search Results (${itemsList.length})</h2>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                            ${cardsHTML}
+                        </div>
+                    </section>
+                `;
+                return;
+            }
+
+            const groups = {};
+            itemsList.forEach(item => {
+                const cat = item.category || 'General';
+                if (!groups[cat]) groups[cat] = [];
+                groups[cat].push(item);
+            });
+
+            wrapper.innerHTML = "";
+            Object.keys(groups).forEach((categoryName, idx) => {
+                const categoryItems = groups[categoryName];
+                const safeSliderId = `slider_${idx}`;
+                
+                let cardsHTML = categoryItems.map(item => generateCardMarkup(item)).join('');
+
+                wrapper.innerHTML += `
+                    <section class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h2 class="heading-font text-lg font-bold tracking-tight text-slate-900">${categoryName}</h2>
+                            <div class="flex space-x-1">
+                                <button onclick="scrollSlider('${safeSliderId}', 'left')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">←</button>
+                                <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold">→</button>
+                            </div>  
+                        </div>
+                        <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide snap-x scroll-smooth w-full">
+                            ${cardsHTML}
+                        </div>
+                    </section>
+                `;
+            });
+        }
+
+        // 🛠️ Modified Card Markup: Views Count (👁️) Completely Removed For Privacy
+        function generateCardMarkup(item) {
+            const cleanDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : '';
+            const typeBadgeColor = item.contentType === 'article' ? 'bg-amber-500' : 'bg-indigo-600';
+            const typeLabel = item.contentType === 'article' ? 'Article' : 'Novel';
+
+            return `
+                <div class="w-[140px] sm:w-[170px] bg-white rounded-2xl border border-slate-100 p-2 shadow-xs hover:shadow-md transition duration-200 snap-start flex-shrink-0 relative group">
+                    <span class="absolute top-3 left-3 z-10 ${typeBadgeColor} text-white text-[9px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-sm">
+                        ${typeLabel}
+                    </span>
+                    <div class="overflow-hidden rounded-xl bg-slate-100 aspect-[3/4] relative">
+                        <img src="${item.coverImage}" alt="Cover" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">
+                    </div>
+                    <div class="mt-2 space-y-0.5 px-0.5">
+                        <h3 class="text-xs font-bold text-slate-900 truncate tracking-tight">${item.title}</h3>
+                        <p class="text-[10px] text-slate-500 font-medium truncate">By ${item.author}</p>
+                        
+                        <div class="flex items-center justify-between text-[9px] font-bold text-slate-400 pt-1 border-t border-slate-50 mt-1">
+                            <span>Published</span>
+                            <span>${cleanDate}</span>
+                        </div>
+                    </div>
+                    <a href="novel-detail.html?id=${item._id}" class="absolute inset-0 z-20"></a>
+                </div>
+            `;
+        }
+
+        function scrollSlider(id, direction) {
+            const slider = document.getElementById(id);
+            const amt = direction === 'left' ? -200 : 200;
+            slider.scrollBy({ left: amt, behavior: 'smooth' });
+        }
+
+     // 🔐 Yeh function check karega aur button ko ghaib karega
+function hideSignupIfLoggedIn() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        const joinBtn = document.getElementById('joinBtn');
+        const mobileJoinBtn = document.getElementById('mobileJoinBtn');
+        
+        if (joinBtn) joinBtn.classList.add('hidden');
+        if (mobileJoinBtn) mobileJoinBtn.classList.add('hidden');
+    }
+}
+
+// ⚡ Jab page load ho toh dono kaam ek sath hon
+window.onload = function() {
+    fetchRealNovels();       // Tumhara purana novels load karne wala function
+    hideSignupIfLoggedIn();  // Button ko ghaib karne wala function
+};
+
+
     </script>
 </body>
 </html>

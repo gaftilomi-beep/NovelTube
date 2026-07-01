@@ -17,21 +17,21 @@
             </div>
             <div class="flex space-x-3">
                 <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">← Website Home</a>
-                <a href="upload.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload Novel</a>
+                <a href="upload.html" class="bg-indigo-600 hover:bg-indigo-50 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload Studio</a>
             </div>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Views</p>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Genuine Total Views</p>
                 <p id="statViews" class="text-2xl font-black text-indigo-400 mt-1">0</p>
             </div>
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Novels</p>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Items (Novels/Articles)</p>
                 <p id="statNovels" class="text-2xl font-black text-emerald-400 mt-1">0</p>
             </div>
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Chapters</p>
+                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Episodes</p>
                 <p id="statChapters" class="text-2xl font-black text-amber-400 mt-1">0</p>
             </div>
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
@@ -41,19 +41,21 @@
         </div>
 
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-            <h2 class="text-xl font-bold text-indigo-400 border-b border-slate-700 pb-2">📚 Novels Studio</h2>
+            <h2 class="text-xl font-bold text-indigo-400 border-b border-slate-700 pb-2">📚 Library Studio Content Engine</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase bg-slate-900/40">
                             <th class="p-3">Cover</th>
-                            <th class="p-3">Novel Title</th>
-                            <th class="p-3">Chapters</th>
+                            <th class="p-3">Title Name</th>
+                            <th class="p-3">Type</th>
+                            <th class="p-3">Genuine Views</th>
+                            <th class="p-3">Episodes/Parts</th>
                             <th class="p-3 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="novelsTableBody" class="text-sm divide-y divide-slate-700/50">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -62,11 +64,9 @@
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <div>
                     <h2 class="text-xl font-bold text-indigo-400">👥 User Management Center</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Registered users ko track karein, block karein ya delete karein.</p>
                 </div>
                 <span id="totalUsersCount" class="bg-indigo-950 text-indigo-400 text-xs font-bold px-3 py-1 rounded-full border border-indigo-800">0 Users</span>
             </div>
-            
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -79,9 +79,6 @@
                         </tr>
                     </thead>
                     <tbody id="usersTableBody" class="text-sm divide-y divide-slate-700/50">
-                        <tr>
-                            <td colspan="5" class="p-4 text-center text-slate-500 text-xs">Loading users data...</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -91,71 +88,57 @@
 
     <div id="chapterModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-indigo-400">➕ Add New Chapter</h3>
+            <h3 class="text-lg font-bold text-indigo-400">➕ Add New Episode/Section</h3>
             <input type="hidden" id="modalNovelId">
             <form id="chapterForm" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Chapter Title / Number</label>
-                    <input type="text" id="nextChapterTitle" required placeholder="e.g., Chapter 15: Naya Safar" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Title / Label Name</label>
+                    <input type="text" id="nextChapterTitle" required placeholder="e.g., Episode 15" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Chapter File (.txt)</label>
-                    <input type="file" id="nextChapterFile" required accept=".txt" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select File (.pdf)</label>
+                    <input type="file" id="nextChapterFile" required accept=".pdf" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
                 </div>
                 <div class="flex justify-end space-x-3 pt-2">
                     <button type="button" onclick="closeChapterModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
-                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition">Save Chapter</button>
+                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-50 text-xs font-bold transition">Save Content</button>
                 </div>
             </form>
         </div>
     </div>
 
- <script>
-        // 🎯 FIXED: URL sabse upar set kar diya taake password check ko sahi rasta mile
-        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-            ? 'https://noveltube.onrender.com/api' 
-            : '/api';
+    <script>
+        const API_BASE_URL = 'https://noveltube.onrender.com/api';
 
-        // 🔒 SECURE PASSWORD LOCK
         async function checkAdminAccess() {
             if (sessionStorage.getItem('admin_authenticated') === 'true') {
-                return; // Agar ek baar password de diya hai toh dubara nahi maangega
-            }
-
-            const password = prompt("🔐 Admin Security: Khas Admin Password Darj Karein:");
-            
-            if (!password) {
-                window.location.href = 'index.html';
+                initDashboard();
                 return;
             }
+            const password = prompt("🔐 Admin Security Pin Code:");
+            if (!password) { window.location.href = 'index.html'; return; }
 
             try {
-                // 🎯 FIXED: Ab ye backend port 5001 par hi request bheje ga bina crash kiye
                 const response = await fetch(`${API_BASE_URL}/admin/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
                 const data = await response.json();
-
                 if (data.success) {
                     sessionStorage.setItem('admin_authenticated', 'true');
-                    initDashboard(); // Password sahi hone par data load karo
+                    initDashboard();
                 } else {
-                    alert("❌ Galat Password! Access Denied.");
+                    alert("❌ Galat Password!");
                     window.location.href = 'index.html';
                 }
             } catch (error) {
-                console.error("Security check failed:", error);
-                alert("🚨 Backend Server se rabta nahi ho pa raha! Pehle node server.js chalayein.");
                 window.location.href = 'index.html';
             }
         }
 
-        // Page load hote hi sabse pehle password check trigger hoga
         checkAdminAccess();
 
-        // 1. Analytics Load Karna
         async function fetchSystemAnalytics() {
             try {
                 const response = await fetch(`${API_BASE_URL}/analytics/system`);
@@ -165,45 +148,57 @@
                     document.getElementById('statNovels').innerText = data.totalNovels || 0;
                     document.getElementById('statChapters').innerText = data.totalChapters || 0;
                 }
-            } catch (error) {
-                console.error("Analytics fetch error:", error);
-            }
+            } catch (error) { console.error(error); }
         }
 
-        // 2. Novels Data Populate Karna
         async function loadAdminDashboard() {
             const tableBody = document.getElementById('novelsTableBody');
             try {
                 const response = await fetch(`${API_BASE_URL}/novels`);
-                if (!response.ok) throw new Error("Failed to load novels");
-                const novels = await response.json();
+                if (!response.ok) throw new Error("Load failed");
+                const list = await response.json();
                 
-                if (novels.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 text-xs">No novels found.</td></tr>`;
+                if (list.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">No entries found.</td></tr>`;
                     return;
                 }
 
-                tableBody.innerHTML = novels.map(novel => `
-                    <tr class="hover:bg-slate-700/20 transition-colors">
-                        <td class="p-3">
-                            <img src="${novel.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Novel'">
-                        </td>
-                        <td class="p-3 font-semibold text-slate-200">${novel.title}</td>
-                        <td class="p-3 text-slate-400 text-xs">${novel.chapters ? novel.chapters.length : 0} Chapters</td>
-                        <td class="p-3 text-center">
-                            <button onclick="openChapterModal('${novel._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow transition">
-                                ➕ Add Chapter
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+                tableBody.innerHTML = list.map(item => {
+                    const typeLabel = item.contentType === 'article' ? '📰 Article' : '📚 Novel';
+                    return `
+                        <tr class="hover:bg-slate-700/20 transition-colors">
+                            <td class="p-3">
+                                <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
+                            </td>
+                            <td class="p-3 font-semibold text-slate-200">${item.title}</td>
+                            <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
+                            <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
+                            <td class="p-3 text-slate-400 text-xs">${item.chapters ? item.chapters.length : 0} Items</td>
+                            <td class="p-3 text-center space-x-2">
+                                <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
+                                    ➕ Add Part
+                                </button>
+                                <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
+                                    🗑️ Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (error) {
-                console.error("Error loading novels:", error);
-                tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400 text-xs">Error loading novels data.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
             }
         }
 
-        // 3. Users Fetch Karke Table Me Dikhana
+        async function deleteNovel(id) {
+            if (!confirm("⚠️ WARNING: Kya aap permanently delete karna chahte hain?")) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels/${id}`, { method: 'DELETE' });
+                if (response.ok) { alert("🗑️ Entry deleted successfully!"); initDashboard(); }
+            } catch (error) { alert("🚨 Action fail."); }
+        }
+
+        // Users rendering logic stream
         async function loadUsers() {
             const tableBody = document.getElementById('usersTableBody');
             const countBadge = document.getElementById('totalUsersCount');
@@ -211,104 +206,58 @@
             
             try {
                 const response = await fetch(`${API_BASE_URL}/users`);
-                if (!response.ok) throw new Error("Users load nahi ho sakay");
-                
+                if (!response.ok) return;
                 const users = await response.json();
                 countBadge.innerText = `${users.length} Users`;
                 if(statUsersElement) statUsersElement.innerText = users.length;
                 
-                if (users.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 text-xs">No users registered yet.</td></tr>`;
-                    return;
-                }
-                
-                tableBody.innerHTML = users.map(user => {
-                    const isBlocked = user.isBlocked || false;
-                    return `
-                        <tr class="hover:bg-slate-700/30 transition-colors">
-                            <td class="p-3 font-mono text-xs text-slate-500">${user._id}</td>
-                            <td class="p-3 font-semibold text-slate-200">${user.username || 'N/A'}</td>
-                            <td class="p-3 text-slate-400 text-xs">${user.email}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${isBlocked ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
-                                    ${isBlocked ? 'Blocked' : 'Active'}
-                                </span>
-                            </td>
-                            <td class="p-3 text-center space-x-2">
-                                <button onclick="toggleBlockUser('${user._id}', ${isBlocked})" class="px-2.5 py-1 text-xs font-bold rounded-lg transition ${isBlocked ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-amber-600 hover:bg-amber-500 text-white'}">
-                                    ${isBlocked ? 'Unblock' : 'Block'}
-                                </button>
-                                <button onclick="deleteUser('${user._id}')" class="px-2.5 py-1 text-xs font-bold bg-red-600 hover:bg-red-500 text-white rounded-lg transition">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (error) {
-                console.error("Error loading users:", error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400 text-xs">❌ Users data load nahi ho saka.</td></tr>`;
-            }
+                tableBody.innerHTML = users.map(user => `
+                    <tr class="hover:bg-slate-700/30 transition-colors">
+                        <td class="p-3 font-mono text-xs text-slate-500">${user._id}</td>
+                        <td class="p-3 font-semibold text-slate-200">${user.username || 'N/A'}</td>
+                        <td class="p-3 text-slate-400 text-xs">${user.email}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${user.isBlocked ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                                ${user.isBlocked ? 'Blocked' : 'Active'}
+                            </span>
+                        </td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick="toggleBlockUser('${user._id}', ${user.isBlocked || false})" class="px-2 py-1 text-xs font-bold rounded-lg ${user.isBlocked ? 'bg-emerald-600' : 'bg-amber-600'} text-white">
+                                ${user.isBlocked ? 'Unblock' : 'Block'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.log(e); }
         }
 
-        // 4. User Block/Unblock Logic
-        async function toggleBlockUser(userId, currentStatus) {
-            const action = currentStatus ? "unblock" : "block";
-            if (!confirm(`Kya aap is user ko pakka ${action} karna chahte hain?`)) return;
-            
+        async function toggleBlockUser(userId, isBlocked) {
             try {
-                const response = await fetch(`${API_BASE_URL}/users/${userId}/toggle-block`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                if (response.ok) {
-                    alert(`🎉 User successfully ${action}ed!`);
-                    loadUsers();
-                } else {
-                    alert("❌ Action failed.");
-                }
-            } catch (error) {
-                console.error("Block status error:", error);
-            }
+                const response = await fetch(`${API_BASE_URL}/users/${userId}/toggle-block`, { method: 'PATCH' });
+                if (response.ok) loadUsers();
+            } catch (e) { console.log(e); }
         }
 
-        // 5. User Account Permanently Delete Karna
-        async function deleteUser(userId) {
-            if (!confirm("⚠️ WARNING: Kya aap is user ko permanently delete karna chahte hain?")) return;
-            
+        document.getElementById('chapterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('modalNovelId').value;
+            const submitBtn = document.getElementById('modalSubmitBtn');
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('chapterTitle', document.getElementById('nextChapterTitle').value);
+            formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
+
             try {
-                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert("🗑️ User profile has been deleted successfully!");
-                    loadUsers();
-                } else {
-                    alert("❌ Deletion failed.");
-                }
-            } catch (error) {
-                console.error("Delete user error:", error);
-            }
-        }
+                const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { method: 'POST', body: formData });
+                if (response.ok) { closeChapterModal(); initDashboard(); }
+            } catch (error) { console.error(error); } finally { submitBtn.disabled = false; }
+        });
 
-        function openChapterModal(id) {
-            document.getElementById('modalNovelId').value = id;
-            document.getElementById('chapterModal').classList.remove('hidden');
-        }
+        function openChapterModal(id) { document.getElementById('modalNovelId').value = id; document.getElementById('chapterModal').classList.remove('hidden'); }
+        function closeChapterModal() { document.getElementById('chapterModal').classList.add('hidden'); document.getElementById('chapterForm').reset(); }
 
-        function closeChapterModal() {
-            document.getElementById('chapterModal').classList.add('hidden');
-            document.getElementById('chapterForm').reset();
-        }
-
-        // Initializer Updates
-        function initDashboard() {
-            fetchSystemAnalytics();
-            loadAdminDashboard();
-            loadUsers(); 
-        }
+        function initDashboard() { fetchSystemAnalytics(); loadAdminDashboard(); loadUsers(); }
     </script>
 </body>
 </html>

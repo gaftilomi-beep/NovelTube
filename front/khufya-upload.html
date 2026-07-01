@@ -5,237 +5,289 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Upload - NovelTube</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Jameel Noori Nastaleeq';
+            src: url('https://cdn.jsdelivr.net/gh/subbanyusuf/jameel-noori-nastaleeq@master/Jameel%20Noori%20Nastaleeq.ttf') format('truetype');
+        }
+        .font-urdu {
+            font-family: 'Jameel Noori Nastaleeq', 'Urdu Typesetting', 'Jonameel Noori', serif;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 flex items-center justify-center p-4 md:p-8">
 
     <div class="w-full max-w-2xl bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 space-y-6">
         
         <div class="text-center">
-            <h2 class="text-2xl font-black tracking-tight text-indigo-400">📚 Novel Studio</h2>
-            <p class="text-xs text-slate-400 mt-1">PC se files upload karein aur chapters ki list banayein</p>
+            <h2 id="pageMainHeading" class="text-2xl font-black tracking-tight text-indigo-400">📚 Content Management Studio</h2>
+            <p class="text-xs text-slate-400 mt-1">Select karein ke aap Novel upload kar rahe hain ya Article</p>
         </div>
 
         <form id="masterUploadForm" class="space-y-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase">Novel Name</label>
-                    <input type="text" id="title" required class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Content Type</label>
+                    <select id="contentType" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100 font-bold" onchange="handleTypeChange()">
+                        <option value="novel">📚 Novel</option>
+                        <option value="article">📰 Article</option>
+                    </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase">Writer Name</label>
-                    <input type="text" id="author" placeholder="e.g., Nimra Ahmed" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
+                    <label id="categoryLabel" class="block text-xs font-bold text-slate-400 uppercase">Novel Category / Genre</label>
+                    <div class="flex gap-2 mt-1">
+                        <select id="categorySelect" required class="flex-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                            </select>
+                        <button type="button" onclick="addNewCategoryPrompt()" class="bg-indigo-600 hover:bg-indigo-500 px-3 rounded-xl text-xs font-bold transition">+</button>
+                    </div>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase">About Novel</label>
-                <textarea id="description" required class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white h-20 focus:outline-indigo-500" placeholder="Novel ki kahani..."></textarea>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label id="titleLabel" class="block text-xs font-bold text-slate-400 uppercase">Novel Name</label>
+                    <input type="text" id="title" required class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100" placeholder="Enter title...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Writer Name / Author</label>
+                    <input type="text" id="author" required class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100" placeholder="e.g., Nimra Ahmed">
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase">Cover Image (PC File)</label>
-                    <input type="file" id="coverImage" accept="image/*" required class="w-full mt-1 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                    <label class="block text-xs font-bold text-slate-400 uppercase">Cover Image</label>
+                    <input type="file" id="coverImage" required accept="image/*" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-slate-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-950 file:text-indigo-400 hover:file:bg-indigo-900">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase">Status</label>
-                    <select id="status" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500">
-                        <option value="Completed">Completed</option>
-                        <option value="Ongoing">Ongoing</option>
+                    <select id="status" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                        <option value="Ongoing">Ongoing (Jari Hai)</option>
+                        <option value="Completed">Completed (Mukammal)</option>
                     </select>
                 </div>
             </div>
 
-            <div class="p-4 bg-slate-900/40 border border-slate-700 rounded-xl space-y-3">
-                <label class="block text-xs font-bold text-slate-400 uppercase">Novel Category</label>
-                <select id="categorySelect" onchange="toggleCustomCategory()" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-indigo-500 font-medium">
-                    <option value="Trending Novels">Trending Novels</option>
-                    <option value="Newly Uploaded">Newly Uploaded</option>
-                    <option value="Romantic Novels">Romantic Novels</option>
-                    <option value="CREATE_NEW">➕ + Create New Category...</option>
-                </select>
-                
-                <input type="text" id="customCategoryInput" placeholder="Type new category name (e.g., Action, Suspense, Horror)" class="hidden w-full mt-2 p-2.5 bg-slate-900 border-2 border-indigo-500 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 placeholder-slate-500">
+            <div>
+                <label id="descLabel" class="block text-xs font-bold text-slate-400 uppercase">Novel Short Description (Urdu Nastaleeq Output)</label>
+                <textarea id="description" required rows="3" class="font-urdu text-xl w-full mt-1 p-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-indigo-500 text-slate-100 text-right" style="direction: rtl;" placeholder="یہاں کہانی کا خلاصہ لکھیں..."></textarea>
             </div>
 
-            <div class="p-4 bg-indigo-950/40 border border-indigo-900/60 rounded-xl">
-                <label class="block text-xs font-bold text-indigo-400 uppercase">Kya is novel ke Chapters hain?</label>
-                <select id="hasChapters" onchange="toggleFormLogic()" class="w-full mt-1.5 p-2.5 bg-slate-900 border border-indigo-800 font-bold rounded-xl text-sm text-indigo-300 focus:outline-indigo-500">
-                    <option value="no">No (Single Book PDF)</option>
-                    <option value="yes">Yes (Multiple Chapters)</option>
-                </select>
-            </div>
-
-            <div id="singlePdfSection" class="p-4 bg-slate-900/50 border border-slate-700 rounded-xl">
-                <label class="block text-xs font-bold text-slate-400 uppercase">Upload Full Novel PDF (PC File)</label>
-                <input type="file" id="mainPdf" accept=".pdf" required class="w-full mt-2 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer">
-            </div>
-
-            <div id="chapterSection" class="hidden p-4 bg-slate-900/80 border border-dashed border-slate-600 rounded-xl space-y-4">
-                <p class="text-xs font-black text-indigo-400 uppercase tracking-wider">➕ Add Chapters One by One</p>
-               
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400">Chapter Title</label>
-                        <input type="text" id="chapterTitleInput" placeholder="e.g., Chapter 1" class="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400">Chapter PDF (PC File)</label>
-                        <input type="file" id="chapterPdfInput" accept=".pdf" class="w-full mt-1 text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
-                    </div>
+            <div id="chapterControllerBox" class="bg-slate-900/40 p-4 rounded-xl border border-slate-700/50 space-y-4">
+                <div>
+                    <label id="hasChaptersLabel" class="block text-xs font-bold text-slate-400 uppercase">Kya is Novel ke Episodes / Chapters hain?</label>
+                    <select id="hasChapters" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100" onchange="toggleUploadMode()">
+                        <option value="no">Nahi (Aik hi Mukammal PDF File Hai)</option>
+                        <option value="yes">Haan (Alag Alag Episodes List Hai)</option>
+                    </select>
                 </div>
 
-                <button type="button" onclick="addChapterToArray()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold p-2 rounded-xl text-xs transition cursor-pointer">
-                    + Add This Chapter To List
-                </button>
+                <div id="singleUploadBlock">
+                    <label id="mainPdfLabel" class="block text-xs font-bold text-slate-400 uppercase">Upload Mukammal Novel PDF</label>
+                    <input type="file" id="mainPdf" accept=".pdf" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-slate-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-950 file:text-indigo-400 hover:file:bg-indigo-900">
+                </div>
 
-                <div class="pt-2">
-                    <p class="text-xs font-bold text-slate-400 mb-2">Added Chapters List:</p>
-                    <div id="addedChaptersContainer" class="space-y-2 max-h-40 overflow-y-auto pr-1">
-                        <p class="text-xs text-slate-500 italic">Abhi tak koi chapter add nahi kiya.</p>
+                <div id="multiChapterBlock" class="hidden space-y-3 border-t border-slate-700/50 pt-3">
+                    <div class="text-xs font-bold text-indigo-400 uppercase tracking-wide">📦 Chapter Queue Generator</div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <div>
+                            <label id="tempTitleLabel" class="block text-[11px] font-semibold text-slate-400 uppercase">Episode Name / Number</label>
+                            <input type="text" id="tempChapterTitle" class="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-100" placeholder="e.g., Episode 1">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-400 uppercase">Select Chapter PDF</label>
+                            <input type="file" id="tempChapterFile" accept=".pdf" class="w-full mt-1 text-xs text-slate-400">
+                        </div>
+                        <div class="sm:col-span-2 flex justify-end">
+                            <button type="button" onclick="addChapterToQueue()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition">+ Queue Me Add Karein</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-1 max-h-40 overflow-y-auto" id="queueContainer">
+                        <p class="text-slate-500 text-xs italic text-center py-2">Koi chapter queue me nahi hai.</p>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-black p-3.5 rounded-xl transition text-sm shadow-lg tracking-wide cursor-pointer">
-                Publish Novel 🚀
+            <button type="submit" id="submitMasterBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl text-sm transition tracking-wide shadow-lg shadow-indigo-950/50">
+                🚀 Upload System Process Start Karein
             </button>
         </form>
     </div>
 
     <script>
-        // Global Array jo saare chapters ka data hold karega
+        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+            ? 'https://noveltube.onrender.com/api' 
+            : '/api';
+
         let uploadedChaptersList = [];
 
-        // 1. TOGGLE LOGIC: Fields ko chupana aur validations handle karna
-        function toggleFormLogic() {
-            const hasChapters = document.getElementById('hasChapters').value;
-            const singleSection = document.getElementById('singlePdfSection');
-            const chapterSection = document.getElementById('chapterSection');
-            const mainPdfInput = document.getElementById('mainPdf');
+        // Dynamic Text Adjustments for Novel vs Article
+        function handleTypeChange() {
+            const type = document.getElementById('contentType').value;
+            const titleLabel = document.getElementById('titleLabel');
+            const categoryLabel = document.getElementById('categoryLabel');
+            const descLabel = document.getElementById('descLabel');
+            const chapterControllerBox = document.getElementById('chapterControllerBox');
+            const mainPdfLabel = document.getElementById('mainPdfLabel');
+            const hasChaptersLabel = document.getElementById('hasChaptersLabel');
+            const tempTitleLabel = document.getElementById('tempTitleLabel');
 
-            if (hasChapters === 'yes') {
-                singleSection.classList.add('hidden');
-                mainPdfInput.removeAttribute('required');
-                mainPdfInput.value = ""; // clear single file selection
-                chapterSection.classList.remove('hidden');
+            if (type === 'article') {
+                titleLabel.innerText = "Article Title";
+                categoryLabel.innerText = "Article Category";
+                descLabel.innerText = "Article Short Description (Urdu Nastaleeq Output)";
+                mainPdfLabel.innerText = "Upload Article PDF File";
+                hasChaptersLabel.innerText = "Kya is Article ke parts / sub-sections hain?";
+                tempTitleLabel.innerText = "Section Name / Part Number";
+                document.getElementById('title').placeholder = "Enter article title...";
             } else {
-                singleSection.classList.remove('hidden');
-                mainPdfInput.setAttribute('required', 'true');
-                chapterSection.classList.add('hidden');
-                uploadedChaptersList = []; // list khali kardo
-                renderChaptersList();
+                titleLabel.innerText = "Novel Name";
+                categoryLabel.innerText = "Novel Category / Genre";
+                descLabel.innerText = "Novel Short Description (Urdu Nastaleeq Output)";
+                mainPdfLabel.innerText = "Upload Mukammal Novel PDF";
+                hasChaptersLabel.innerText = "Kya is Novel ke Episodes / Chapters hain?";
+                tempTitleLabel.innerText = "Episode Name / Number";
+                document.getElementById('title').placeholder = "Enter title...";
             }
         }
 
-        // 2. NEW CATEGORY INPUT BOX TOGGLE
-        function toggleCustomCategory() {
-            const select = document.getElementById('categorySelect');
-            const customInput = document.getElementById('customCategoryInput');
-            
-            if (select.value === 'CREATE_NEW') {
-                customInput.classList.remove('hidden'); // Box dikhao
-                customInput.focus();                    // Cursor box ke andar bhej do
+        // Toggle Upload Section Blocks
+        function toggleUploadMode() {
+            const choice = document.getElementById('hasChapters').value;
+            if(choice === 'yes') {
+                document.getElementById('multiChapterBlock').classList.remove('hidden');
+                document.getElementById('singleUploadBlock').classList.add('hidden');
+                document.getElementById('mainPdf').required = false;
             } else {
-                customInput.classList.add('hidden');    // Box dubara chupao
-                customInput.value = '';                 // Likhi hui value clear karo
-            }
-        }
-
-        // 3. LIST BUILDER LOGIC: Chapter ko array mein add karna aur screen par dikhana
-        function addChapterToArray() {
-            const titleInput = document.getElementById('chapterTitleInput');
-            const fileInput = document.getElementById('chapterPdfInput');
-
-            if (!titleInput.value || !fileInput.files[0]) {
-                alert("Galti! Pehle chapter ka naam likhein aur file select karein.");
-                return;
-            }
-
-            // Chapter object bana kar global list mein push karna
-            uploadedChaptersList.push({
-                title: titleInput.value,
-                file: fileInput.files[0] 
-            });
-
-            // Screen par list ko update karna
-            renderChaptersList();
-
-            // Inputs ko khali kar dena
-            titleInput.value = "";
-            fileInput.value = "";
-        }
-
-        // List ko UI par draw karne wala function
-        function renderChaptersList() {
-            const container = document.getElementById('addedChaptersContainer');
-
-            if (uploadedChaptersList.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic">Abhi tak koi chapter add nahi kiya.</p>`;
-                return;
-            }
-
-            container.innerHTML = "";
-            uploadedChaptersList.forEach((ch, index) => {
-                container.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-700/50 p-2 rounded-lg text-xs border border-slate-600">
-                        <span class="font-medium truncate max-w-[70%]">📄 ${ch.title} <span class="text-[10px] text-slate-400">(${Math.round(ch.file.size/1024)} KB)</span></span>
-                        <button type="button" onclick="removeChapter(${index})" class="text-rose-400 hover:text-rose-500 font-bold px-1 transition cursor-pointer">Mitao ✖</button>
-                    </div>
-                `;
-            });
-        }
-
-        // List se chapter remove karne ka function
-        function removeChapter(index) {
-            uploadedChaptersList.splice(index, 1);
-            renderChaptersList();
-        }
-
-        // 4. MAIN FORM SUBMIT ACTION (BACKEND TRANSMISSION)
-        document.getElementById('masterUploadForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const hasChaptersValue = document.getElementById('hasChapters').value;
-            if (hasChaptersValue === 'yes' && uploadedChaptersList.length === 0) {
-                alert("Galti! Aapne 'Chapters: Yes' select kiya hai lekin koi chapter list mein add nahi kiya.");
-                return;
-            }
-
-            // Button ko loading state mein le kar jaana
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerText;
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Publishing Novel & Files... Please Wait... ⏳";
-
-            const formData = new FormData();
-            formData.append('title', document.getElementById('title').value);
-            formData.append('author', document.getElementById('author').value || 'Unknown Writer');
-            formData.append('description', document.getElementById('description').value);
-            formData.append('status', document.getElementById('status').value);
-            formData.append('hasChapters', hasChaptersValue === 'yes');
-
-            // 🔥 CATEGORY CHECK Logic:
-            let finalCategory = document.getElementById('categorySelect').value;
-            if (finalCategory === 'CREATE_NEW') {
-                finalCategory = document.getElementById('customCategoryInput').value.trim();
-                
-                if (!finalCategory) {
-                    alert("Galti! Please apni naye category ka naam box mein type karein.");
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = originalBtnText;
-                    return;
+                document.getElementById('multiChapterBlock').classList.add('hidden');
+                document.getElementById('singleUploadBlock').classList.remove('hidden');
+                if(document.getElementById('hasChapters').offsetParent !== null) {
+                    document.getElementById('mainPdf').required = true;
                 }
             }
-            formData.append('category', finalCategory); // Send to backend
+        }
 
-            // Cover File
+        // Add item to temporary upload state queue array
+        function addChapterToQueue() {
+            const titleInput = document.getElementById('tempChapterTitle');
+            const fileInput = document.getElementById('tempChapterFile');
+
+            if(!titleInput.value || !fileInput.files[0]) {
+                alert("Galti: Meharbani karke pehle Chapter Title aur PDF select karein!");
+                return;
+            }
+
+            uploadedChaptersList.push({
+                title: titleInput.value,
+                file: fileInput.files[0]
+            });
+
+            titleInput.value = "";
+            fileInput.value = "";
+            renderQueueUI();
+        }
+
+        // Queue visual synchronized renderer
+        function renderQueueUI() {
+            const container = document.getElementById('queueContainer');
+            if(uploadedChaptersList.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-xs italic text-center py-2">Koi chapter queue me nahi hai.</p>`;
+                return;
+            }
+
+            container.innerHTML = uploadedChaptersList.map((ch, index) => `
+                <div class="flex items-center justify-between text-xs bg-slate-900 p-2 rounded-lg border border-slate-800">
+                    <span class="font-semibold text-slate-300 truncate max-w-[200px]">📍 ${ch.title}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] bg-indigo-950 text-indigo-400 px-2 py-0.5 rounded border border-indigo-900">PDF Ready</span>
+                        <button type="button" onclick="removeQueueItem(${index})" class="text-rose-400 hover:text-rose-500 font-bold px-1">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeQueueItem(index) {
+            uploadedChaptersList.splice(index, 1);
+            renderQueueUI();
+        }
+
+        // Load Categories Dynamically from MongoDB Atlas Server
+        async function loadExistingCategories() {
+            const select = document.getElementById('categorySelect');
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories`);
+                if (response.ok) {
+                    const categories = await response.json();
+                    if(categories.length > 0) {
+                        select.innerHTML = categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                    } else {
+                        select.innerHTML = `<option value="General">General</option>`;
+                    }
+                }
+            } catch (error) {
+                console.error("Categories fetch error:", error);
+                select.innerHTML = `<option value="General">General</option>`;
+            }
+        }
+
+        // Add a brand new category on the fly via admin panel prompt module
+        async function addNewCategoryPrompt() {
+            const newCat = prompt("🆕 Nayi Category Ka Naam Likhein (e.g., Romantic, Horror, Tech):");
+            if (!newCat || newCat.trim() === "") return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newCat.trim() })
+                });
+
+                if (response.ok) {
+                    alert(`🎉 Category "${newCat}" add ho gayi!`);
+                    await loadExistingCategories();
+                    document.getElementById('categorySelect').value = newCat.trim();
+                } else {
+                    alert("❌ Category add nahi ho saki ya pehle se majood hai.");
+                }
+            } catch (err) {
+                alert("🚨 Backend operational failure error.");
+            }
+        }
+
+        // Submit form data payload process stream
+        document.getElementById('masterUploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const hasChaptersValue = document.getElementById('hasChapters').value;
+            if (hasChaptersValue === 'yes' && uploadedChaptersList.length === 0) {
+                alert("⚠️ Error: Aapne Multi-Chapter Mode select kiya hai par queue me koi chapter add nahi kiya!");
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitMasterBtn');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Files Compress Aur Upload Ho Rahi Hain... ⏳";
+
+            const formData = new FormData();
+            formData.append('contentType', document.getElementById('contentType').value); // Send Content Type
+            formData.append('title', document.getElementById('title').value);
+            formData.append('author', document.getElementById('author').value);
+            formData.append('category', document.getElementById('categorySelect').value);
+            formData.append('status', document.getElementById('status').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('hasChapters', hasChaptersValue);
+
             const coverImageFile = document.getElementById('coverImage').files[0];
             formData.append('coverImage', coverImageFile);
 
             if (hasChaptersValue === 'no') {
                 const mainPdfFile = document.getElementById('mainPdf').files[0];
-                formData.append('mainPdf', mainPdfFile);
+                if(mainPdfFile) formData.append('mainPdf', mainPdfFile);
             } else {
                 uploadedChaptersList.forEach((ch) => {
                     formData.append(`chapterTitles`, ch.title);
@@ -244,14 +296,13 @@
             }
 
             try {
-                // Request sending to backend
-                const response = await fetch('https://noveltube.onrender.com/api/novels', {
+                const response = await fetch(`${API_BASE_URL}/novels`, {
                     method: 'POST',
                     body: formData
                 });
 
                 if (response.ok) {
-                    alert('🎉 Mubarak ho! Saare chapters aur files ke sath novel upload ho gaya!');
+                    alert('🎉 Mubarak ho! Aapka content successfully platform par upload ho gaya!');
                     location.reload(); 
                 } else {
                     const errData = await response.json();
@@ -261,11 +312,15 @@
                 console.error(error);
                 alert('❌ Server se rabta nahi ho saka. Terminal check karein!');
             } finally {
-                // Button ko back normal state pe laana
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalBtnText;
             }
         });
+
+        window.onload = function() {
+            loadExistingCategories();
+            handleTypeChange();
+        };
     </script>
 </body>
 </html>

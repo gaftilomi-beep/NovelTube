@@ -3,15 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novel Details - NovelTube</title>
+    <title>Details - NovelTube</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Jameel Noori Nastaleeq';
+            src: url('https://cdn.jsdelivr.net/gh/Sajjad26/Jameel-Noori-Nastaleeq-Web@master/Jameel%20Noori%20Nastaleeq.woff2') format('woff2'),
+                 url('https://cdn.jsdelivr.net/gh/subbanyusuf/jameel-noori-nastaleeq@master/Jameel%20Noori%20Nastaleeq.ttf') format('truetype');
+            font-display: swap;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .font-urdu {
+            font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Urdu Typesetting', serif !important;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 2.2 !important;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
 
     <div class="max-w-4xl mx-auto px-4 py-10">
         
         <div id="loading" class="text-center text-slate-500 font-medium py-20">
-            Novel ki tafseelat load ho rahi hain... ⏳
+            Tafseelat load ho rahi hain... ⏳
         </div>
 
         <div id="novelContainer" class="hidden space-y-8">
@@ -26,9 +45,14 @@
                     </div>
                     <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700"></span></p>
                     
+                    <div class="flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 py-1">
+                        <span class="flex items-center gap-1">👁️ <span id="viewCountDisplay" class="text-slate-600">0</span> Views</span>
+                        <span class="flex items-center gap-1">📅 <span id="dateDisplay" class="text-slate-600">--/--/----</span></span>
+                    </div>
+
                     <div class="pt-2">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">About Novel:</h3>
-                        <p id="novelDescription" class="text-sm text-slate-600 mt-1 leading-relaxed"></p>
+                        <h3 id="aboutHeadingText" class="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">About Novel:</h3>
+                        <p id="novelDescription" class="font-urdu text-xl text-slate-800 mt-3 text-right" style="direction: rtl;"></p>
                     </div>
                 </div>
             </div>
@@ -36,8 +60,8 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 
                 <div id="singleNovelSection" class="hidden text-center py-6 space-y-4">
-                    <h2 class="text-lg font-bold text-slate-800">📖 Full Novel Reading Options</h2>
-                    <p class="text-xs text-slate-500">Yeh novel mukammal aik hi file mein available hai.</p>
+                    <h2 id="readingOptionsHeading" class="text-lg font-bold text-slate-800">📖 Full Novel Reading Options</h2>
+                    <p id="readingOptionsSub" class="text-xs text-slate-500">Yeh novel mukammal aik hi file mein available hai.</p>
                     <div class="flex flex-wrap justify-center gap-4">
                         <a id="readOnlineBtn" href="" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-sm transition">Read Online</a>
                         <a id="downloadBtn" href="" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl shadow-sm transition">Download Full PDF</a>
@@ -45,9 +69,9 @@
                 </div>
 
                 <div id="chaptersSection" class="hidden space-y-4">
-                    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">📑 Episodes / Chapters List</h2>
+                    <h2 id="listSectionHeading" class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">📑 Episodes / Chapters List</h2>
                     <div id="chaptersList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -56,31 +80,70 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'https://noveltube.onrender.com/api';
+
+        // FEATURE 3: Anti-Spam Anti-Refresh Trigger Logic
+        async function triggerGenuineView(id) {
+            const storageKey = `view_cooldown_${id}`;
+            const lastViewTime = localStorage.getItem(storageKey);
+            const now = Date.now();
+
+            // 15 Minutes window lockout limit rule for real human validation
+            if (!lastViewTime || (now - parseInt(lastViewTime)) > 15 * 60 * 1000) {
+                try {
+                    await fetch(`${API_BASE_URL}/novels/${id}/view`, { method: 'POST' });
+                    localStorage.setItem(storageKey, now.toString());
+                } catch(err) {
+                    console.log("Analytics stream view registration fail.");
+                }
+            }
+        }
+
         async function fetchNovelDetails() {
             const urlParams = new URLSearchParams(window.location.search);
             const novelId = urlParams.get('id');
 
             if (!novelId) {
-                document.getElementById('loading').innerHTML = "❌ Novel ID nahi mili URL mein!";
+                document.getElementById('loading').innerHTML = "❌ ID nahi mili URL mein!";
                 return;
             }
 
-            try {
-                const response = await fetch(`https://noveltube.onrender.com/api/novels/${novelId}`);
-                if (!response.ok) throw new Error('Novel nahi mila');
-                
-                const novel = await response.json();
+            // Fire view count trigger immediately safely
+            await triggerGenuineView(novelId);
 
-                // Basic Data Binding
-                document.getElementById('novelCover').src = novel.coverImage;
-                document.getElementById('novelTitle').innerText = novel.title;
-                document.getElementById('novelAuthor').innerText = novel.author;
-                document.getElementById('novelDescription').innerText = novel.description;
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels/${novelId}`);
+                if (!response.ok) throw new Error('Content nahi mila');
                 
-                // Status Badge styling
+                const item = await response.json();
+
+                // Dynamic UI Feature 2 Switcher Evaluation
+                const isArticle = item.contentType === 'article';
+                
+                if (isArticle) {
+                    document.getElementById('aboutHeadingText').innerText = "About Article:";
+                    document.getElementById('readingOptionsHeading').innerText = "📰 Full Article Reading Options";
+                    document.getElementById('readingOptionsSub').innerText = "Yeh article padhne ke liye niche diye gaye option par click karein.";
+                    document.getElementById('downloadBtn').innerText = "Download Article PDF";
+                    document.getElementById('listSectionHeading').innerText = "📑 Article Parts / Sections List";
+                }
+
+                // Analytics Display Map
+                document.getElementById('viewCountDisplay').innerText = item.views || 0;
+                if(item.createdAt) {
+                    const cleanDate = new Date(item.createdAt).toLocaleDateString('en-GB');
+                    document.getElementById('dateDisplay').innerText = cleanDate;
+                }
+
+                // Data Binding
+                document.getElementById('novelCover').src = item.coverImage;
+                document.getElementById('novelTitle').innerText = item.title;
+                document.getElementById('novelAuthor').innerText = item.author;
+                document.getElementById('novelDescription').innerText = item.description;
+                
                 const statusBadge = document.getElementById('novelStatus');
-                statusBadge.innerText = novel.status;
-                if(novel.status === 'Ongoing') {
+                statusBadge.innerText = item.status;
+                if(item.status === 'Ongoing') {
                     statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800";
                 } else {
                     statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
@@ -89,17 +152,14 @@
                 const singleSection = document.getElementById('singleNovelSection');
                 const chaptersSection = document.getElementById('chaptersSection');
 
-                // CORE CONDITION CHECKING
-                if (novel.hasChapters === true || (novel.chapters && novel.chapters.length > 0)) {
+                if (item.hasChapters === true || (item.chapters && item.chapters.length > 0)) {
                     singleSection.classList.add('hidden');
                     chaptersSection.classList.remove('hidden');
 
                     const listContainer = document.getElementById('chaptersList');
                     listContainer.innerHTML = ""; 
 
-                    // Loop for multiple chapters with separate Read & Download buttons
-                    novel.chapters.forEach((ch, index) => {
-                        // 🔥 Cloudinary Trick: Adds attachment flag to force download instead of opening in browser
+                    item.chapters.forEach((ch) => {
                         const forceDownloadUrl = ch.chapterPdf ? ch.chapterPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
 
                         listContainer.innerHTML += `
@@ -117,18 +177,15 @@
                         `;
                     });
                 } else {
-                    // Single Novel Mode
                     chaptersSection.classList.add('hidden');
                     singleSection.classList.remove('hidden');
 
-                    // Single Novel Direct Cloudinary Download Link
-                    const singleDownloadUrl = novel.mainPdf ? novel.mainPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
+                    const singleDownloadUrl = item.mainPdf ? item.mainPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
 
-                    document.getElementById('readOnlineBtn').href = novel.mainPdf;
+                    document.getElementById('readOnlineBtn').href = item.mainPdf;
                     document.getElementById('downloadBtn').href = singleDownloadUrl;
                 }
 
-                // Hide loading & show content
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('novelContainer').classList.remove('hidden');
 
