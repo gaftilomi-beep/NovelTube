@@ -11,14 +11,14 @@ dotenv.config();
 const connectDB = require('./config/db.js');
 connectDB();
 // back/server.js mein connectDB(); ke bilkul niche yeh paste karein:
+// 🚨 DATABASE SE PURANA GALAT CATEGORY INDEX KHATAM KARNE KE LIYE CODE:
 mongoose.connection.once('open', async () => {
     try {
-        // Yeh novel collection se category ka hidden unique check mita dega
+        // Yeh line database ke andar se category ka unique check delete kar degi
         await mongoose.connection.db.collection('novels').dropIndex('category_1');
-        console.log("✅ Category ka hidden unique index kamyabi se khatam ho gaya!");
-    } catch (err) {
-        // Agar index pehle se nahi hoga toh error bypass ho jayega
-        console.log("Index clean ya pehle se dropped hai.");
+        console.log("🎉 Database se category ka unique index kamyabi se delete ho gaya!");
+    } catch (error) {
+        console.log("ℹ️ Index pehle se clear hai ya drop karne ki zaroorat nahi.");
     }
 });
 

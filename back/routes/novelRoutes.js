@@ -151,62 +151,76 @@ router.delete('/:id', async (req, res) => {
 });
 
 // ➕ 5. UPDATE ROUTE: Kisi novel mein agla (Next) Chapter add karne ke liye
-router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) => {
+// 📥 1. POST ROUTE: Novel aur Chapters upload karne ke liye (FIXED CATEGORY ISSUE)
+router.post('/', upload.fields([
+    { name: 'coverImage', maxCount: 1 },
+    { name: 'mainPdf', maxCount: 1 }
+]), async (req, res) => {
     try {
-        const { chapterTitle } = req.body;
-        
-        if (!req.file) {
-            return res.status(400).json({ error: 'Galti! Please chapter ki PDF file select karein.' });
+        const { title, author, description, status, category, hasChapters } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ error: 'Novel ka Title lazmi hai!' });
         }
 
-        // Single Chapter Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'noveltube/chapters',
-            resource_type: 'auto'
+        // 🖼️ Cloudinary file paths variables
+        let coverImageUrl = '';
+        let mainPdfUrl = '';
+
+        // Cover Image Cloudinary par upload karein
+        if (req.files && req.files.coverImage) {
+            const coverResult = await cloudinary.uploader.upload(req.files.coverImage[0].path, {
+                folder: 'noveltube/covers'
+            });
+            coverImageUrl = coverResult.secure_url;
+            fs.unlinkSync(req.files.coverImage[0].path); // Temp file clear
+        }
+
+        // Main PDF Cloudinary par upload karein (Agar hasChapters false hai)
+        if (req.files && req.files.mainPdf && (hasChapters === 'false' || hasChapters === false)) {
+            const pdfResult = await cloudinary.uploader.upload(req.files.mainPdf[0].path, {
+                folder: 'noveltube/pdfs',
+                resource_type: 'raw' // PDF ke liye raw lazmi hai
+            });
+            mainPdfUrl = pdfResult.secure_url;
+            fs.unlinkSync(req.files.mainPdf[0].path); // Temp file clear
+        }
+
+        // ⚡ Naya Novel insert karein bina kisi category validation clash ke!
+        const newNovel = new Novel({
+            title,
+            author: author || 'Unknown Writer',
+            description,
+            coverImage: coverImageUrl,
+            status: status || 'Ongoing',
+            category: category ? category.trim() : 'Newly Uploaded',
+            hasChapters: hasChapters === 'true' || hasChapters === true,
+            mainPdf: hasChapters === 'false' || hasChapters === false ? mainPdfUrl : undefined,
+            views: 0
         });
-        const chapterPdfUrl = result.secure_url;
-        
-        fs.unlinkSync(req.file.path); // Temporary local file delete karein
 
-        // MongoDB ke array mein push ($push) karna
-        const updatedNovel = await Novel.findByIdAndUpdate(
-            req.params.id,
-            {
-                $push: {
-                    chapters: {
-                        chapterTitle: chapterTitle || `Chapter`,
-                        chapterPdf: chapterPdfUrl
-                    }
-                }
-            },
-            { new: true }
-        );
+        await newNovel.save();
 
-        res.status(200).json({ message: '🎉 Naya chapter Cloudinary par save ho gaya!', data: updatedNovel });
+        res.status(201).json({ 
+            success: true, 
+            message: '🎉 Novel kamyabi se upload ho gaya!', 
+            data: newNovel 
+        });
+
     } catch (error) {
-        console.error("🔥 Chapter Upload Error:", error);
-        res.status(500).json({ error: 'Chapter save nahi ho saka!', details: error.message });
+        console.error("🔥 Upload Error:", error);
+        res.status(500).json({ error: 'Novel save nahi ho saka!', details: error.message });
     }
 });
-
-// 📊 6. ANALYTICS ROUTE: Total Views aur User counts nikalne ke liye
-router.get('/admin/analytics', async (req, res) => {
+// 🔍 GET ALL CATEGORIES: Saari mojooda categories frontend ko bhejne ke liye
+router.get('/categories', async (req, res) => {
     try {
-        const novels = await Novel.find();
-        let totalViews = 0;
-        novels.forEach(n => {
-            totalViews += (n.views || 0);
-        });
-
-        res.status(200).json({
-            totalNovels: novels.length,
-            totalViews: totalViews,
-            registeredUsers: 148, 
-            activeOnlineUsers: Math.floor(Math.random() * (25 - 5 + 1)) + 5 
-        });
+        // Distinct se database mein mojood saari unique categories nikal aayengi
+        const categories = await Novel.distinct('category');
+        return res.status(200).json(categories);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("🔥 Categories Fetch Error:", error);
+        return res.status(500).json({ error: 'Categories load nahi ho sakeen!' });
     }
 });
-
 module.exports = router;
