@@ -10,6 +10,17 @@ const path = require('path');
 dotenv.config();
 const connectDB = require('./config/db.js');
 connectDB();
+// back/server.js mein connectDB(); ke bilkul niche yeh paste karein:
+mongoose.connection.once('open', async () => {
+    try {
+        // Yeh novel collection se category ka hidden unique check mita dega
+        await mongoose.connection.db.collection('novels').dropIndex('category_1');
+        console.log("✅ Category ka hidden unique index kamyabi se khatam ho gaya!");
+    } catch (err) {
+        // Agar index pehle se nahi hoga toh error bypass ho jayega
+        console.log("Index clean ya pehle se dropped hai.");
+    }
+});
 
 const app = express();
 

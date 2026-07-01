@@ -1,49 +1,49 @@
+// ✅ NOVEL UPLOAD YA CREATE WALE CONTROLLER FUNCTION KO IS TARAH UPDATE KAREIN:
 const Novel = require('../models/Novel');
 
-// 1. Naya Novel Add Karne Ke Liye (Admin Post Feature)
 const createNovel = async (req, res) => {
     try {
-        const { title, description, coverImage, author, genre, status, hasChapters } = req.body;
-        
+        const { title, author, description, status, category, hasChapters } = req.body;
+
+        // 🚨 PURANI GALTI JO APNE KI THI:
+        // const existingCategory = await Novel.findOne({ category }); 
+        // if (existingCategory) return res.status(400).json({ error: "Category already exists!" });
+        // 👆 Agar yeh lines ya is jaisa koi check laga hai, TOH USKO DELETE KAR DEIN!
+
+        // 🖼️ Files path check karne ke liye safe logic
+        const coverImage = req.files && req.files.coverImage ? `/uploads/${req.files.coverImage[0].filename}` : '';
+        const mainPdf = req.files && req.files.mainPdf ? `/uploads/${req.files.mainPdf[0].filename}` : '';
+
+        // ⚡ Naya Novel banayein bina kisi category validation ke clash ke
         const newNovel = new Novel({
             title,
+            author: author || 'Unknown Writer',
             description,
             coverImage,
-            author,
-            genre,
-            status,
-            hasChapters // 🔥 ON/OFF feature shamil hai
+            status: status || 'Ongoing',
+            // .trim() lagane se extra spaces ka masla hal ho jata hai
+            category: category ? category.trim() : 'Newly Uploaded', 
+            hasChapters: hasChapters === 'true' || hasChapters === true,
+            mainPdf: hasChapters === 'false' || hasChapters === false ? mainPdf : undefined,
+            views: 0 // Humne views tracker bhi yahan initialize kar diya
         });
 
-        const savedNovel = await newNovel.save();
-        res.status(201).json({ success: true, message: "Novel successfully created!", data: savedNovel });
+        await newNovel.save();
+        
+        return res.status(201).json({ 
+            success: true, 
+            message: "🎉 Novel kamyabi se upload ho gaya!", 
+            data: newNovel 
+        });
+
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Upload error details:", error);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Novel insert nahi ho saka ya database ka koi masla hai!" 
+        });
     }
 };
 
-// 2. Saare Novels Get Karne Ke Liye (Home Page par dikhane ke liye)
-const getAllNovels = async (req, res) => {
-    try {
-        const novels = await Novel.find().sort({ createdAt: -1 }); 
-        res.status(200).json({ success: true, data: novels });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// 3. Kisi Aik Specific Novel Ki Detail Get Karne Ke Liye (Novel Detail Page)
-const getNovelById = async (req, res) => {
-    try {
-        const novel = await Novel.findById(req.params.id);
-        if (!novel) {
-            return res.status(404).json({ success: false, message: "Novel nahi mila!" });
-        }
-        res.status(200).json({ success: true, data: novel });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// 🔥 VIP LINE: Yeh sab ko export karna zaroori hai taaki routes ko mil sakein!
-module.exports = { createNovel, getAllNovels, getNovelById };
+// Baaki exports check kar lein ke aapka setup kaisa hai
+module.exports = { createNovel };
