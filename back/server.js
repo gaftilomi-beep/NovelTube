@@ -9,15 +9,9 @@ const path = require('path');
 
 dotenv.config();
 
-// 🔌 DATABASE CONNECTION
-// Humne duplicate connectDB() hata diya hai taake aik hi clean connection rahe
-mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI)
-  .then(() => {
-      console.log("🚀 MongoDB Connected Successfully");
-  })
-  .catch((err) => {
-      console.error("🔥 MongoDB Connection Error:", err);
-  });
+// 🔌 CLEAN DATABASE CONNECTION
+const connectDB = require('./config/db.js');
+connectDB(); // Sirf isay chalne dein, duplicate mongoose.connect hata diya hai!
 
 const app = express();
 
@@ -30,9 +24,8 @@ async function trackWebsiteVisit() {
     try {
         const db = mongoose.connection.db;
         
-        // 🚨 FIX: Agar database abhi connect nahi hua, tu yahan se wapas ho jao (Crash mat karo)
+        // 🚨 CRASH GUARD: Agar DB abhi tak background me connect nahi hua, tu wait karein
         if (!db) {
-            console.log("⏳ Global counter: Waiting for database connection...");
             return;
         }
 
