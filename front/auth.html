@@ -48,7 +48,7 @@
             <form id="signupForm" class="space-y-4">
                 <div class="space-y-1">
                     <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
-                    <input type="text" id="signupName" required placeholder="Enter your full name" class="w-full p-3 text-sm bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    <input type="text" id="signupUsername" required placeholder="Enter your full name" class="w-full p-3 text-sm bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
                 </div>
                 <div class="space-y-1">
                     <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
@@ -90,7 +90,6 @@
     <script>
         const API_BASE_URL = 'https://noveltube.onrender.com/api';
 
-        // 🔄 Toggle Sign Up / Login Tabs Interface
         function toggleAuthMode(mode) {
             const title = document.getElementById('authTitle');
             const subtitle = document.getElementById('authSubtitle');
@@ -100,7 +99,7 @@
             const tabLoginBtn = document.getElementById('tabLoginBtn');
             const alertBox = document.getElementById('statusAlert');
             
-            alertBox.classList.add('hidden'); // clear alerts
+            alertBox.classList.add('hidden'); 
 
             if (mode === 'signup') {
                 title.innerText = "Create an Account";
@@ -121,7 +120,6 @@
             }
         }
 
-        // Notification Alerts Controller
         function showAlert(msg, isSuccess = false) {
             const alertBox = document.getElementById('statusAlert');
             alertBox.classList.remove('hidden', 'bg-rose-50', 'text-rose-600', 'bg-emerald-50', 'text-emerald-600');
@@ -133,78 +131,104 @@
             }
         }
 
-        // 📝 Sign Up Form Submit Event
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('signupName').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
+        // 📑 SIGNUP FORM SUBMISSION (Fixed explicit element retrieval)
+        const signupFormElement = document.getElementById('signupForm');
+        if (signupFormElement) {
+            signupFormElement.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('signupUsername').value.trim(); 
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value.trim();
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
-                });
-                const data = await response.json();
+                const submitBtn = signupFormElement.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerText;
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Processing... ⏳";
 
-                if (response.ok) {
-                    showAlert("🎉 Account registered! Switching to login tab...", true);
-                    setTimeout(() => {
-                        toggleAuthMode('login');
-                        document.getElementById('loginEmail').value = email;
-                    }, 1500);
-                } else {
-                    showAlert(data.error || "Registration failed. Try again!");
+                try {
+                    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('userRole', data.user?.role || 'user');
+                        showAlert("🎉 Account created successfully! Logging you in...", true);
+                        
+                        setTimeout(() => {
+                            window.location.href = 'index.html'; 
+                        }, 1200);
+                    } else {
+                        showAlert(data.error || "Signup failed. Try again.");
+                    }
+                } catch (error) {
+                    console.error("Signup Error Log:", error);
+                    showAlert("🚨 Server backend sleep mode mein ho sakta hai ya network block hai. 30 seconds baad dobara dabein.");
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
                 }
-            } catch (error) {
-                showAlert("🚨 Connection failure. Server standard error.");
-            }
-        });
+            });
+        }
 
-        // 🔑 Login Form Submit Event
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
+        // 🔑 LOGIN FORM SUBMISSION
+        const loginFormElement = document.getElementById('loginForm');
+        if (loginFormElement) {
+            loginFormElement.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json();
+                const submitBtn = loginFormElement.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerText;
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Logging in... ⏳";
 
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('userRole', data.user?.role || 'user');
-                    
-                    showAlert("🔓 Login secure! Forwarding dashboard page...", true);
-                    
-                    setTimeout(() => {
-                        if (data.user?.role === 'admin') {
-                            window.location.href = 'dashboar.html';
-                        } else {
-                            window.location.href = 'index.html';
-                        }
-                    }, 1200);
-                } else {
-                    showAlert(data.error || "Invalid username or password credentials.");
+                try {
+                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('userRole', data.user?.role || 'user');
+                        showAlert("🔓 Login secure! Forwarding dashboard page...", true);
+                        
+                        setTimeout(() => {
+                            if (data.user?.role === 'admin') {
+                                window.location.href = 'dashboar.html';
+                            } else {
+                                window.location.href = 'index.html';
+                            }
+                        }, 1200);
+                    } else {
+                        showAlert(data.error || "Invalid username or password credentials.");
+                    }
+                } catch (error) {
+                    console.error("Login Error Log:", error);
+                    showAlert("🚨 Network issue. Server backend offline.");
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
                 }
-            } catch (error) {
-                showAlert("🚨 Network issue. Server backend offline.");
-            }
-        });
+            });
+        }
 
-        // ⚡ Smart Mode Detection Parameter Check on Page Load
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const mode = urlParams.get('mode');
             if (mode === 'login') {
-                toggleAuthMode('login'); // Agar url me ?mode=login ho toh direct login khule
+                toggleAuthMode('login'); 
             } else {
-                toggleAuthMode('signup'); // Default new users ke liye signup khule
+                toggleAuthMode('signup'); 
             }
         }
     </script>

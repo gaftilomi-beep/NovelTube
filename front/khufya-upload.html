@@ -18,7 +18,30 @@
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 flex items-center justify-center p-4 md:p-8">
 
-    <div class="w-full max-w-2xl bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 space-y-6">
+    <!-- 🔒 1. PASSWORD GATE OVERLAY (Yeh sab se pehle dikhega) -->
+    <div id="passwordGate" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
+        <div class="w-full max-w-sm bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-4">
+            <div class="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                🔒
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-lg font-black tracking-tight text-slate-100">Admin Access Required</h3>
+                <p class="text-xs text-slate-400">Meharbani karke is page ko kholne ke liye khufya password darj karein.</p>
+            </div>
+            
+            <div class="space-y-3">
+                <input type="password" id="gatePasswordInput" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100 text-center tracking-widest font-bold" placeholder="••••••••">
+                <button onclick="checkGatePassword()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition tracking-wide shadow-md shadow-indigo-950/50">
+                    Verify & Open Studio 🚀
+                </button>
+            </div>
+            
+            <p id="gateError" class="text-xs text-rose-400 font-semibold hidden animate-pulse">❌ Ghalat Password! Aapko access nahi hai.</p>
+        </div>
+    </div>
+
+    <!-- 📚 2. MAIN CONTENT STUDIO (Default: 'hidden' - Password ke bina bilkul nahi khulega) -->
+    <div id="studioContainer" class="hidden w-full max-w-2xl bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 space-y-6">
         
         <div class="text-center">
             <h2 id="pageMainHeading" class="text-2xl font-black tracking-tight text-indigo-400">📚 Content Management Studio</h2>
@@ -39,7 +62,7 @@
                     <label id="categoryLabel" class="block text-xs font-bold text-slate-400 uppercase">Novel Category / Genre</label>
                     <div class="flex gap-2 mt-1">
                         <select id="categorySelect" required class="flex-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                            </select>
+                        </select>
                         <button type="button" onclick="addNewCategoryPrompt()" class="bg-indigo-600 hover:bg-indigo-500 px-3 rounded-xl text-xs font-bold transition">+</button>
                     </div>
                 </div>
@@ -79,8 +102,8 @@
                 <div>
                     <label id="hasChaptersLabel" class="block text-xs font-bold text-slate-400 uppercase">Kya is Novel ke Episodes / Chapters hain?</label>
                     <select id="hasChapters" class="w-full mt-1 p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-100" onchange="toggleUploadMode()">
-                        <option value="no">Nahi (Aik hi Mukammal PDF File Hai)</option>
-                        <option value="yes">Haan (Alag Alag Episodes List Hai)</option>
+                        <option value="false">Nahi (Aik hi Mukammal PDF File Hai)</option>
+                        <option value="true">Haan (Alag Alag Episodes List Hai)</option>
                     </select>
                 </div>
 
@@ -119,19 +142,41 @@
     </div>
 
     <script>
-        const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
-            ? 'https://noveltube.onrender.com/api' 
-            : '/api';
+        // 🔑 PASSWORD GATE ENGINE
+        function checkGatePassword() {
+            const inputVal = document.getElementById('gatePasswordInput').value.trim();
+            
+            // 👇 Aap is quotation ke andar apna marzi ka password set kar sakte hain
+            const SECRET_PASSWORD = "HamzaTube2026"; 
 
+            if (inputVal === SECRET_PASSWORD) {
+                // Sahi password par gate gayab aur studio active ho jayega
+                document.getElementById('passwordGate').classList.add('hidden');
+                document.getElementById('studioContainer').classList.remove('hidden');
+                loadExistingCategories(); // Sirf tabhi chalega jab access milega
+            } else {
+                // Ghalat password par input clear aur error display
+                document.getElementById('gatePasswordInput').value = "";
+                document.getElementById('gateError').classList.remove('hidden');
+            }
+        }
+
+        // Enter daba kar submit karne ka feature
+        document.getElementById('gatePasswordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkGatePassword();
+            }
+        });
+
+        // --- BAAKI APKA APKI OLD UPLOAD REPAIR LOGIC ---
+        const API_BASE_URL = 'https://noveltube.onrender.com/api';
         let uploadedChaptersList = [];
 
-        // Dynamic Text Adjustments for Novel vs Article
         function handleTypeChange() {
             const type = document.getElementById('contentType').value;
             const titleLabel = document.getElementById('titleLabel');
             const categoryLabel = document.getElementById('categoryLabel');
             const descLabel = document.getElementById('descLabel');
-            const chapterControllerBox = document.getElementById('chapterControllerBox');
             const mainPdfLabel = document.getElementById('mainPdfLabel');
             const hasChaptersLabel = document.getElementById('hasChaptersLabel');
             const tempTitleLabel = document.getElementById('tempTitleLabel');
@@ -155,10 +200,9 @@
             }
         }
 
-        // Toggle Upload Section Blocks
         function toggleUploadMode() {
             const choice = document.getElementById('hasChapters').value;
-            if(choice === 'yes') {
+            if(choice === 'true') {
                 document.getElementById('multiChapterBlock').classList.remove('hidden');
                 document.getElementById('singleUploadBlock').classList.add('hidden');
                 document.getElementById('mainPdf').required = false;
@@ -171,7 +215,6 @@
             }
         }
 
-        // Add item to temporary upload state queue array
         function addChapterToQueue() {
             const titleInput = document.getElementById('tempChapterTitle');
             const fileInput = document.getElementById('tempChapterFile');
@@ -191,7 +234,6 @@
             renderQueueUI();
         }
 
-        // Queue visual synchronized renderer
         function renderQueueUI() {
             const container = document.getElementById('queueContainer');
             if(uploadedChaptersList.length === 0) {
@@ -215,15 +257,14 @@
             renderQueueUI();
         }
 
-        // Load Categories Dynamically from MongoDB Atlas Server
         async function loadExistingCategories() {
             const select = document.getElementById('categorySelect');
             try {
-                const response = await fetch(`${API_BASE_URL}/categories`);
+                const response = await fetch(`${API_BASE_URL}/novels/categories`);
                 if (response.ok) {
                     const categories = await response.json();
                     if(categories.length > 0) {
-                        select.innerHTML = categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                        select.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
                     } else {
                         select.innerHTML = `<option value="General">General</option>`;
                     }
@@ -234,36 +275,41 @@
             }
         }
 
-        // Add a brand new category on the fly via admin panel prompt module
-        async function addNewCategoryPrompt() {
+        function addNewCategoryPrompt() {
             const newCat = prompt("🆕 Nayi Category Ka Naam Likhein (e.g., Romantic, Horror, Tech):");
             if (!newCat || newCat.trim() === "") return;
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/categories`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: newCat.trim() })
-                });
+            const cleanCat = newCat.trim();
+            const select = document.getElementById('categorySelect');
 
-                if (response.ok) {
-                    alert(`🎉 Category "${newCat}" add ho gayi!`);
-                    await loadExistingCategories();
-                    document.getElementById('categorySelect').value = newCat.trim();
-                } else {
-                    alert("❌ Category add nahi ho saki ya pehle se majood hai.");
+            let exists = false;
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value.toLowerCase() === cleanCat.toLowerCase()) {
+                    exists = true;
+                    break;
                 }
-            } catch (err) {
-                alert("🚨 Backend operational failure error.");
             }
+
+            if (exists) {
+                alert(`⚠️ Category "${cleanCat}" pehle se list mein majood hai!`);
+                select.value = cleanCat;
+                return;
+            }
+
+            const newOption = document.createElement('option');
+            newOption.value = cleanCat;
+            newOption.innerText = cleanCat;
+            select.appendChild(newOption);
+            select.value = cleanCat;
+
+            alert(`🎉 "${cleanCat}" temporary list mein add ho gayi! Jab aap novel upload karenge, yeh database mein permanent register ho jayegi.`);
         }
 
-        // Submit form data payload process stream
         document.getElementById('masterUploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const hasChaptersValue = document.getElementById('hasChapters').value;
-            if (hasChaptersValue === 'yes' && uploadedChaptersList.length === 0) {
+            if (hasChaptersValue === 'true' && uploadedChaptersList.length === 0) {
                 alert("⚠️ Error: Aapne Multi-Chapter Mode select kiya hai par queue me koi chapter add nahi kiya!");
                 return;
             }
@@ -274,18 +320,18 @@
             submitBtn.innerText = "Files Compress Aur Upload Ho Rahi Hain... ⏳";
 
             const formData = new FormData();
-            formData.append('contentType', document.getElementById('contentType').value); // Send Content Type
+            formData.append('contentType', document.getElementById('contentType').value);
             formData.append('title', document.getElementById('title').value);
             formData.append('author', document.getElementById('author').value);
             formData.append('category', document.getElementById('categorySelect').value);
             formData.append('status', document.getElementById('status').value);
             formData.append('description', document.getElementById('description').value);
-            formData.append('hasChapters', hasChaptersValue);
+            formData.append('hasChapters', hasChaptersValue === 'true');
 
             const coverImageFile = document.getElementById('coverImage').files[0];
             formData.append('coverImage', coverImageFile);
 
-            if (hasChaptersValue === 'no') {
+            if (hasChaptersValue === 'false') {
                 const mainPdfFile = document.getElementById('mainPdf').files[0];
                 if(mainPdfFile) formData.append('mainPdf', mainPdfFile);
             } else {
@@ -310,7 +356,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert('❌ Server se rabta nahi ho saka. Terminal check karein!');
+                alert('❌ Server se rabta nahi ho saka. Terminal backend check karein!');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalBtnText;
@@ -318,8 +364,8 @@
         });
 
         window.onload = function() {
-            loadExistingCategories();
             handleTypeChange();
+            // Note: loadExistingCategories ko yahan se hata diya hai taake password ke bina categories load hi na hon
         };
     </script>
 </body>

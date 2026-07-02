@@ -46,7 +46,6 @@
                     <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700"></span></p>
                     
                     <div class="flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 py-1">
-                        <span class="flex items-center gap-1">👁️ <span id="viewCountDisplay" class="text-slate-600">0</span> Views</span>
                         <span class="flex items-center gap-1">📅 <span id="dateDisplay" class="text-slate-600">--/--/----</span></span>
                     </div>
 
@@ -70,8 +69,7 @@
 
                 <div id="chaptersSection" class="hidden space-y-4">
                     <h2 id="listSectionHeading" class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">📑 Episodes / Chapters List</h2>
-                    <div id="chaptersList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    </div>
+                    <div id="chaptersList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
 
             </div>
@@ -79,123 +77,158 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE_URL = 'https://noveltube.onrender.com/api';
+  <script>
+    const API_BASE_URL = 'https://noveltube.onrender.com/api';
 
-        // FEATURE 3: Anti-Spam Anti-Refresh Trigger Logic
-        async function triggerGenuineView(id) {
-            const storageKey = `view_cooldown_${id}`;
-            const lastViewTime = localStorage.getItem(storageKey);
-            const now = Date.now();
+    async function triggerGenuineView(id) {
+        const storageKey = `view_cooldown_${id}`;
+        const lastViewTime = localStorage.getItem(storageKey);
+        const now = Date.now();
 
-            // 15 Minutes window lockout limit rule for real human validation
-            if (!lastViewTime || (now - parseInt(lastViewTime)) > 15 * 60 * 1000) {
-                try {
-                    await fetch(`${API_BASE_URL}/novels/${id}/view`, { method: 'POST' });
-                    localStorage.setItem(storageKey, now.toString());
-                } catch(err) {
-                    console.log("Analytics stream view registration fail.");
-                }
+        if (!lastViewTime || (now - parseInt(lastViewTime)) > 15 * 60 * 1000) {
+            try {
+                await fetch(`${API_BASE_URL}/novels/${id}/view`, { method: 'POST' });
+                localStorage.setItem(storageKey, now.toString());
+            } catch(err) {
+                console.log("Analytics stream view registration fail.");
             }
         }
+    }
 
-        async function fetchNovelDetails() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const novelId = urlParams.get('id');
+    async function fetchNovelDetails() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const novelId = urlParams.get('id');
 
-            if (!novelId) {
-                document.getElementById('loading').innerHTML = "❌ ID nahi mili URL mein!";
-                return;
+        if (!novelId) {
+            document.getElementById('loading').innerHTML = "❌ ID nahi mili URL mein!";
+            return;
+        }
+
+        await triggerGenuineView(novelId);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${novelId}`);
+            if (!response.ok) throw new Error('Content nahi mila');
+            
+            const item = await response.json();
+
+            // Smart Check: Article or Novel
+            const itemCategory = item.category ? item.category.toLowerCase() : '';
+            const isArticle = (item.contentType && item.contentType.toLowerCase().trim() === 'article') || itemCategory.includes('article');
+            
+            if (isArticle) {
+                document.getElementById('aboutHeadingText').innerText = "About Article:";
+                document.getElementById('readingOptionsHeading').innerText = "📰 Full Article Reading Options";
+                document.getElementById('readingOptionsSub').classList.add('hidden');
+                document.getElementById('downloadBtn').innerText = "Download Article PDF";
+                document.getElementById('listSectionHeading').innerText = "📑 Article Parts / Sections List";
+                
+                if (!item.description || item.description.includes("No description required")) {
+                    document.getElementById('novelDescription').classList.add('hidden');
+                    document.getElementById('aboutHeadingText').classList.add('hidden');
+                }
+            } else {
+                document.getElementById('aboutHeadingText').innerText = "About Novel:";
+                document.getElementById('readingOptionsHeading').innerText = "📖 Full Novel Reading Options";
+                document.getElementById('readingOptionsSub').classList.remove('hidden');
+                document.getElementById('readingOptionsSub').innerText = "Yeh novel mukammal aik hi file mein available hai.";
+                document.getElementById('downloadBtn').innerText = "Download Full PDF";
+                document.getElementById('listSectionHeading').innerText = "📑 Episodes / Chapters List";
+                
+                document.getElementById('novelDescription').classList.remove('hidden');
+                document.getElementById('aboutHeadingText').classList.remove('hidden');
+            }
+            
+            if(item.createdAt) {
+                const cleanDate = new Date(item.createdAt).toLocaleDateString('en-GB');
+                document.getElementById('dateDisplay').innerText = cleanDate;
             }
 
-            // Fire view count trigger immediately safely
-            await triggerGenuineView(novelId);
+            document.getElementById('novelCover').src = item.coverImage;
+            document.getElementById('novelTitle').innerText = item.title;
+            document.getElementById('novelAuthor').innerText = item.author;
+            document.getElementById('novelDescription').innerText = item.description;
+            
+            const statusBadge = document.getElementById('novelStatus');
+            statusBadge.innerText = item.status;
+            if(item.status === 'Ongoing') {
+                statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800";
+            } else {
+                statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
+            }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${novelId}`);
-                if (!response.ok) throw new Error('Content nahi mila');
-                
-                const item = await response.json();
+            const singleSection = document.getElementById('singleNovelSection');
+            const chaptersSection = document.getElementById('chaptersSection');
 
-                // Dynamic UI Feature 2 Switcher Evaluation
-                const isArticle = item.contentType === 'article';
-                
-                if (isArticle) {
-                    document.getElementById('aboutHeadingText').innerText = "About Article:";
-                    document.getElementById('readingOptionsHeading').innerText = "📰 Full Article Reading Options";
-                    document.getElementById('readingOptionsSub').innerText = "Yeh article padhne ke liye niche diye gaye option par click karein.";
-                    document.getElementById('downloadBtn').innerText = "Download Article PDF";
-                    document.getElementById('listSectionHeading').innerText = "📑 Article Parts / Sections List";
-                }
+            // Check if it has chapters
+            if (item.hasChapters === true || (item.chapters && item.chapters.length > 0)) {
+                singleSection.classList.add('hidden');
+                chaptersSection.classList.remove('hidden');
 
-                // Analytics Display Map
-                document.getElementById('viewCountDisplay').innerText = item.views || 0;
-                if(item.createdAt) {
-                    const cleanDate = new Date(item.createdAt).toLocaleDateString('en-GB');
-                    document.getElementById('dateDisplay').innerText = cleanDate;
-                }
+                const listContainer = document.getElementById('chaptersList');
+                listContainer.innerHTML = ""; 
 
-                // Data Binding
-                document.getElementById('novelCover').src = item.coverImage;
-                document.getElementById('novelTitle').innerText = item.title;
-                document.getElementById('novelAuthor').innerText = item.author;
-                document.getElementById('novelDescription').innerText = item.description;
-                
-                const statusBadge = document.getElementById('novelStatus');
-                statusBadge.innerText = item.status;
-                if(item.status === 'Ongoing') {
-                    statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800";
-                } else {
-                    statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
-                }
+                item.chapters.forEach((ch) => {
+                    // Safe Check for Chapter PDF
+                    const hasChapterPdf = ch.chapterPdf && ch.chapterPdf.trim() !== "" && ch.chapterPdf !== "#";
+                    const forceDownloadUrl = hasChapterPdf ? ch.chapterPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
+                    const readUrl = hasChapterPdf ? ch.chapterPdf : '#';
+                    
+                    // If PDF is missing, trigger alert instead of redirecting
+                    const clickHandler = hasChapterPdf ? '' : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
 
-                const singleSection = document.getElementById('singleNovelSection');
-                const chaptersSection = document.getElementById('chaptersSection');
-
-                if (item.hasChapters === true || (item.chapters && item.chapters.length > 0)) {
-                    singleSection.classList.add('hidden');
-                    chaptersSection.classList.remove('hidden');
-
-                    const listContainer = document.getElementById('chaptersList');
-                    listContainer.innerHTML = ""; 
-
-                    item.chapters.forEach((ch) => {
-                        const forceDownloadUrl = ch.chapterPdf ? ch.chapterPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
-
-                        listContainer.innerHTML += `
-                            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-xs hover:border-indigo-100 transition duration-200">
-                                <span class="text-sm font-bold text-slate-700 truncate max-w-[140px] sm:max-w-[180px]">${ch.chapterTitle}</span>
-                                <div class="flex items-center gap-2 flex-shrink-0">
-                                    <a href="${ch.chapterPdf}" target="_blank" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
-                                        Read 📖
-                                    </a>
-                                    <a href="${forceDownloadUrl}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
-                                        Download 📥
-                                    </a>
-                                </div>
+                    listContainer.innerHTML += `
+                        <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-xs hover:border-indigo-100 transition duration-200">
+                            <span class="text-sm font-bold text-slate-700 truncate max-w-[140px] sm:max-w-[180px]">${ch.chapterTitle}</span>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <a href="${readUrl}" ${clickHandler} target="_blank" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
+                                    Read 📖
+                                </a>
+                                <a href="${forceDownloadUrl}" ${clickHandler} target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
+                                    Download 📥
+                                </a>
                             </div>
-                        `;
-                    });
-                } else {
-                    chaptersSection.classList.add('hidden');
-                    singleSection.classList.remove('hidden');
+                        </div>
+                    `;
+                });
+            } else {
+                chaptersSection.classList.add('hidden');
+                singleSection.classList.remove('hidden');
 
-                    const singleDownloadUrl = item.mainPdf ? item.mainPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
+                // Safe Check for Single Novel/Article PDF
+                const hasMainPdf = item.mainPdf && item.mainPdf.trim() !== "" && item.mainPdf !== "#";
 
+                if (hasMainPdf) {
+                    const singleDownloadUrl = item.mainPdf.replace('/upload/', '/upload/fl_attachment/');
                     document.getElementById('readOnlineBtn').href = item.mainPdf;
                     document.getElementById('downloadBtn').href = singleDownloadUrl;
+                    
+                    // Reset any previous alert preventions
+                    document.getElementById('readOnlineBtn').onclick = null;
+                    document.getElementById('downloadBtn').onclick = null;
+                } else {
+                    // Prevent redirection and show alert if link is missing
+                    const missingLinkAlert = (e) => {
+                        e.preventDefault();
+                        alert("⚠️ Is novel/article ka main PDF URL database mein mojud nahi hai!");
+                    };
+                    document.getElementById('readOnlineBtn').href = "#";
+                    document.getElementById('downloadBtn').href = "#";
+                    document.getElementById('readOnlineBtn').onclick = missingLinkAlert;
+                    document.getElementById('downloadBtn').onclick = missingLinkAlert;
                 }
-
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('novelContainer').classList.remove('hidden');
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById('loading').innerHTML = "❌ Data load karne mein masla aaya ya backend band hai.";
             }
-        }
 
-        window.onload = fetchNovelDetails;
-    </script>
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('novelContainer').classList.remove('hidden');
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loading').innerHTML = "❌ Data load karne mein masla aaya ya backend band hai.";
+        }
+    }
+
+    window.onload = fetchNovelDetails;
+</script>
 </body>
 </html>

@@ -33,9 +33,7 @@
                 <a href="#contact-section" class="hover:text-indigo-600 transition">Contact Us</a>
             </nav>
             
-            <div class="flex items-center space-x-2">
-                <a href="auth.html" id="joinBtn" class="text-xs font-bold bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition">Sign Up</a>
-            </div>
+        
         </div>
     </header>
 
@@ -48,9 +46,7 @@
                 <p class="text-xs md:text-sm text-slate-300 max-w-md mx-auto">Parhein behtareen Urdu novels aur exclusive informative articles bina kisi rukawat ke, bilkul muft.</p>
                 
                 <div class="pt-4 max-w-md mx-auto relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        🔍
-                    </div>
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">🔍</div>
                     <input type="text" id="globalSearchInput" oninput="performLiveFilterSearch()" placeholder="Search novel, article or writer name..." class="w-full pl-10 pr-4 py-3 bg-white text-slate-900 text-sm font-medium rounded-2xl shadow-lg border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
             </div>
@@ -86,7 +82,7 @@
                 </div>
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80">
                     <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Whatsapp</span>
-                    <span class="text-xs md:text-sm font-semibold text-slate-700"> 03700933073 </span>
+                    <span class="text-xs md:text-sm font-semibold text-slate-700">03700933073</span>
                 </div>
             </div>
         </section>
@@ -187,11 +183,14 @@
             });
         }
 
-        // 🛠️ Modified Card Markup: Views Count (👁️) Completely Removed For Privacy
         function generateCardMarkup(item) {
             const cleanDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : '';
-            const typeBadgeColor = item.contentType === 'article' ? 'bg-amber-500' : 'bg-indigo-600';
-            const typeLabel = item.contentType === 'article' ? 'Article' : 'Novel';
+            
+            // Smart Fallback Badge System
+            const itemCategory = item.category ? item.category.toLowerCase() : '';
+            const isArticle = (item.contentType && item.contentType.toLowerCase().trim() === 'article') || itemCategory.includes('article');
+            const typeBadgeColor = isArticle ? 'bg-amber-500' : 'bg-indigo-600';
+            const typeLabel = isArticle ? 'Article' : 'Novel';
 
             return `
                 <div class="w-[140px] sm:w-[170px] bg-white rounded-2xl border border-slate-100 p-2 shadow-xs hover:shadow-md transition duration-200 snap-start flex-shrink-0 relative group">
@@ -221,25 +220,18 @@
             slider.scrollBy({ left: amt, behavior: 'smooth' });
         }
 
-     // 🔐 Yeh function check karega aur button ko ghaib karega
-function hideSignupIfLoggedIn() {
-    const token = localStorage.getItem('token');
-    if (token) {
-        const joinBtn = document.getElementById('joinBtn');
-        const mobileJoinBtn = document.getElementById('mobileJoinBtn');
-        
-        if (joinBtn) joinBtn.classList.add('hidden');
-        if (mobileJoinBtn) mobileJoinBtn.classList.add('hidden');
-    }
-}
+        function hideSignupIfLoggedIn() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                const joinBtn = document.getElementById('joinBtn');
+                if (joinBtn) joinBtn.classList.add('hidden');
+            }
+        }
 
-// ⚡ Jab page load ho toh dono kaam ek sath hon
-window.onload = function() {
-    fetchRealNovels();       // Tumhara purana novels load karne wala function
-    hideSignupIfLoggedIn();  // Button ko ghaib karne wala function
-};
-
-
+        window.onload = function() {
+            fetchRealNovels();
+            hideSignupIfLoggedIn();
+        };
     </script>
 </body>
 </html>
