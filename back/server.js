@@ -12,15 +12,14 @@ const connectDB = require('./config/db.js');
 connectDB();
 // back/server.js mein connectDB(); ke bilkul niche yeh paste karein:
 // 🚨 DATABASE SE PURANA GALAT CATEGORY INDEX KHATAM KARNE KE LIYE CODE:
-mongoose.connection.once('open', async () => {
-    try {
-        // Yeh line database ke andar se category ka unique check delete kar degi
-        await mongoose.connection.db.collection('novels').dropIndex('category_1');
-        console.log("🎉 Database se category ka unique index kamyabi se delete ho gaya!");
-    } catch (error) {
-        console.log("ℹ️ Index pehle se clear hai ya drop karne ki zaroorat nahi.");
-    }
-});
+// Database Connection Logic (Isko simple rakhein bina kisi dropIndex ke)
+mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI)
+  .then(() => {
+      console.log("🚀 MongoDB Connected Successfully");
+  })
+  .catch((err) => {
+      console.error("🔥 MongoDB Connection Error:", err);
+  });
 
 const app = express();
 
