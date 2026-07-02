@@ -8,10 +8,7 @@ const dotenv = require('dotenv');
 const path = require('path'); 
 
 dotenv.config();
-
-// 🔌 CLEAN DATABASE CONNECTION
 const connectDB = require('./config/db.js');
-connectDB(); // Sirf isay chalne dein, duplicate mongoose.connect hata diya hai!
 
 const app = express();
 
@@ -23,13 +20,8 @@ app.use(express.json());
 async function trackWebsiteVisit() {
     try {
         const db = mongoose.connection.db;
-        
-        // 🚨 CRASH GUARD: Agar DB abhi tak background me connect nahi hua, tu wait karein
-        if (!db) {
-            return;
-        }
+        if (!db) return; // Guard clause
 
-        // Ek simple collection banayein 'site_stats' ke naam se
         await db.collection('site_stats').updateOne(
             { _id: 'global_views' },
             { $inc: { count: 1 } },
@@ -40,7 +32,6 @@ async function trackWebsiteVisit() {
     }
 }
 
-// Middleware jo har page visit ko track karega lekin API calls ko chhor kar
 app.use((req, res, next) => {
     if (!req.path.startsWith('/api') && !req.path.includes('.')) {
         trackWebsiteVisit();
@@ -58,8 +49,6 @@ app.use('/api/novels', require('./routes/novelRoutes'));
 app.use('/api/chapters', require('./routes/chapterRoutes'));
 
 // 👥 ADMIN & USER MANAGEMENT ROUTES
-
-// 1. Saare Users Ka Data Dekhne Ke Liye
 app.get('/api/users', async (req, res) => {
     try {
         const users = await mongoose.model('User').find({}, '-password'); 
@@ -69,12 +58,10 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// 2. User Ko Block / Unblock Karne Ke Liye
 app.patch('/api/users/:id/toggle-block', async (req, res) => {
     try {
         const user = await mongoose.model('User').findById(req.params.id);
         if (!user) return res.status(404).json({ error: "User nahi mila" });
-
         user.isBlocked = !user.isBlocked; 
         await user.save();
         res.json({ message: "User status updated successfully!" });
@@ -83,7 +70,6 @@ app.patch('/api/users/:id/toggle-block', async (req, res) => {
     }
 });
 
-// 3. User Ko Humesha Ke Liye Delete Karne Ke Liye
 app.delete('/api/users/:id', async (req, res) => {
     try {
         await mongoose.model('User').findByIdAndDelete(req.params.id);
@@ -93,25 +79,18 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// 4. 🔥 UPDATED LIVE COUNTER STATS
 app.get('/api/analytics/system', async (req, res) => {
     try {
         const totalUsers = await mongoose.model('User').countDocuments();
-        
-        let totalNovels = 0;
-        let totalChapters = 0;
-        let novelViewsTotal = 0;
-        let overallWebsiteViews = 0;
+        let totalNovels = 0, totalChapters = 0, novelViewsTotal = 0, overallWebsiteViews = 0;
 
         try {
             const db = mongoose.connection.db;
             if (db) {
                 totalNovels = await db.collection('novels').countDocuments();
                 totalChapters = await db.collection('chapters').countDocuments();
-                
                 const novelsList = await db.collection('novels').find({}).toArray();
                 novelViewsTotal = novelsList.reduce((sum, novel) => sum + (novel.views || 0), 0);
-
                 const globalStats = await db.collection('site_stats').findOne({ _id: 'global_views' });
                 overallWebsiteViews = globalStats ? globalStats.count : 0;
             }
@@ -131,20 +110,27 @@ app.get('/api/analytics/system', async (req, res) => {
     }
 });
 
-// 🔒 SECURE ADMIN PASSWORD VERIFICATION ENDPOINT
 app.post('/api/admin/verify', (req, res) => {
     const { password } = req.body;
     const securePassword = process.env.ADMIN_PASSWORD || "Hamza786"; 
+    if (password === securePassword) return res.json({ success: true });
+    return res.status(401).json({ success: false, error: "Galat Password!" });
+});
 
-    if (password === securePassword) {
-        return res.json({ success: true });
-    } else {
-        return res.status(401).json({ success: false, error: "Galat Password!" });
+// 🔥 SAFEST WAY TO START SERVER (Wait for DB first)
+const startServer = async () => {
+    try {
+        // Pehle database connect hone ka poora wait karein
+        await connectDB(); 
+
+        // Jab DB kamyab ho jaye, tab port open karein taake Render ko kharab response na jaye
+        const PORT = process.env.PORT || 5001;
+        app.listen(PORT, () => {
+            console.log(`🔥 Server is running smoothly on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error("❌ Server initialization failed:", error.message);
     }
-});
+};
 
-// Port Listener
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-    console.log(`🔥 Server is running smoothly on port ${PORT}`);
-});
+startServer();
