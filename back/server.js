@@ -2,17 +2,15 @@ const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']); // ISP Block Torne Ke Liye
 
 const express = require('express');
-const mongoose = require('mongoose'); // 🔥 Safe rendering aur dashboard queries ke liye
+const mongoose = require('mongoose'); 
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path'); 
 
 dotenv.config();
-const connectDB = require('./config/db.js');
-connectDB();
-// back/server.js mein connectDB(); ke bilkul niche yeh paste karein:
-// 🚨 DATABASE SE PURANA GALAT CATEGORY INDEX KHATAM KARNE KE LIYE CODE:
-// Database Connection Logic (Isko simple rakhein bina kisi dropIndex ke)
+
+// 🔌 DATABASE CONNECTION
+// Humne duplicate connectDB() hata diya hai taake aik hi clean connection rahe
 mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI)
   .then(() => {
       console.log("🚀 MongoDB Connected Successfully");
@@ -28,13 +26,16 @@ app.use(cors());
 app.use(express.json());
 
 // 📈 EXTRA FEATURE: OVERALL WEBSITE VIEWS TRACKER (Global Counter)
-// Jab bhi koi banda website par visit karega (index.html load karega), yeh automatic database me count badhaega
-let websiteViewsCounter = 0;
-
-// Background tracker function jo database me save karega
 async function trackWebsiteVisit() {
     try {
         const db = mongoose.connection.db;
+        
+        // 🚨 FIX: Agar database abhi connect nahi hua, tu yahan se wapas ho jao (Crash mat karo)
+        if (!db) {
+            console.log("⏳ Global counter: Waiting for database connection...");
+            return;
+        }
+
         // Ek simple collection banayein 'site_stats' ke naam se
         await db.collection('site_stats').updateOne(
             { _id: 'global_views' },
@@ -53,7 +54,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
 
 // Frontend aur Uploads folders ka setup
 app.use(express.static(path.join(__dirname, 'front')));
@@ -82,7 +82,7 @@ app.patch('/api/users/:id/toggle-block', async (req, res) => {
         const user = await mongoose.model('User').findById(req.params.id);
         if (!user) return res.status(404).json({ error: "User nahi mila" });
 
-        user.isBlocked = !user.isBlocked; // Status true/false flip
+        user.isBlocked = !user.isBlocked; 
         await user.save();
         res.json({ message: "User status updated successfully!" });
     } catch (err) {
@@ -100,7 +100,7 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// 4. 🔥 UPDATED LIVE COUNTER STATS (Total Novels, Chapters, Users, Novel Views & Overall Website Views)
+// 4. 🔥 UPDATED LIVE COUNTER STATS
 app.get('/api/analytics/system', async (req, res) => {
     try {
         const totalUsers = await mongoose.model('User').countDocuments();
@@ -112,25 +112,23 @@ app.get('/api/analytics/system', async (req, res) => {
 
         try {
             const db = mongoose.connection.db;
-            totalNovels = await db.collection('novels').countDocuments();
-            totalChapters = await db.collection('chapters').countDocuments();
-            
-            // 📊 1. Saare Novels Ke Views Ko Plus (+) Kar Ke Total Nikalein
-            const novelsList = await db.collection('novels').find({}).toArray();
-            novelViewsTotal = novelsList.reduce((sum, novel) => sum + (novel.views || 0), 0);
+            if (db) {
+                totalNovels = await db.collection('novels').countDocuments();
+                totalChapters = await db.collection('chapters').countDocuments();
+                
+                const novelsList = await db.collection('novels').find({}).toArray();
+                novelViewsTotal = novelsList.reduce((sum, novel) => sum + (novel.views || 0), 0);
 
-            // 🌐 2. Overall Website Visited Views Ko Database Se Uthayein
-            const globalStats = await db.collection('site_stats').findOne({ _id: 'global_views' });
-            overallWebsiteViews = globalStats ? globalStats.count : 0;
-
+                const globalStats = await db.collection('site_stats').findOne({ _id: 'global_views' });
+                overallWebsiteViews = globalStats ? globalStats.count : 0;
+            }
         } catch (dbErr) {
             console.log("Analytics collections fetch fallback active");
         }
 
-        // Dashboard ko dono kism ke views bhej rahe hain!
         res.json({
-            totalViews: novelViewsTotal,          // Novels par total kitne clicks aaye
-            overallWebsiteViews: overallWebsiteViews, // 👈 Overall website par kitne log aaye (Chahe novel dekha ya nahi)
+            totalViews: novelViewsTotal,          
+            overallWebsiteViews: overallWebsiteViews, 
             totalNovels,
             totalChapters,
             totalUsers
