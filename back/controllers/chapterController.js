@@ -1,4 +1,5 @@
 const Chapter = require('../models/Chapter');
+const mongoose = require('mongoose');
 
 // 1. Naya Chapter Add Karne Ke Liye (Admin Feature)
 const createChapter = async (req, res) => {
@@ -43,21 +44,22 @@ const getChapterDetails = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-// 🔥 NAYA FEATURE: Specific Chapter Delete Karne Ke Liye
+
+// 4. 🔥 NAYA: Specific Chapter Delete Karne Ke Liye
 const deleteChapter = async (req, res) => {
     try {
         const { chapterId } = req.params;
         
-        // 1. Chapter ko find aur delete karein
+        // Chapter ko find aur delete karein
         const deletedChapter = await Chapter.findByIdAndDelete(chapterId);
         if (!deletedChapter) {
             return res.status(404).json({ success: false, message: "Chapter nahi mila!" });
         }
 
-        // 2. Novel model ko import kar ke, uske chapters array se bhi is ID ko nikaal (pull) dein
+        // Novel model ko call kar ke, uske chapters array se is ID ko nikaal dein
         const Novel = mongoose.model('Novel');
         await Novel.findByIdAndUpdate(
-            deletedChapter.novelId, // Schema ke mutabiq 'novelId' hi sahi field name hai
+            deletedChapter.novelId, 
             { $pull: { chapters: chapterId } }
         );
 
@@ -67,9 +69,10 @@ const deleteChapter = async (req, res) => {
     }
 };
 
+// Yahan sab functions export hone chahiye!
 module.exports = { 
     createChapter, 
     getChaptersByNovel, 
-    getChapterDetails, 
-    deleteChapter // <-- Yeh yahan add karna lazmi hai
+    getChapterDetails,
+    deleteChapter 
 };
