@@ -213,4 +213,31 @@ router.get('/categories', async (req, res) => {
     }
 });
 
+// 🗑️ 6. DELETE CHAPTER ROUTE: Kisi novel ke andar se specific chapter delete karne ke liye
+router.delete('/:novelId/chapters/:chapterId', async (req, res) => {
+    try {
+        const { novelId, chapterId } = req.params;
+
+        // $pull operator use kar ke chapters array se specific _id wala chapter nikal denge
+        const updatedNovel = await Novel.findByIdAndUpdate(
+            novelId,
+            { $pull: { chapters: { _id: chapterId } } },
+            { new: true } // Update hone ke baad naya data return kare
+        );
+
+        if (!updatedNovel) {
+            return res.status(404).json({ message: 'Novel ya chapter nahi mila!' });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: '🎉 Chapter kamyabi se delete ho gaya!',
+            data: updatedNovel
+        });
+    } catch (error) {
+        console.error("🔥 Delete Chapter Error:", error);
+        res.status(500).json({ message: 'Server error! Chapter delete nahi ho saka.', details: error.message });
+    }
+});
+
 module.exports = router;
