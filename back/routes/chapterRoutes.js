@@ -1,9 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { createChapter, getChaptersByNovel, getChapterDetails } = require('../controllers/chapterController');
+const { 
+    createChapter, 
+    getChaptersByNovel, 
+    getChapterDetails,
+    deleteChapter // <-- Isko yahan import karein
+} = require('../controllers/chapterController');
 
-router.post('/', createChapter);                                // POST: /api/chapters (Naya chapter daalne ke liye)
-router.get('/novel/:novelId', getChaptersByNovel);             // GET: /api/chapters/novel/:novelId (Novel ke saare chapters)
-router.get('/novel/:novelId/:chapterNumber', getChapterDetails); // GET: /api/chapters/novel/:novelId/:chapterNumber (Reading page)
+router.post('/', createChapter);                                
+router.get('/novel/:novelId', getChaptersByNovel);             
+router.get('/novel/:novelId/:chapterNumber', getChapterDetails); 
+
+// 🔥 NAYA ROUTE: Specific chapter delete karne ke liye
+router.delete('/:chapterId', deleteChapter); 
 
 module.exports = router;
