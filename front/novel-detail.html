@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Details - NovelTube</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
+        /* Cross-platform robust font declaration */
         @font-face {
             font-family: 'Jameel Noori Nastaleeq';
-            src: url('https://cdn.jsdelivr.net/gh/Sajjad26/Jameel-Noori-Nastaleeq-Web@master/Jameel%20Noori%20Nastaleeq.woff2') format('woff2'),
+            src: local('Jameel Noori Nastaleeq'), 
+                 url('https://cdn.jsdelivr.net/gh/Sajjad26/Jameel-Noori-Nastaleeq-Web@master/Jameel%20Noori%20Nastaleeq.woff2') format('woff2'),
                  url('https://cdn.jsdelivr.net/gh/subbanyusuf/jameel-noori-nastaleeq@master/Jameel%20Noori%20Nastaleeq.ttf') format('truetype');
             font-display: swap;
             font-weight: normal;
@@ -17,11 +19,12 @@
         }
 
         .font-urdu {
-            font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Urdu Typesetting', serif !important;
+            font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Urdu Typesetting', Arial, sans-serif !important;
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             line-height: 2.2 !important;
+            font-size: 1.25rem !important;
         }
     </style>
 </head>
@@ -40,7 +43,8 @@
                 
                 <div class="flex-1 text-center md:text-left space-y-2">
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                        <h1 id="novelTitle" class="text-3xl font-black text-slate-900 tracking-tight"></h1>
+                        <!-- Added font-urdu to title automatically -->
+                        <h1 id="novelTitle" class="text-3xl font-black text-slate-900 tracking-tight font-urdu" style="direction: rtl;"></h1>
                         <span id="novelStatus" class="px-2.5 py-1 text-xs font-bold rounded-full"></span>
                     </div>
                     <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700"></span></p>
@@ -51,7 +55,7 @@
 
                     <div class="pt-2">
                         <h3 id="aboutHeadingText" class="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">About Novel:</h3>
-                        <p id="novelDescription" class="font-urdu text-xl text-slate-800 mt-3 text-right" style="direction: rtl;"></p>
+                        <p id="novelDescription" class="font-urdu text-slate-800 mt-3 text-right" style="direction: rtl;"></p>
                     </div>
                 </div>
             </div>
@@ -78,7 +82,7 @@
     </div>
 
   <script>
-    const API_BASE_URL = 'https://noveltube.onrender.com/api';
+    const API_BASE_URL = 'https://noveltube-1.onrender.com';
 
     async function triggerGenuineView(id) {
         const storageKey = `view_cooldown_${id}`;
@@ -112,7 +116,6 @@
             
             const item = await response.json();
 
-            // Smart Check: Article or Novel
             const itemCategory = item.category ? item.category.toLowerCase() : '';
             const isArticle = (item.contentType && item.contentType.toLowerCase().trim() === 'article') || itemCategory.includes('article');
             
@@ -160,26 +163,25 @@
             const singleSection = document.getElementById('singleNovelSection');
             const chaptersSection = document.getElementById('chaptersSection');
 
-            // Check if it has chapters
-            if (item.hasChapters === true || (item.chapters && item.chapters.length > 0)) {
+          if (item && (item.hasChapters === true || (item.chapters && item.chapters.length > 0))) {
                 singleSection.classList.add('hidden');
                 chaptersSection.classList.remove('hidden');
 
                 const listContainer = document.getElementById('chaptersList');
                 listContainer.innerHTML = ""; 
 
-                item.chapters.forEach((ch) => {
-                    // Safe Check for Chapter PDF
+                item.chapters?.forEach((ch) => {
                     const hasChapterPdf = ch.chapterPdf && ch.chapterPdf.trim() !== "" && ch.chapterPdf !== "#";
-                    const forceDownloadUrl = hasChapterPdf ? ch.chapterPdf.replace('/upload/', '/upload/fl_attachment/') : '#';
+                    const cleanChapterTitle = ch.chapterTitle.trim().replace(/\s+/g, '_');
+                    const forceDownloadUrl = hasChapterPdf ? ch.chapterPdf.replace('/upload/', `/upload/fl_attachment:${cleanChapterTitle}/`) : '#';
                     const readUrl = hasChapterPdf ? ch.chapterPdf : '#';
                     
-                    // If PDF is missing, trigger alert instead of redirecting
                     const clickHandler = hasChapterPdf ? '' : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
 
                     listContainer.innerHTML += `
                         <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-xs hover:border-indigo-100 transition duration-200">
-                            <span class="text-sm font-bold text-slate-700 truncate max-w-[140px] sm:max-w-[180px]">${ch.chapterTitle}</span>
+                            <!-- Chapter titles par bhi font-urdu laga di -->
+                            <span class="font-urdu text-lg font-bold text-slate-700 truncate max-w-[140px] sm:max-w-[180px]">${ch.chapterTitle}</span>
                             <div class="flex items-center gap-2 flex-shrink-0">
                                 <a href="${readUrl}" ${clickHandler} target="_blank" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
                                     Read 📖
@@ -195,19 +197,17 @@
                 chaptersSection.classList.add('hidden');
                 singleSection.classList.remove('hidden');
 
-                // Safe Check for Single Novel/Article PDF
                 const hasMainPdf = item.mainPdf && item.mainPdf.trim() !== "" && item.mainPdf !== "#";
 
                 if (hasMainPdf) {
-                    const singleDownloadUrl = item.mainPdf.replace('/upload/', '/upload/fl_attachment/');
+                    const cleanNovelTitle = item.title.trim().replace(/\s+/g, '_');
+                    const singleDownloadUrl = item.mainPdf.replace('/upload/', `/upload/fl_attachment:${cleanNovelTitle}/`);
                     document.getElementById('readOnlineBtn').href = item.mainPdf;
                     document.getElementById('downloadBtn').href = singleDownloadUrl;
                     
-                    // Reset any previous alert preventions
                     document.getElementById('readOnlineBtn').onclick = null;
                     document.getElementById('downloadBtn').onclick = null;
                 } else {
-                    // Prevent redirection and show alert if link is missing
                     const missingLinkAlert = (e) => {
                         e.preventDefault();
                         alert("⚠️ Is novel/article ka main PDF URL database mein mojud nahi hai!");

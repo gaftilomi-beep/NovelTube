@@ -3,6 +3,7 @@
 <head>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6838616165368341" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
+    <meta name="google-adsense-account" content="ca-pub-6838616165368341">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-site-verification" content="gXq7_FNyqzuEOqHn8WIoI7ITsIJrtZhrjZjQAURfzo4" />
     <title>NovelTube - Premium Reading Platform</title>
@@ -13,11 +14,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         .heading-font { font-family: 'Poppins', sans-serif; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+    <!-- Dynamic theme styles will be injected here -->
+    <style id="theme-override"></style>
 </head>
 <body class="bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white">
 
@@ -33,7 +36,14 @@
                 <a href="#contact-section" class="hover:text-indigo-600 transition">Contact Us</a>
             </nav>
             
-        
+            <!-- Theme Switcher Added Here -->
+            <div>
+                <select id="themeSwitcher" onchange="applyTheme(this.value)" class="text-xs font-semibold bg-transparent border border-slate-300 text-slate-700 rounded-lg px-2 py-1 outline-none cursor-pointer hover:bg-slate-100 transition">
+                    <option value="light">☀️ Light</option>
+                    <option value="dark">🌙 Dark</option>
+                    <option value="creme">🍦 Creme</option>
+                </select>
+            </div>
         </div>
     </header>
 
@@ -94,8 +104,39 @@
     </footer>
 
     <script>
-        const API_BASE_URL = 'https://noveltube.onrender.com/api';
+        const API_BASE_URL = 'https://noveltube-1.onrender.com';
         let allContentDataMasterArray = []; 
+
+        // Theme Logic
+        function applyTheme(theme) {
+            const styleEl = document.getElementById('theme-override');
+            const switcher = document.getElementById('themeSwitcher');
+            
+            if (theme === 'dark') {
+                document.body.className = 'bg-slate-900 text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-300';
+                styleEl.innerHTML = `
+                    .bg-white, .bg-slate-50 { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9 !important; }
+                    .bg-white\\/80 { background-color: rgba(30, 41, 59, 0.9) !important; }
+                    .text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600 { color: #f8fafc !important; }
+                    .bg-slate-100 { background-color: #0f172a !important; }
+                    #themeSwitcher { color: #f1f5f9; background-color: #334155; border-color: #475569; }
+                `;
+            } else if (theme === 'creme') {
+                document.body.className = 'bg-[#FDFBF7] text-[#5C4D3C] selection:bg-[#D4A373] selection:text-white transition-colors duration-300';
+                styleEl.innerHTML = `
+                    .bg-white, .bg-slate-50 { background-color: #FAF6ED !important; border-color: #E6D5B8 !important; color: #5C4D3C !important; }
+                    .bg-white\\/80 { background-color: rgba(250, 246, 237, 0.9) !important; }
+                    .text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600 { color: #4A3B28 !important; }
+                    .bg-slate-100 { background-color: #EFE7D1 !important; }
+                    #themeSwitcher { color: #5C4D3C; background-color: #FAF6ED; border-color: #E6D5B8; }
+                `;
+            } else {
+                document.body.className = 'bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white transition-colors duration-300';
+                styleEl.innerHTML = ''; // Reset to default tailwind styles
+            }
+            localStorage.setItem('noveltube_theme', theme);
+            switcher.value = theme;
+        }
 
         async function fetchRealNovels() {
             const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
@@ -186,7 +227,6 @@
         function generateCardMarkup(item) {
             const cleanDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : '';
             
-            // Smart Fallback Badge System
             const itemCategory = item.category ? item.category.toLowerCase() : '';
             const isArticle = (item.contentType && item.contentType.toLowerCase().trim() === 'article') || itemCategory.includes('article');
             const typeBadgeColor = isArticle ? 'bg-amber-500' : 'bg-indigo-600';
@@ -229,6 +269,10 @@
         }
 
         window.onload = function() {
+            // Apply saved theme first
+            const savedTheme = localStorage.getItem('noveltube_theme') || 'light';
+            applyTheme(savedTheme);
+            
             fetchRealNovels();
             hideSignupIfLoggedIn();
         };

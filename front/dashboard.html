@@ -41,7 +41,13 @@
         </div>
 
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-            <h2 class="text-xl font-bold text-indigo-400 border-b border-slate-700 pb-2">📚 Library Studio Content Engine</h2>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700 pb-2">
+                <h2 class="text-xl font-bold text-indigo-400">📚 Library Studio Content Engine</h2>
+                <!-- Search Input added safely -->
+                <div class="w-full md:w-72">
+                    <input type="text" id="novelSearchInput" oninput="filterNovels()" placeholder="🔍 Search novel by title..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -107,8 +113,26 @@
         </div>
     </div>
 
+    <!-- New Manage Chapters Modal (Specifically for Deleting Chapters) -->
+    <div id="manageChaptersModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-lg shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 class="text-lg font-bold text-indigo-400">📖 Manage & Delete Chapters</h3>
+                <button onclick="closeManageChaptersModal()" class="text-slate-400 hover:text-slate-200 font-bold text-sm">✕</button>
+            </div>
+            <input type="hidden" id="manageNovelId">
+            <div class="max-h-60 overflow-y-auto space-y-2 pr-1" id="chaptersListContainer">
+                <!-- Chapters list will render dynamically here -->
+            </div>
+            <div class="flex justify-end pt-2">
+                <button type="button" onclick="closeManageChaptersModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const API_BASE_URL = 'https://noveltube.onrender.com/api';
+        const API_BASE_URL = 'https://noveltube-1.onrender.com';
+        let allNovelsList = []; // Kept to safely search locally
 
         async function checkAdminAccess() {
             if (sessionStorage.getItem('admin_authenticated') === 'true') {
@@ -152,42 +176,57 @@
         }
 
         async function loadAdminDashboard() {
-            const tableBody = document.getElementById('novelsTableBody');
             try {
                 const response = await fetch(`${API_BASE_URL}/novels`);
                 if (!response.ok) throw new Error("Load failed");
-                const list = await response.json();
-                
-                if (list.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">No entries found.</td></tr>`;
-                    return;
-                }
-
-                tableBody.innerHTML = list.map(item => {
-                    const typeLabel = item.contentType === 'article' ? '📰 Article' : '📚 Novel';
-                    return `
-                        <tr class="hover:bg-slate-700/20 transition-colors">
-                            <td class="p-3">
-                                <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
-                            </td>
-                            <td class="p-3 font-semibold text-slate-200">${item.title}</td>
-                            <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
-                            <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
-                            <td class="p-3 text-slate-400 text-xs">${item.chapters ? item.chapters.length : 0} Items</td>
-                            <td class="p-3 text-center space-x-2">
-                                <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
-                                    ➕ Add Part
-                                </button>
-                                <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
-                                    🗑️ Delete
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                allNovelsList = await response.json();
+                renderNovelsTable(allNovelsList);
             } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
+                document.getElementById('novelsTableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
             }
+        }
+
+        // Dedicated render function for search and load
+        function renderNovelsTable(list) {
+            const tableBody = document.getElementById('novelsTableBody');
+            if (list.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">No entries found.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = list.map(item => {
+                const typeLabel = item.contentType === 'article' ? '📰 Article' : '📚 Novel';
+                return `
+                    <tr class="hover:bg-slate-700/20 transition-colors">
+                        <td class="p-3">
+                            <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
+                        </td>
+                        <td class="p-3 font-semibold text-slate-200">${item.title}</td>
+                        <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
+                        <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
+                        <td class="p-3 text-slate-400 text-xs">
+                            <button onclick="openManageChaptersModal('${item._id}')" class="underline text-indigo-400 hover:text-indigo-350 cursor-pointer">
+                                ${item.chapters ? item.chapters.length : 0} Items (Manage)
+                            </button>
+                        </td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
+                                ➕ Add Part
+                            </button>
+                            <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
+                                🗑️ Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Search Filter Functionality
+        function filterNovels() {
+            const query = document.getElementById('novelSearchInput').value.toLowerCase();
+            const filtered = allNovelsList.filter(item => item.title.toLowerCase().includes(query));
+            renderNovelsTable(filtered);
         }
 
         async function deleteNovel(id) {
@@ -198,6 +237,60 @@
             } catch (error) { alert("🚨 Action fail."); }
         }
 
+        // Open specific chapters viewer/deleter
+        function openManageChaptersModal(novelId) {
+            const novel = allNovelsList.find(n => n._id === novelId);
+            if (!novel) return;
+
+            document.getElementById('manageNovelId').value = novelId;
+            const container = document.getElementById('chaptersListContainer');
+            
+            if (!novel.chapters || novel.chapters.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-500 text-xs py-4">Is novel ka koi chapter nahi hai.</p>`;
+            } else {
+                container.innerHTML = novel.chapters.map((chap, idx) => `
+                    <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <div>
+                            <span class="text-xs font-mono text-indigo-400 mr-2">#${idx + 1}</span>
+                            <span class="text-sm font-semibold text-slate-200">${chap.title}</span>
+                        </div>
+                        <button onclick="deleteChapter('${novelId}', '${chap._id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('manageChaptersModal').classList.remove('hidden');
+        }
+
+        function closeManageChaptersModal() {
+            document.getElementById('manageChaptersModal').classList.add('hidden');
+        }
+
+        // Delete specific chapter api integration
+        // Delete specific chapter api integration
+// Delete specific chapter api integration
+async function deleteChapter(novelId, chapterId) {
+    if (!confirm("⚠️ Kya aap is specific chapter ko delete karna chahte hain?")) return;
+    try {
+        // 🔥 Yahan hum ne URL exactly naye backend route ke mutabiq theek kar diya hai
+        // novelId aur chapterId dono paas ho rahe hain
+        const response = await fetch(`${API_BASE_URL}/novels/${novelId}/chapters/${chapterId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert("🎉 Chapter successfully delete ho gaya!");
+            closeManageChaptersModal();
+            initDashboard(); // Yeh data ko refresh kar dega
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            alert(`❌ Delete failed: ${errorData.message || 'Server ne reject kardia.'}`);
+        }
+    } catch (error) {
+        alert("🚨 Connection error! Chapter delete nahi ho saka.");
+    }
+}
         // Users rendering logic stream
         async function loadUsers() {
             const tableBody = document.getElementById('usersTableBody');
@@ -242,6 +335,9 @@
             e.preventDefault();
             const id = document.getElementById('modalNovelId').value;
             const submitBtn = document.getElementById('modalSubmitBtn');
+            
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "⏳ Uploading PDF...";
             submitBtn.disabled = true;
 
             const formData = new FormData();
@@ -249,9 +345,26 @@
             formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
 
             try {
-                const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { method: 'POST', body: formData });
-                if (response.ok) { closeChapterModal(); initDashboard(); }
-            } catch (error) { console.error(error); } finally { submitBtn.disabled = false; }
+                const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                
+                if (response.ok) { 
+                    alert("🎉 Chapter kamyabi se add ho gaya hai!");
+                    closeChapterModal(); 
+                    initDashboard(); 
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(`❌ Server Error (${response.status}): ${errorData.message || 'Chapter save nahi ho saka. Route check karein.'}`);
+                }
+            } catch (error) { 
+                console.error(error); 
+                alert("🚨 Network Error: Server se rabta nahi ho pa raha! Check karein backend chal raha hai ya nahi.");
+            } finally { 
+                submitBtn.disabled = false; 
+                submitBtn.innerText = originalText;
+            }
         });
 
         function openChapterModal(id) { document.getElementById('modalNovelId').value = id; document.getElementById('chapterModal').classList.remove('hidden'); }
