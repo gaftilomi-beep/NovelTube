@@ -1,20 +1,26 @@
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']); // ISP Block Torne Ke Liye
+const dotenv = require('dotenv');
+dotenv.config(); // dotenv ko upar le aayein taake process.env pehle load ho jaye
+
+// Agar environment local hai (development), sirf tab DNS change karein
+if (process.env.NODE_ENV !== 'production') {
+    dns.setServers(['8.8.8.8', '8.8.4.4']); // Local machine par ISP block torne ke liye
+    console.log("🛠️ Local DNS Active (ISP Bypass)");
+}
 
 const express = require('express');
 const mongoose = require('mongoose'); 
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path'); 
 
-dotenv.config();
 const connectDB = require('./config/db.js');
-
 const app = express();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// ... Baqi saara code bilkul waisa hi rahega ...
 
 // 📈 EXTRA FEATURE: OVERALL WEBSITE VIEWS TRACKER (Global Counter)
 async function trackWebsiteVisit() {
