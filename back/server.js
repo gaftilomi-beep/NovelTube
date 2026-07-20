@@ -14,13 +14,12 @@ const cors = require('cors');
 const path = require('path'); 
 
 const connectDB = require('./config/db.js');
+
 const app = express();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
-
-// ... Baqi saara code bilkul waisa hi rahega ...
 
 // 📈 EXTRA FEATURE: OVERALL WEBSITE VIEWS TRACKER (Global Counter)
 async function trackWebsiteVisit() {
@@ -135,7 +134,7 @@ const startServer = async () => {
             console.log(`🔥 Server is running smoothly on port ${PORT}`);
         });
     } catch (error) {
-        console.error("❌ Server initialization failed:", error.message);
+        error.message ? console.error("❌ Server initialization failed:", error.message) : console.error("❌ Server initialization failed");
     }
 };
 
