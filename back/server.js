@@ -12,6 +12,10 @@ const express = require('express');
 const mongoose = require('mongoose'); 
 const cors = require('cors');
 const path = require('path'); 
+const multer = require('multer');
+
+// Image upload storage configuration (Uploads folder)
+const upload = multer({ dest: 'uploads/' });
 
 const connectDB = require('./config/db.js');
 
@@ -52,6 +56,54 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/novels', require('./routes/novelRoutes'));
 app.use('/api/chapters', require('./routes/chapterRoutes'));
+
+// 📝 NOVEL EDIT & COVER UPDATE ROUTES
+// 1. Edit Novel Text Details
+app.patch('/api/novels/:id', async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+        const { title, author, contentType, status, description } = req.body;
+
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (author !== undefined) updateData.author = author;
+        if (contentType !== undefined) updateData.contentType = contentType;
+        if (status !== undefined) updateData.status = status;
+        if (description !== undefined) updateData.description = description;
+
+        await db.collection('novels').updateOne(
+            { _id: new mongoose.Types.ObjectId(req.params.id) },
+            { $set: updateData }
+        );
+
+        res.json({ success: true, message: "Novel details updated successfully!" });
+    } catch (err) {
+        console.error("Edit Novel Error:", err);
+        res.status(500).json({ error: "Novel details update nahi ho sakin." });
+    }
+});
+
+// 2. Update Novel Cover Image
+app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "Koi image file select nahi ki gayi." });
+        }
+
+        const db = mongoose.connection.db;
+        const newCoverUrl = `/uploads/${req.file.filename}`;
+
+        await db.collection('novels').updateOne(
+            { _id: new mongoose.Types.ObjectId(req.params.id) },
+            { $set: { coverImage: newCoverUrl } }
+        );
+
+        res.json({ success: true, coverImage: newCoverUrl, message: "Cover photo updated successfully!" });
+    } catch (err) {
+        console.error("Cover Upload Error:", err);
+        res.status(500).json({ error: "Cover update fail ho gaya." });
+    }
+});
 
 // 👥 ADMIN & USER MANAGEMENT ROUTES
 app.get('/api/users', async (req, res) => {
