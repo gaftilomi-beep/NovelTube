@@ -23,7 +23,8 @@ const app = express();
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // 📈 EXTRA FEATURE: OVERALL WEBSITE VIEWS TRACKER (Global Counter)
 async function trackWebsiteVisit() {
@@ -84,6 +85,7 @@ app.patch('/api/novels/:id', async (req, res) => {
 });
 
 // 2. Update Novel Cover Image
+// 2. Update Novel Cover Image (FIXED PATH)
 app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (req, res) => {
     try {
         if (!req.file) {
@@ -91,6 +93,8 @@ app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (re
         }
 
         const db = mongoose.connection.db;
+        
+        // Exact static path for front-end access
         const newCoverUrl = `/uploads/${req.file.filename}`;
 
         await db.collection('novels').updateOne(
@@ -98,7 +102,11 @@ app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (re
             { $set: { coverImage: newCoverUrl } }
         );
 
-        res.json({ success: true, coverImage: newCoverUrl, message: "Cover photo updated successfully!" });
+        res.json({ 
+            success: true, 
+            coverImage: newCoverUrl, 
+            message: "Cover photo updated successfully!" 
+        });
     } catch (err) {
         console.error("Cover Upload Error:", err);
         res.status(500).json({ error: "Cover update fail ho gaya." });
