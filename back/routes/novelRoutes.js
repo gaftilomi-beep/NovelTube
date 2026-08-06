@@ -7,7 +7,7 @@ const Novel = require('../models/Novel'); // Model ka path
 
 const router = express.Router();
 
-// ☁️ Cloudinary Configuration (Jo aapne .env mein set kiya hy)
+// ☁️ Cloudinary Configuration
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -32,7 +32,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// 📥 1. POST ROUTE: Novel aur Chapters upload karne ke liye
+// -------------------------------------------------------------
+// 1. POST ROUTE: Novel aur Chapters upload karne ke liye
+// -------------------------------------------------------------
 router.post('/', upload.fields([
     { name: 'coverImage', maxCount: 1 },
     { name: 'mainPdf', maxCount: 1 },
@@ -49,8 +51,8 @@ router.post('/', upload.fields([
                 folder: 'noveltube/covers',
                 resource_type: 'image'
             });
-            coverImageUrl = result.secure_url; // Permanent Cloud Link
-            fs.unlinkSync(file.path); // Local temporary file delete karein
+            coverImageUrl = result.secure_url;
+            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
         }
 
         // B. Main Single PDF Upload to Cloudinary
@@ -59,10 +61,10 @@ router.post('/', upload.fields([
             const file = req.files['mainPdf'][0];
             const result = await cloudinary.uploader.upload(file.path, {
                 folder: 'noveltube/pdfs',
-                resource_type: 'auto' // Auto-detect PDF format
+                resource_type: 'auto'
             });
             mainPdfUrl = result.secure_url;
-            fs.unlinkSync(file.path); // Local temporary file delete karein
+            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
         }
 
         // C. Multiple Chapters Upload to Cloudinary
@@ -70,7 +72,6 @@ router.post('/', upload.fields([
         if (hasChapters === 'true' && req.files && req.files['chapterFiles']) {
             const titlesArray = Array.isArray(chapterTitles) ? chapterTitles : [chapterTitles];
             
-            // Loop chala kar aik aik karke saari files upload hongi
             for (let index = 0; index < req.files['chapterFiles'].length; index++) {
                 const file = req.files['chapterFiles'][index];
                 const result = await cloudinary.uploader.upload(file.path, {
@@ -83,7 +84,7 @@ router.post('/', upload.fields([
                     chapterPdf: result.secure_url
                 });
                 
-                fs.unlinkSync(file.path); // Upload hote hi local file saaf
+                if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
             }
         }
 
@@ -109,7 +110,9 @@ router.post('/', upload.fields([
     }
 });
 
-// 📤 2. GET ROUTE: Saare novels homepage par dikhane ke liye
+// -------------------------------------------------------------
+// 2. GET ROUTE: Saare novels homepage par dikhane ke liye
+// -------------------------------------------------------------
 router.get('/', async (req, res) => {
     try {
         const novels = await Novel.find().sort({ _id: -1 });
@@ -119,7 +122,22 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 📤 3. GET SINGLE NOVEL ROUTE: Open hote hi view count +1 karo
+// -------------------------------------------------------------
+// 3. GET ALL CATEGORIES (FIXED POSITION: Must be BEFORE /:id)
+// -------------------------------------------------------------
+router.get('/categories', async (req, res) => {
+    try {
+        const categories = await Novel.distinct('category');
+        return res.status(200).json(categories);
+    } catch (error) {
+        console.error("🔥 Categories Fetch Error:", error);
+        return res.status(500).json({ error: 'Categories load nahi ho sakeen!' });
+    }
+});
+
+// -------------------------------------------------------------
+// 4. GET SINGLE NOVEL ROUTE: Open hote hi view count +1 karo
+// -------------------------------------------------------------
 router.get('/:id', async (req, res) => {
     try {
         const novel = await Novel.findByIdAndUpdate(
@@ -137,7 +155,9 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// 🗑️ 4. DELETE ROUTE: Novel ko database se mitaane ke liye
+// -------------------------------------------------------------
+// 5. DELETE ROUTE: Novel ko database se mitaane ke liye
+// -------------------------------------------------------------
 router.delete('/:id', async (req, res) => {
     try {
         const deletedNovel = await Novel.findByIdAndDelete(req.params.id);
@@ -150,8 +170,11 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// ➕ 5. UPDATE ROUTE: Kisi novel mein agla (Next) Chapter add karne ke liye
+// -------------------------------------------------------------
+// 6. UPDATE ROUTE: Novel mein agla (Next) Chapter add karne ke liye (FIXED)
+// -------------------------------------------------------------
 router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) => {
+    let tempFilePath = null;
     try {
         const { id } = req.params;
         const { chapterTitle } = req.body;
@@ -160,18 +183,20 @@ router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) =
             return res.status(400).json({ error: 'PDF file lazmi upload karein!' });
         }
 
-        // Cloudinary par PDF upload karein
-        const result = await cloudinary.uploader.upload(req.file.path, {
+        tempFilePath = req.file.path;
+
+        // Cloudinary par PDF upload (resource_type: 'auto' for safer execution)
+        const result = await cloudinary.uploader.upload(tempFilePath, {
             folder: 'noveltube/chapters',
-            resource_type: 'raw' // PDF ke liye raw hona lazmi hai
+            resource_type: 'auto'
         });
 
-        // Local temporary file delete karein
-        if (fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+        // Local temporary file cleanup
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
         }
 
-        // Novel ke andar chapters wale array mein naya chapter push karein
+        // Novel Document update
         const updatedNovel = await Novel.findByIdAndUpdate(
             id,
             {
@@ -196,33 +221,26 @@ router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) =
         });
 
     } catch (error) {
+        // Safe Cleanup on Error
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
         console.error("🔥 Add Chapter Error:", error);
         res.status(500).json({ error: 'Server error! Chapter save nahi ho saka.', details: error.message });
     }
 });
 
-// 🔍 GET ALL CATEGORIES: Saari mojooda categories frontend ko bhejne ke liye
-router.get('/categories', async (req, res) => {
-    try {
-        // Distinct se database mein mojood saari unique categories nikal aayengi
-        const categories = await Novel.distinct('category');
-        return res.status(200).json(categories);
-    } catch (error) {
-        console.error("🔥 Categories Fetch Error:", error);
-        return res.status(500).json({ error: 'Categories load nahi ho sakeen!' });
-    }
-});
-
-// 🗑️ 6. DELETE CHAPTER ROUTE: Kisi novel ke andar se specific chapter delete karne ke liye
+// -------------------------------------------------------------
+// 7. DELETE CHAPTER ROUTE: Specific chapter delete karne ke liye
+// -------------------------------------------------------------
 router.delete('/:novelId/chapters/:chapterId', async (req, res) => {
     try {
         const { novelId, chapterId } = req.params;
 
-        // $pull operator use kar ke chapters array se specific _id wala chapter nikal denge
         const updatedNovel = await Novel.findByIdAndUpdate(
             novelId,
             { $pull: { chapters: { _id: chapterId } } },
-            { new: true } // Update hone ke baad naya data return kare
+            { new: true }
         );
 
         if (!updatedNovel) {
