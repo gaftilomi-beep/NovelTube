@@ -21,10 +21,29 @@ const connectDB = require('./config/db.js');
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// 🛠️ UPDATED CORS CONFIGURATION FOR NETLIFY & RENDER
+const allowedOrigins = [
+    'https://noveltube.netlify.app',
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://127.0.0.1:5500' // Live Server testing ke liye
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, postman, curl)
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Production test ke liye sab origin allow kar rahe hain
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    credentials: true
+}));
+
+app.use(express.json());
 
 // 📈 EXTRA FEATURE: OVERALL WEBSITE VIEWS TRACKER (Global Counter)
 async function trackWebsiteVisit() {
@@ -84,7 +103,6 @@ app.patch('/api/novels/:id', async (req, res) => {
     }
 });
 
-// 2. Update Novel Cover Image
 // 2. Update Novel Cover Image (FIXED PATH)
 app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (req, res) => {
     try {
