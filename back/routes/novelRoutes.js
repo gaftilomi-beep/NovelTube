@@ -1,9 +1,7 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const cloudinary = require('cloudinary').v2; // 🔥 Cloudinary SDK
-const Novel = require('../models/Novel'); // Model ka path
+const cloudinary = require('cloudinary').v2;
+const Novel = require('../models/Novel');
 
 const router = express.Router();
 
@@ -14,26 +12,29 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 📂 Ensure temporary 'uploads' folder exists automatically
-if (!fs.existsSync('./uploads')) {
-    fs.mkdirSync('./uploads');
-}
-
-// ⚙️ Multer Configuration (Temporary local staging ke liye)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); 
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+// ⚡ Multer Memory Storage (Local Disk Ki Zaroorat Nahi Padegi)
+const storage = multer.memoryStorage();
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 15 * 1024 * 1024 } // 15MB file limit
 });
 
-const upload = multer({ storage: storage });
+// 🛠️ Buffer se Direct Cloudinary Upload karne ka Utility Function
+const uploadToCloudinary = (fileBuffer, folder, resourceType = 'auto') => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { folder, resource_type: resourceType },
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
+        stream.end(fileBuffer);
+    });
+};
 
 // -------------------------------------------------------------
-// 1. POST ROUTE: Novel aur Chapters upload karne ke liye
+// 1. POST ROUTE: Naya Novel Upload Karne Ke Liye
 // -------------------------------------------------------------
 router.post('/', upload.fields([
     { name: 'coverImage', maxCount: 1 },
@@ -43,75 +44,67 @@ router.post('/', upload.fields([
     try {
         const { title, author, description, status, hasChapters, chapterTitles, category } = req.body;
 
-        // A. Cover Image Upload to Cloudinary
+        // A. Cover Image Upload
         let coverImageUrl = '';
         if (req.files && req.files['coverImage']) {
             const file = req.files['coverImage'][0];
-            const result = await cloudinary.uploader.upload(file.path, {
-                folder: 'noveltube/covers',
-                resource_type: 'image'
-            });
+            const result = await uploadToCloudinary(file.buffer, 'noveltube/covers', 'image');
             coverImageUrl = result.secure_url;
-            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
         }
 
-        // B. Main Single PDF Upload to Cloudinary
+        // B. Main Single PDF Upload
         let mainPdfUrl = '';
         if (hasChapters === 'false' && req.files && req.files['mainPdf']) {
             const file = req.files['mainPdf'][0];
-            const result = await cloudinary.uploader.upload(file.path, {
-                folder: 'noveltube/pdfs',
-                resource_type: 'auto'
-            });
+            const result = await uploadToCloudinary(file.buffer, 'noveltube/pdfs', 'raw');
             mainPdfUrl = result.secure_url;
-            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
         }
 
-        // C. Multiple Chapters Upload to Cloudinary
+        // C. Multiple Chapters Upload
         let finalChapters = [];
         if (hasChapters === 'true' && req.files && req.files['chapterFiles']) {
             const titlesArray = Array.isArray(chapterTitles) ? chapterTitles : [chapterTitles];
             
             for (let index = 0; index < req.files['chapterFiles'].length; index++) {
                 const file = req.files['chapterFiles'][index];
-                const result = await cloudinary.uploader.upload(file.path, {
-                    folder: 'noveltube/chapters',
-                    resource_type: 'auto'
-                });
+                const result = await uploadToCloudinary(file.buffer, 'noveltube/chapters', 'raw');
                 
                 finalChapters.push({
                     chapterTitle: titlesArray[index] || `Chapter ${index + 1}`,
                     chapterPdf: result.secure_url
                 });
-                
-                if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
             }
         }
 
-        // Save to MongoDB
+        // MongoDB Mein Save Karein
         const newNovel = new Novel({
             title,
             author: author || 'Unknown Writer',
             description,
-            status,
-            category: category || 'Newly Uploaded',
+            status: status || 'Ongoing',
+            category: category ? category.trim() : 'Newly Uploaded',
             hasChapters: hasChapters === 'true',
             coverImage: coverImageUrl,
             mainPdf: hasChapters === 'true' ? '' : mainPdfUrl,
-            chapters: finalChapters
+            chapters: finalChapters,
+            views: 0
         });
 
         await newNovel.save();
-        res.status(201).json({ message: '🎉 Novel Cloudinary par kamyabi se publish ho gaya!', data: newNovel });
+        res.status(201).json({ 
+            success: true, 
+            message: '🎉 Novel Cloudinary par kamyabi se publish ho gaya!', 
+            data: newNovel 
+        });
 
     } catch (error) {
-        console.error("🔥 Server Error:", error);
+        console.error("🔥 Upload Novel Error:", error);
         res.status(500).json({ error: 'Database ya Cloudinary par save nahi ho saka!', details: error.message });
     }
 });
 
 // -------------------------------------------------------------
-// 2. GET ROUTE: Saare novels homepage par dikhane ke liye
+// 2. GET ROUTE: Saare Novels Fetch Karne Ke Liye
 // -------------------------------------------------------------
 router.get('/', async (req, res) => {
     try {
@@ -123,7 +116,7 @@ router.get('/', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 3. GET ALL CATEGORIES (FIXED POSITION: Must be BEFORE /:id)
+// 3. GET ALL CATEGORIES
 // -------------------------------------------------------------
 router.get('/categories', async (req, res) => {
     try {
@@ -136,7 +129,7 @@ router.get('/categories', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 4. GET SINGLE NOVEL ROUTE: Open hote hi view count +1 karo
+// 4. GET SINGLE NOVEL (+1 View Count)
 // -------------------------------------------------------------
 router.get('/:id', async (req, res) => {
     try {
@@ -156,7 +149,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 5. DELETE ROUTE: Novel ko database se mitaane ke liye
+// 5. DELETE ROUTE: Novel Delete Karne Ke Liye
 // -------------------------------------------------------------
 router.delete('/:id', async (req, res) => {
     try {
@@ -171,10 +164,9 @@ router.delete('/:id', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 6. UPDATE ROUTE: Novel mein agla (Next) Chapter add karne ke liye (FIXED)
+// 6. ADD CHAPTER ROUTE (Single Chapter Add Karne Ke Liye)
 // -------------------------------------------------------------
 router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) => {
-    let tempFilePath = null;
     try {
         const { id } = req.params;
         const { chapterTitle } = req.body;
@@ -183,20 +175,10 @@ router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) =
             return res.status(400).json({ error: 'PDF file lazmi upload karein!' });
         }
 
-        tempFilePath = req.file.path;
+        // Buffer se Direct Cloudinary Upload
+        const result = await uploadToCloudinary(req.file.buffer, 'noveltube/chapters', 'raw');
 
-        // Cloudinary par PDF upload (resource_type: 'auto' for safer execution)
-        const result = await cloudinary.uploader.upload(tempFilePath, {
-            folder: 'noveltube/chapters',
-            resource_type: 'auto'
-        });
-
-        // Local temporary file cleanup
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            fs.unlinkSync(tempFilePath);
-        }
-
-        // Novel Document update
+        // Document Update
         const updatedNovel = await Novel.findByIdAndUpdate(
             id,
             {
@@ -221,17 +203,13 @@ router.post('/:id/add-chapter', upload.single('chapterFile'), async (req, res) =
         });
 
     } catch (error) {
-        // Safe Cleanup on Error
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            fs.unlinkSync(tempFilePath);
-        }
         console.error("🔥 Add Chapter Error:", error);
         res.status(500).json({ error: 'Server error! Chapter save nahi ho saka.', details: error.message });
     }
 });
 
 // -------------------------------------------------------------
-// 7. DELETE CHAPTER ROUTE: Specific chapter delete karne ke liye
+// 7. DELETE CHAPTER ROUTE
 // -------------------------------------------------------------
 router.delete('/:novelId/chapters/:chapterId', async (req, res) => {
     try {
