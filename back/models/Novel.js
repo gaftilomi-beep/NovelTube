@@ -1,22 +1,78 @@
 const mongoose = require('mongoose');
 
-const novelSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    author: { type: String, default: 'Unknown Writer' },
-    description: { type: String },
-    coverImage: { type: String },
-    status: { type: String, default: 'Ongoing' }, 
-    category: { type: String, default: 'Newly Uploaded' }, 
-    hasChapters: { type: Boolean, default: false },
-    mainPdf: { type: String },
-    views: { type: Number, default: 0 },
-    // 🔥 FIX: Chapters ka array schema mein add kar diya taake MongoDB mein data save ho sake!
-    chapters: [
-        {
-            chapterTitle: { type: String },
-            chapterPdf: { type: String }
-        }
-    ]
-}, { timestamps: true });
+const novelSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-module.exports = mongoose.model('Novel', novelSchema);
+        author: {
+            type: String,
+            default: 'Unknown Writer',
+            trim: true
+        },
+
+        description: {
+            type: String,
+            default: ''
+        },
+
+        coverImage: {
+            type: String,
+            default: ''
+        },
+
+        status: {
+            type: String,
+            default: 'Ongoing'
+        },
+
+        category: {
+            type: String,
+            default: 'Newly Uploaded'
+        },
+
+        contentType: {
+            type: String,
+            default: 'novel'
+        },
+
+        hasChapters: {
+            type: Boolean,
+            default: false
+        },
+
+        mainPdf: {
+            type: String,
+            default: ''
+        },
+
+        views: {
+            type: Number,
+            default: 0
+        },
+
+        chapters: [
+            {
+                chapterTitle: {
+                    type: String,
+                    default: ''
+                },
+
+                chapterPdf: {
+                    type: String,
+                    required: true
+                }
+            }
+        ]
+    },
+
+    {
+        timestamps: true
+    }
+);
+
+module.exports =
+    mongoose.model('Novel', novelSchema);

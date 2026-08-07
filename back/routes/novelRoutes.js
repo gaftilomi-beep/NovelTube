@@ -2,12 +2,13 @@ const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
+
 const Novel = require('../models/Novel');
 
 const router = express.Router();
 
 // ============================================================
-// ☁️ CLOUDINARY CONFIGURATION
+// CLOUDINARY
 // ============================================================
 
 cloudinary.config({
@@ -17,51 +18,56 @@ cloudinary.config({
 });
 
 // ============================================================
-// 📁 MULTER MEMORY STORAGE
+// MULTER MEMORY STORAGE
 // ============================================================
 
-const storage = multer.memoryStorage();
-
 const upload = multer({
-    storage,
+
+    storage: multer.memoryStorage(),
+
     limits: {
-        fileSize: 15 * 1024 * 1024 // 15MB
+        fileSize: 15 * 1024 * 1024
     }
 });
 
 // ============================================================
-// ☁️ CLOUDINARY UPLOAD HELPER
+// CLOUDINARY UPLOAD HELPER
 // ============================================================
 
-const uploadToCloudinary = (
-    fileBuffer,
+function uploadToCloudinary(
+    buffer,
     folder,
     resourceType = 'auto'
-) => {
+) {
 
-    return new Promise((resolve, reject) => {
+    return new Promise(
+        (resolve, reject) => {
 
-        const stream = cloudinary.uploader.upload_stream(
-            {
-                folder,
-                resource_type: resourceType
-            },
-            (error, result) => {
+            const stream =
+                cloudinary.uploader.upload_stream(
 
-                if (error) {
-                    return reject(error);
-                }
+                    {
+                        folder,
+                        resource_type: resourceType
+                    },
 
-                resolve(result);
-            }
-        );
+                    (error, result) => {
 
-        stream.end(fileBuffer);
-    });
-};
+                        if (error) {
+                            return reject(error);
+                        }
+
+                        resolve(result);
+                    }
+                );
+
+            stream.end(buffer);
+        }
+    );
+}
 
 // ============================================================
-// 🟢 1. CREATE / UPLOAD NOVEL
+// CREATE NOVEL
 // ============================================================
 
 router.post(
@@ -84,7 +90,7 @@ router.post(
 
         try {
 
-            console.log('📥 New novel upload received');
+            console.log('📥 CREATE NOVEL REQUEST');
 
             const {
                 title,
@@ -98,7 +104,7 @@ router.post(
             } = req.body;
 
             // ------------------------------------------------
-            // BASIC VALIDATION
+            // TITLE
             // ------------------------------------------------
 
             if (!title || !title.trim()) {
@@ -110,7 +116,7 @@ router.post(
             }
 
             // ------------------------------------------------
-            // COVER IMAGE
+            // COVER
             // ------------------------------------------------
 
             let coverImageUrl = '';
@@ -118,13 +124,14 @@ router.post(
             if (
                 req.files &&
                 req.files.coverImage &&
-                req.files.coverImage.length > 0
+                req.files.coverImage.length
             ) {
 
-                const file = req.files.coverImage[0];
+                const file =
+                    req.files.coverImage[0];
 
                 console.log(
-                    '🖼️ Uploading cover to Cloudinary...'
+                    '🖼️ Uploading cover...'
                 );
 
                 const result =
@@ -134,7 +141,8 @@ router.post(
                         'image'
                     );
 
-                coverImageUrl = result.secure_url;
+                coverImageUrl =
+                    result.secure_url;
             }
 
             // ------------------------------------------------
@@ -143,17 +151,22 @@ router.post(
 
             let mainPdfUrl = '';
 
+            const chaptersEnabled =
+                hasChapters === 'true' ||
+                hasChapters === true;
+
             if (
-                hasChapters === 'false' &&
+                !chaptersEnabled &&
                 req.files &&
                 req.files.mainPdf &&
-                req.files.mainPdf.length > 0
+                req.files.mainPdf.length
             ) {
 
-                const file = req.files.mainPdf[0];
+                const file =
+                    req.files.mainPdf[0];
 
                 console.log(
-                    '📄 Uploading main PDF to Cloudinary...'
+                    '📄 Uploading main PDF...'
                 );
 
                 const result =
@@ -163,7 +176,8 @@ router.post(
                         'raw'
                     );
 
-                mainPdfUrl = result.secure_url;
+                mainPdfUrl =
+                    result.secure_url;
             }
 
             // ------------------------------------------------
@@ -173,7 +187,7 @@ router.post(
             const finalChapters = [];
 
             if (
-                hasChapters === 'true' &&
+                chaptersEnabled &&
                 req.files &&
                 req.files.chapterFiles
             ) {
@@ -186,16 +200,16 @@ router.post(
                             : [];
 
                 for (
-                    let index = 0;
-                    index < req.files.chapterFiles.length;
-                    index++
+                    let i = 0;
+                    i < req.files.chapterFiles.length;
+                    i++
                 ) {
 
                     const file =
-                        req.files.chapterFiles[index];
+                        req.files.chapterFiles[i];
 
                     console.log(
-                        `📚 Uploading Chapter ${index + 1}...`
+                        `📚 Uploading Chapter ${i + 1}...`
                     );
 
                     const result =
@@ -205,14 +219,11 @@ router.post(
                             'raw'
                         );
 
-                    const title =
-                        titlesArray[index] ||
-                        `Chapter ${index + 1}`;
-
                     finalChapters.push({
 
-                        // Dashboard ke saath consistent
-                        chapterTitle: title,
+                        chapterTitle:
+                            titlesArray[i] ||
+                            `Chapter ${i + 1}`,
 
                         chapterPdf:
                             result.secure_url
@@ -221,54 +232,56 @@ router.post(
             }
 
             // ------------------------------------------------
-            // SAVE NOVEL
+            // SAVE
             // ------------------------------------------------
 
-            const newNovel = new Novel({
+            const newNovel =
+                new Novel({
 
-                title: title.trim(),
+                    title:
+                        title.trim(),
 
-                author:
-                    author && author.trim()
-                        ? author.trim()
-                        : 'Unknown Writer',
+                    author:
+                        author && author.trim()
+                            ? author.trim()
+                            : 'Unknown Writer',
 
-                description:
-                    description || '',
+                    description:
+                        description || '',
 
-                status:
-                    status || 'Ongoing',
+                    status:
+                        status || 'Ongoing',
 
-                category:
-                    category && category.trim()
-                        ? category.trim()
-                        : 'Newly Uploaded',
+                    category:
+                        category && category.trim()
+                            ? category.trim()
+                            : 'Newly Uploaded',
 
-                contentType:
-                    contentType || 'novel',
+                    contentType:
+                        contentType || 'novel',
 
-                hasChapters:
-                    hasChapters === 'true',
+                    hasChapters:
+                        chaptersEnabled,
 
-                coverImage:
-                    coverImageUrl,
+                    coverImage:
+                        coverImageUrl,
 
-                mainPdf:
-                    hasChapters === 'true'
-                        ? ''
-                        : mainPdfUrl,
+                    mainPdf:
+                        chaptersEnabled
+                            ? ''
+                            : mainPdfUrl,
 
-                chapters:
-                    finalChapters,
+                    chapters:
+                        finalChapters,
 
-                views: 0
-            });
+                    views: 0
+                });
 
             await newNovel.save();
 
             console.log(
-                '✅ Novel saved successfully:',
-                newNovel._id
+                '✅ Novel saved:',
+                newNovel._id.toString()
             );
 
             return res.status(201).json({
@@ -276,15 +289,16 @@ router.post(
                 success: true,
 
                 message:
-                    '🎉 Novel Cloudinary aur MongoDB par successfully publish ho gaya!',
+                    '🎉 Novel successfully publish ho gaya!',
 
-                data: newNovel
+                data:
+                    newNovel
             });
 
         } catch (error) {
 
             console.error(
-                '🔥 Upload Novel Error:',
+                '🔥 CREATE NOVEL ERROR:',
                 error
             );
 
@@ -293,7 +307,7 @@ router.post(
                 success: false,
 
                 error:
-                    'Database ya Cloudinary par save nahi ho saka!',
+                    'Novel save nahi ho saka.',
 
                 details:
                     error.message
@@ -303,7 +317,7 @@ router.post(
 );
 
 // ============================================================
-// 🟢 2. GET ALL NOVELS
+// GET ALL NOVELS
 // ============================================================
 
 router.get(
@@ -316,7 +330,7 @@ router.get(
                 await Novel
                     .find()
                     .sort({
-                        _id: -1
+                        createdAt: -1
                     });
 
             return res.status(200).json(
@@ -326,11 +340,12 @@ router.get(
         } catch (error) {
 
             console.error(
-                '🔥 Get Novels Error:',
+                '🔥 GET NOVELS ERROR:',
                 error
             );
 
             return res.status(500).json({
+                success: false,
                 error: error.message
             });
         }
@@ -338,7 +353,8 @@ router.get(
 );
 
 // ============================================================
-// 🟢 3. GET CATEGORIES
+// GET CATEGORIES
+// IMPORTANT: Ye /:id se PEHLE hona chahiye
 // ============================================================
 
 router.get(
@@ -359,11 +375,12 @@ router.get(
         } catch (error) {
 
             console.error(
-                '🔥 Categories Error:',
+                '🔥 CATEGORIES ERROR:',
                 error
             );
 
             return res.status(500).json({
+                success: false,
                 error:
                     'Categories load nahi ho sakeen!'
             });
@@ -372,7 +389,7 @@ router.get(
 );
 
 // ============================================================
-// 🟢 4. GET SINGLE NOVEL + VIEW COUNT
+// GET SINGLE NOVEL + VIEW
 // ============================================================
 
 router.get(
@@ -381,20 +398,23 @@ router.get(
 
         try {
 
+            const { id } =
+                req.params;
+
             if (
-                !mongoose.Types.ObjectId.isValid(
-                    req.params.id
-                )
+                !mongoose.Types.ObjectId.isValid(id)
             ) {
 
                 return res.status(400).json({
+                    success: false,
                     error: 'Invalid novel ID.'
                 });
             }
 
             const novel =
                 await Novel.findByIdAndUpdate(
-                    req.params.id,
+
+                    id,
 
                     {
                         $inc: {
@@ -410,6 +430,7 @@ router.get(
             if (!novel) {
 
                 return res.status(404).json({
+                    success: false,
                     error: 'Novel nahi mila!'
                 });
             }
@@ -421,11 +442,12 @@ router.get(
         } catch (error) {
 
             console.error(
-                '🔥 Single Novel Error:',
+                '🔥 SINGLE NOVEL ERROR:',
                 error
             );
 
             return res.status(500).json({
+                success: false,
                 error: error.message
             });
         }
@@ -433,107 +455,52 @@ router.get(
 );
 
 // ============================================================
-// 🟢 5. DELETE NOVEL
-// ============================================================
-
-router.delete(
-    '/:id',
-    async (req, res) => {
-
-        try {
-
-            if (
-                !mongoose.Types.ObjectId.isValid(
-                    req.params.id
-                )
-            ) {
-
-                return res.status(400).json({
-                    error: 'Invalid novel ID.'
-                });
-            }
-
-            const deletedNovel =
-                await Novel.findByIdAndDelete(
-                    req.params.id
-                );
-
-            if (!deletedNovel) {
-
-                return res.status(404).json({
-                    error: 'Novel nahi mila!'
-                });
-            }
-
-            return res.status(200).json({
-
-                success: true,
-
-                message:
-                    '🎉 Novel database se delete ho gaya!'
-            });
-
-        } catch (error) {
-
-            console.error(
-                '🔥 Delete Novel Error:',
-                error
-            );
-
-            return res.status(500).json({
-                error: error.message
-            });
-        }
-    }
-);
-
-// ============================================================
-// 🔥 6. ADD SINGLE CHAPTER / EPISODE
+// 🔥 ADD SINGLE CHAPTER
 // ============================================================
 
 router.post(
     '/:id/add-chapter',
     upload.single('chapterFile'),
+
     async (req, res) => {
 
+        console.log('');
         console.log(
-            '================================================'
+            '=========================================='
         );
-
         console.log(
-            '📚 ADD CHAPTER REQUEST RECEIVED'
+            '📚 ADD CHAPTER REQUEST'
         );
-
         console.log(
             'Novel ID:',
             req.params.id
         );
-
         console.log(
             'Chapter Title:',
             req.body.chapterTitle
         );
-
         console.log(
             'File:',
             req.file
                 ? req.file.originalname
                 : 'NO FILE'
         );
-
         console.log(
-            '================================================'
+            '=========================================='
         );
 
         try {
 
             // ------------------------------------------------
-            // CHECK NOVEL ID
+            // ID CHECK
             // ------------------------------------------------
+
+            const novelId =
+                req.params.id;
 
             if (
                 !mongoose.Types.ObjectId.isValid(
-                    req.params.id
+                    novelId
                 )
             ) {
 
@@ -547,7 +514,7 @@ router.post(
             }
 
             // ------------------------------------------------
-            // CHECK FILE
+            // FILE CHECK
             // ------------------------------------------------
 
             if (!req.file) {
@@ -562,14 +529,13 @@ router.post(
             }
 
             // ------------------------------------------------
-            // CHECK FILE TYPE
+            // PDF CHECK
             // ------------------------------------------------
 
-            const isPdf =
-                req.file.mimetype ===
-                'application/pdf';
-
-            if (!isPdf) {
+            if (
+                req.file.mimetype !==
+                'application/pdf'
+            ) {
 
                 return res.status(400).json({
 
@@ -581,15 +547,15 @@ router.post(
             }
 
             // ------------------------------------------------
-            // CHECK NOVEL
+            // NOVEL CHECK
             // ------------------------------------------------
 
-            const existingNovel =
+            const novel =
                 await Novel.findById(
-                    req.params.id
+                    novelId
                 );
 
-            if (!existingNovel) {
+            if (!novel) {
 
                 return res.status(404).json({
 
@@ -602,21 +568,21 @@ router.post(
 
             console.log(
                 '✅ Novel found:',
-                existingNovel.title
+                novel.title
             );
 
             // ------------------------------------------------
-            // CHAPTER TITLE
+            // TITLE
             // ------------------------------------------------
 
             const chapterTitle =
                 req.body.chapterTitle &&
                 req.body.chapterTitle.trim()
                     ? req.body.chapterTitle.trim()
-                    : 'Untitled Episode';
+                    : `Chapter ${(novel.chapters?.length || 0) + 1}`;
 
             // ------------------------------------------------
-            // CLOUDINARY UPLOAD
+            // CLOUDINARY
             // ------------------------------------------------
 
             console.log(
@@ -625,10 +591,23 @@ router.post(
 
             const result =
                 await uploadToCloudinary(
+
                     req.file.buffer,
+
                     'noveltube/chapters',
+
                     'raw'
                 );
+
+            if (
+                !result ||
+                !result.secure_url
+            ) {
+
+                throw new Error(
+                    'Cloudinary ne PDF URL return nahi kiya.'
+                );
+            }
 
             console.log(
                 '✅ Cloudinary upload successful'
@@ -640,13 +619,13 @@ router.post(
             );
 
             // ------------------------------------------------
-            // ADD CHAPTER TO MONGODB
+            // MONGODB UPDATE
             // ------------------------------------------------
 
             const updatedNovel =
                 await Novel.findByIdAndUpdate(
 
-                    req.params.id,
+                    novelId,
 
                     {
                         $push: {
@@ -680,15 +659,17 @@ router.post(
             }
 
             console.log(
-                '🎉 CHAPTER SUCCESSFULLY SAVED!'
+                '🎉 CHAPTER SAVED SUCCESSFULLY'
             );
 
             console.log(
-                'Total Chapters:',
-                updatedNovel.chapters
-                    ? updatedNovel.chapters.length
-                    : 0
+                'Total chapters:',
+                updatedNovel.chapters.length
             );
+
+            // ------------------------------------------------
+            // RESPONSE
+            // ------------------------------------------------
 
             return res.status(200).json({
 
@@ -697,18 +678,20 @@ router.post(
                 message:
                     '🎉 Chapter kamyabi se add ho gaya!',
 
-                data: updatedNovel
+                data:
+                    updatedNovel
             });
 
         } catch (error) {
 
+            console.error('');
             console.error(
-                '🔥🔥 ADD CHAPTER ERROR 🔥🔥'
+                '🔥 ADD CHAPTER ERROR'
             );
-
             console.error(
                 error
             );
+            console.error('');
 
             return res.status(500).json({
 
@@ -725,11 +708,12 @@ router.post(
 );
 
 // ============================================================
-// 🟢 7. DELETE CHAPTER
+// DELETE CHAPTER
 // ============================================================
 
 router.delete(
     '/:novelId/chapters/:chapterId',
+
     async (req, res) => {
 
         try {
@@ -746,8 +730,22 @@ router.delete(
             ) {
 
                 return res.status(400).json({
-                    message:
+                    success: false,
+                    error:
                         'Invalid novel ID.'
+                });
+            }
+
+            if (
+                !mongoose.Types.ObjectId.isValid(
+                    chapterId
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'Invalid chapter ID.'
                 });
             }
 
@@ -773,8 +771,10 @@ router.delete(
 
                 return res.status(404).json({
 
-                    message:
-                        'Novel ya chapter nahi mila!'
+                    success: false,
+
+                    error:
+                        'Novel nahi mila!'
                 });
             }
 
@@ -785,20 +785,23 @@ router.delete(
                 message:
                     '🎉 Chapter kamyabi se delete ho gaya!',
 
-                data: updatedNovel
+                data:
+                    updatedNovel
             });
 
         } catch (error) {
 
             console.error(
-                '🔥 Delete Chapter Error:',
+                '🔥 DELETE CHAPTER ERROR:',
                 error
             );
 
             return res.status(500).json({
 
-                message:
-                    'Server error! Chapter delete nahi ho saka.',
+                success: false,
+
+                error:
+                    'Chapter delete nahi ho saka.',
 
                 details:
                     error.message
@@ -808,7 +811,71 @@ router.delete(
 );
 
 // ============================================================
-// ERROR HANDLER FOR MULTER
+// DELETE NOVEL
+// ============================================================
+
+router.delete(
+    '/:id',
+    async (req, res) => {
+
+        try {
+
+            const { id } =
+                req.params;
+
+            if (
+                !mongoose.Types.ObjectId.isValid(id)
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'Invalid novel ID.'
+                });
+            }
+
+            const deletedNovel =
+                await Novel.findByIdAndDelete(
+                    id
+                );
+
+            if (!deletedNovel) {
+
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        'Novel nahi mila!'
+                });
+            }
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    '🎉 Novel database se delete ho gaya!'
+            });
+
+        } catch (error) {
+
+            console.error(
+                '🔥 DELETE NOVEL ERROR:',
+                error
+            );
+
+            return res.status(500).json({
+
+                success: false,
+
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+// ============================================================
+// MULTER ERROR
 // ============================================================
 
 router.use(
@@ -819,7 +886,7 @@ router.use(
         ) {
 
             console.error(
-                '🔥 Multer Error:',
+                '🔥 MULTER ERROR:',
                 error
             );
 
@@ -833,7 +900,7 @@ router.use(
                     success: false,
 
                     error:
-                        'PDF maximum 15MB ka ho sakta hai.'
+                        'File maximum 15MB ki ho sakti hai.'
                 });
             }
 

@@ -2,29 +2,23 @@
 // NovelTube Backend Server
 // ============================================================
 
+require('dotenv').config();
+
 const dns = require('dns');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
-// ============================================================
-// LOCAL DNS CONFIGURATION
-// ============================================================
-
-if (process.env.NODE_ENV !== 'production') {
-    dns.setServers(['8.8.8.8', '8.8.4.4']);
-    console.log('🛠️ Local DNS Active (ISP Bypass)');
-}
-
-// ============================================================
-// IMPORTS
-// ============================================================
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
+
+// ============================================================
+// LOCAL DNS
+// ============================================================
+
+if (process.env.NODE_ENV !== 'production') {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+    console.log('🛠️ Local DNS Active');
+}
 
 // ============================================================
 // APP
@@ -33,40 +27,41 @@ const multer = require('multer');
 const app = express();
 
 // ============================================================
-// MULTER - FILE UPLOAD
-// ============================================================
-
-const upload = multer({
-    dest: path.join(__dirname, 'uploads/')
-});
-
-// ============================================================
 // DATABASE
 // ============================================================
 
 const connectDB = require('./config/db.js');
 
 // ============================================================
-// CORS CONFIGURATION
+// MULTER FOR SERVER-SIDE IMAGE ROUTES
+// ============================================================
+
+const upload = multer({
+    dest: path.join(__dirname, 'uploads'),
+    limits: {
+        fileSize: 15 * 1024 * 1024
+    }
+});
+
+// ============================================================
+// CORS
 // ============================================================
 
 // IMPORTANT:
-// Ye actual URLs hain.
-// Inhein [URL](URL) format mein NA likhna.
+// Yahan Markdown links bilkul nahi hone chahiye.
 
 const allowedOrigins = [
     'https://noveltube.netlify.app',
     'http://localhost:3000',
     'http://localhost:5000',
-    'http://127.0.0.1:5500',
-    'http://localhost:5500'
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
 ];
 
 const corsOptions = {
     origin: function (origin, callback) {
 
-        // Browser ke baghair requests:
-        // Postman, curl, server-to-server etc.
+        // Postman / curl / server requests
         if (!origin) {
             return callback(null, true);
         }
@@ -76,17 +71,9 @@ const corsOptions = {
             return callback(null, true);
         }
 
-        // ----------------------------------------------------
-        // TEMPORARY SAFE FALLBACK
-        // ----------------------------------------------------
-        // NovelTube frontend ko CORS ki wajah se block hone se
-        // bachane ke liye unknown origins ko bhi allow kar rahe hain.
-        //
-        // Agar website stable ho jaye to isko restrict kiya
-        // ja sakta hai.
-        // ----------------------------------------------------
+        console.log('⚠️ CORS request from:', origin);
 
-        console.log('🌐 CORS Request From:', origin);
+        // Public API ke liye unknown origins ko bhi allow
         return callback(null, true);
     },
 
@@ -105,17 +92,24 @@ const corsOptions = {
         'X-Requested-With'
     ],
 
-    credentials: true,
+    // Firebase/token based frontend ke liye cookies ki zaroorat nahi
+    credentials: false,
 
     optionsSuccessStatus: 204
 };
-
-// IMPORTANT:
-// CORS middleware routes se PEHLE hona chahiye.
+app.use((req, res, next) => {
+    console.log(
+        `📡 ${new Date().toISOString()} | ${req.method} ${req.originalUrl} | Origin: ${req.headers.origin || 'none'}`
+    );
+    next();
+});
+// ============================================================
+// CORS MUST COME BEFORE ALL API ROUTES
+// ============================================================
 
 app.use(cors(corsOptions));
 
-// Explicit preflight handling
+// Explicit OPTIONS / preflight
 app.options(/.*/, cors(corsOptions));
 
 // ============================================================
@@ -132,19 +126,21 @@ app.use(
 );
 
 // ============================================================
-// WEBSITE GLOBAL VIEW TRACKER
+// WEBSITE VIEW TRACKER
 // ============================================================
 
 async function trackWebsiteVisit() {
+
     try {
+
         const db = mongoose.connection.db;
 
-        if (!db) {
-            return;
-        }
+        if (!db) return;
 
         await db.collection('site_stats').updateOne(
-            { _id: 'global_views' },
+            {
+                _id: 'global_views'
+            },
             {
                 $inc: {
                     count: 1
@@ -155,22 +151,20 @@ async function trackWebsiteVisit() {
             }
         );
 
-    } catch (err) {
+    } catch (error) {
+
         console.log(
             '⚠️ Global counter error:',
-            err.message
+            error.message
         );
     }
 }
 
 // ============================================================
-// GLOBAL VISIT MIDDLEWARE
+// WEBSITE VIEW MIDDLEWARE
 // ============================================================
 
 app.use((req, res, next) => {
-
-    // Sirf website pages ke visits count karein.
-    // API calls aur files ko global website view na banayein.
 
     if (
         !req.path.startsWith('/api') &&
@@ -207,98 +201,112 @@ app.use(
 // API ROUTES
 // ============================================================
 
-// Authentication
 app.use(
     '/api/auth',
     require('./routes/auth')
 );
 
-// Novels
 app.use(
     '/api/novels',
     require('./routes/novelRoutes')
 );
 
-// Chapters
 app.use(
     '/api/chapters',
     require('./routes/chapterRoutes')
 );
 
 // ============================================================
-// EDIT NOVEL DETAILS
+// EDIT NOVEL
 // ============================================================
 
-app.patch('/api/novels/:id', async (req, res) => {
+app.patch(
+    '/api/novels/:id',
+    async (req, res) => {
 
-    try {
+        try {
 
-        const db = mongoose.connection.db;
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid novel ID.'
+                });
+            }
 
-        if (!db) {
-            return res.status(503).json({
-                error: 'Database available nahi hai.'
+            const {
+                title,
+                author,
+                contentType,
+                status,
+                description,
+                category
+            } = req.body;
+
+            const updateData = {};
+
+            if (title !== undefined) {
+                updateData.title = title;
+            }
+
+            if (author !== undefined) {
+                updateData.author = author;
+            }
+
+            if (contentType !== undefined) {
+                updateData.contentType = contentType;
+            }
+
+            if (status !== undefined) {
+                updateData.status = status;
+            }
+
+            if (description !== undefined) {
+                updateData.description = description;
+            }
+
+            if (category !== undefined) {
+                updateData.category = category;
+            }
+
+            const updatedNovel =
+                await mongoose.model('Novel').findByIdAndUpdate(
+                    req.params.id,
+                    {
+                        $set: updateData
+                    },
+                    {
+                        new: true,
+                        runValidators: true
+                    }
+                );
+
+            if (!updatedNovel) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Novel nahi mila.'
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: 'Novel details updated successfully!',
+                data: updatedNovel
+            });
+
+        } catch (error) {
+
+            console.error(
+                '❌ Edit Novel Error:',
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                error: 'Novel details update nahi ho sakin.'
             });
         }
-
-        const {
-            title,
-            author,
-            contentType,
-            status,
-            description
-        } = req.body;
-
-        const updateData = {};
-
-        if (title !== undefined) {
-            updateData.title = title;
-        }
-
-        if (author !== undefined) {
-            updateData.author = author;
-        }
-
-        if (contentType !== undefined) {
-            updateData.contentType = contentType;
-        }
-
-        if (status !== undefined) {
-            updateData.status = status;
-        }
-
-        if (description !== undefined) {
-            updateData.description = description;
-        }
-
-        await db.collection('novels').updateOne(
-            {
-                _id: new mongoose.Types.ObjectId(
-                    req.params.id
-                )
-            },
-            {
-                $set: updateData
-            }
-        );
-
-        res.json({
-            success: true,
-            message: 'Novel details updated successfully!'
-        });
-
-    } catch (err) {
-
-        console.error(
-            '❌ Edit Novel Error:',
-            err
-        );
-
-        res.status(500).json({
-            error: 'Novel details update nahi ho sakin.'
-        });
     }
-});
+);
 
 // ============================================================
 // UPDATE NOVEL COVER
@@ -311,51 +319,58 @@ app.patch(
 
         try {
 
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid novel ID.'
+                });
+            }
+
             if (!req.file) {
                 return res.status(400).json({
+                    success: false,
                     error: 'Koi image file select nahi ki gayi.'
                 });
             }
 
-            const db = mongoose.connection.db;
-
-            if (!db) {
-                return res.status(503).json({
-                    error: 'Database available nahi hai.'
-                });
-            }
-
-            // Browser ke liye relative URL
             const newCoverUrl =
                 `/uploads/${req.file.filename}`;
 
-            await db.collection('novels').updateOne(
-                {
-                    _id: new mongoose.Types.ObjectId(
-                        req.params.id
-                    )
-                },
-                {
-                    $set: {
-                        coverImage: newCoverUrl
+            const updatedNovel =
+                await mongoose.model('Novel').findByIdAndUpdate(
+                    req.params.id,
+                    {
+                        $set: {
+                            coverImage: newCoverUrl
+                        }
+                    },
+                    {
+                        new: true
                     }
-                }
-            );
+                );
 
-            res.json({
+            if (!updatedNovel) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Novel nahi mila.'
+                });
+            }
+
+            return res.json({
                 success: true,
                 coverImage: newCoverUrl,
                 message: 'Cover photo updated successfully!'
             });
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 '❌ Cover Upload Error:',
-                err
+                error
             );
 
-            res.status(500).json({
+            return res.status(500).json({
+                success: false,
                 error: 'Cover update fail ho gaya.'
             });
         }
@@ -363,35 +378,36 @@ app.patch(
 );
 
 // ============================================================
-// USER MANAGEMENT
+// USERS
 // ============================================================
 
-// Get users
-app.get('/api/users', async (req, res) => {
+app.get(
+    '/api/users',
+    async (req, res) => {
 
-    try {
+        try {
 
-        const User = mongoose.model('User');
+            const User = mongoose.model('User');
 
-        const users = await User.find(
-            {},
-            '-password'
-        );
+            const users =
+                await User.find({}, '-password');
 
-        res.json(users);
+            return res.json(users);
 
-    } catch (err) {
+        } catch (error) {
 
-        console.error(
-            '❌ Users Fetch Error:',
-            err
-        );
+            console.error(
+                '❌ Users Error:',
+                error
+            );
 
-        res.status(500).json({
-            error: 'Users list nahi mil saki'
-        });
+            return res.status(500).json({
+                success: false,
+                error: 'Users list nahi mil saki.'
+            });
+        }
     }
-});
+);
 
 // ============================================================
 // BLOCK / UNBLOCK USER
@@ -405,13 +421,13 @@ app.patch(
 
             const User = mongoose.model('User');
 
-            const user = await User.findById(
-                req.params.id
-            );
+            const user =
+                await User.findById(req.params.id);
 
             if (!user) {
                 return res.status(404).json({
-                    error: 'User nahi mila'
+                    success: false,
+                    error: 'User nahi mila.'
                 });
             }
 
@@ -419,20 +435,21 @@ app.patch(
 
             await user.save();
 
-            res.json({
+            return res.json({
                 success: true,
                 message: 'User status updated successfully!'
             });
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 '❌ Toggle Block Error:',
-                err
+                error
             );
 
-            res.status(500).json({
-                error: 'Status change nahi ho saki'
+            return res.status(500).json({
+                success: false,
+                error: 'Status change nahi ho saki.'
             });
         }
     }
@@ -450,31 +467,38 @@ app.delete(
 
             const User = mongoose.model('User');
 
-            await User.findByIdAndDelete(
-                req.params.id
-            );
+            const deletedUser =
+                await User.findByIdAndDelete(req.params.id);
 
-            res.json({
+            if (!deletedUser) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'User nahi mila.'
+                });
+            }
+
+            return res.json({
                 success: true,
-                message: 'User deleted successfully'
+                message: 'User deleted successfully.'
             });
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 '❌ Delete User Error:',
-                err
+                error
             );
 
-            res.status(500).json({
-                error: 'User delete nahi ho saka'
+            return res.status(500).json({
+                success: false,
+                error: 'User delete nahi ho saka.'
             });
         }
     }
 );
 
 // ============================================================
-// SYSTEM ANALYTICS
+// ANALYTICS
 // ============================================================
 
 app.get(
@@ -488,68 +512,60 @@ app.get(
             const totalUsers =
                 await User.countDocuments();
 
-            let totalNovels = 0;
+            const Novel =
+                mongoose.model('Novel');
+
+            const totalNovels =
+                await Novel.countDocuments();
+
             let totalChapters = 0;
             let novelViewsTotal = 0;
             let overallWebsiteViews = 0;
 
-            try {
+            const db = mongoose.connection.db;
 
-                const db = mongoose.connection.db;
+            if (db) {
 
-                if (db) {
+                totalChapters =
+                    await db
+                        .collection('chapters')
+                        .countDocuments();
 
-                    totalNovels =
-                        await db
-                            .collection('novels')
-                            .countDocuments();
+                const novels =
+                    await Novel.find(
+                        {},
+                        {
+                            views: 1
+                        }
+                    ).lean();
 
-                    totalChapters =
-                        await db
-                            .collection('chapters')
-                            .countDocuments();
+                novelViewsTotal =
+                    novels.reduce(
+                        (sum, novel) =>
+                            sum + (Number(novel.views) || 0),
+                        0
+                    );
 
-                    const novelsList =
-                        await db
-                            .collection('novels')
-                            .find({})
-                            .toArray();
+                const stats =
+                    await db
+                        .collection('site_stats')
+                        .findOne({
+                            _id: 'global_views'
+                        });
 
-                    novelViewsTotal =
-                        novelsList.reduce(
-                            (sum, novel) =>
-                                sum +
-                                (Number(novel.views) || 0),
-                            0
-                        );
-
-                    const globalStats =
-                        await db
-                            .collection('site_stats')
-                            .findOne({
-                                _id: 'global_views'
-                            });
-
-                    overallWebsiteViews =
-                        globalStats
-                            ? Number(globalStats.count) || 0
-                            : 0;
-                }
-
-            } catch (dbErr) {
-
-                console.log(
-                    '⚠️ Analytics DB fallback:',
-                    dbErr.message
-                );
+                overallWebsiteViews =
+                    stats
+                        ? Number(stats.count) || 0
+                        : 0;
             }
 
-            res.json({
+            return res.json({
 
-                // Dashboard Genuine Total Views
-                totalViews: novelViewsTotal,
+                success: true,
 
-                // Overall website views
+                totalViews:
+                    novelViewsTotal,
+
                 overallWebsiteViews,
 
                 totalNovels,
@@ -559,31 +575,31 @@ app.get(
                 totalUsers
             });
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 '❌ Analytics Error:',
-                err
+                error
             );
 
-            res.status(500).json({
-                error: 'Analytics load nahi ho saki'
+            return res.status(500).json({
+                success: false,
+                error: 'Analytics load nahi ho saki.'
             });
         }
     }
 );
 
 // ============================================================
-// ADMIN PASSWORD VERIFY
+// ADMIN VERIFY
 // ============================================================
 
 app.post(
     '/api/admin/verify',
     (req, res) => {
 
-        const {
-            password
-        } = req.body;
+        const password =
+            req.body.password;
 
         const securePassword =
             process.env.ADMIN_PASSWORD ||
@@ -607,59 +623,86 @@ app.post(
 // HEALTH CHECK
 // ============================================================
 
-app.get('/api/health', (req, res) => {
+app.get(
+    '/api/health',
+    (req, res) => {
 
-    res.json({
-        success: true,
-        message: 'NovelTube API is running 🚀',
-        database:
-            mongoose.connection.readyState === 1
-                ? 'connected'
-                : 'disconnected',
-        time: new Date().toISOString()
-    });
+        return res.json({
 
-});
+            success: true,
 
-// ============================================================
-// 404 API HANDLER
-// ============================================================
+            message:
+                'NovelTube API is running 🚀',
 
-app.use('/api', (req, res) => {
+            database:
+                mongoose.connection.readyState === 1
+                    ? 'connected'
+                    : 'disconnected',
 
-    res.status(404).json({
-        success: false,
-        error: 'API route not found',
-        path: req.originalUrl
-    });
-
-});
-
-// ============================================================
-// GENERAL ERROR HANDLER
-// ============================================================
-
-app.use((err, req, res, next) => {
-
-    console.error(
-        '🔥 GLOBAL SERVER ERROR:',
-        err
-    );
-
-    // Agar multer ka error hai
-    if (err instanceof multer.MulterError) {
-
-        return res.status(400).json({
-            success: false,
-            error: `File upload error: ${err.message}`
+            time:
+                new Date().toISOString()
         });
     }
+);
 
-    res.status(500).json({
-        success: false,
-        error: 'Internal server error'
-    });
-});
+// ============================================================
+// API 404
+// ============================================================
+
+app.use(
+    '/api',
+    (req, res) => {
+
+        return res.status(404).json({
+
+            success: false,
+
+            error:
+                'API route not found',
+
+            path:
+                req.originalUrl
+        });
+    }
+);
+
+// ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
+app.use(
+    (error, req, res, next) => {
+
+        console.error(
+            '🔥 GLOBAL SERVER ERROR:',
+            error
+        );
+
+        if (error instanceof multer.MulterError) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                error:
+                    `File upload error: ${error.message}`
+            });
+        }
+
+        return res.status(500).json({
+
+            success: false,
+
+            error:
+                'Internal server error',
+
+            details:
+                process.env.NODE_ENV !== 'production'
+                    ? error.message
+                    : undefined
+        });
+    }
+);
 
 // ============================================================
 // START SERVER
@@ -669,7 +712,6 @@ const startServer = async () => {
 
     try {
 
-        // Database pehle connect hogi
         await connectDB();
 
         console.log(
@@ -689,11 +731,11 @@ const startServer = async () => {
                 );
 
                 console.log(
-                    `🌐 CORS Frontend: https://noveltube.netlify.app`
+                    '🌐 Frontend: https://noveltube.netlify.app'
                 );
 
                 console.log(
-                    `📚 API Base: /api`
+                    '📚 API: /api'
                 );
             }
         );
