@@ -17,7 +17,7 @@
             </div>
             <div class="flex space-x-3">
                 <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">← Website Home</a>
-                <a href="khufya-upload.html" class="bg-indigo-600 hover:bg-indigo-50 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload Studio</a>
+                <a href="khufya-upload.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload Studio</a>
             </div>
         </div>
 
@@ -40,10 +40,38 @@
             </div>
         </div>
 
+        <!-- 🎬 NEW FEATURE: DEDICATED EPISODE ADD CARD -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+            <div class="border-b border-slate-700 pb-2">
+                <h2 class="text-xl font-bold text-indigo-400">➕ Direct Episode Add Studio</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Dropdown se novel select karein aur baghair kisi error ke new episode upload karein.</p>
+            </div>
+            <form id="standaloneEpisodeForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select Target Novel</label>
+                    <select id="standaloneNovelSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                        <option value="">-- Choose Novel --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Episode / Chapter Title</label>
+                    <input type="text" id="standaloneChapterTitle" required placeholder="e.g., Episode 1 ya Chapter 5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select File (.pdf)</label>
+                    <input type="file" id="standaloneChapterFile" required accept=".pdf" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
+                </div>
+                <div class="md:col-span-3 flex justify-end">
+                    <button type="submit" id="standaloneSubmitBtn" class="w-full md:w-auto px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg">
+                        🚀 Direct Upload Episode
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700 pb-2">
                 <h2 class="text-xl font-bold text-indigo-400">📚 Library Studio Content Engine</h2>
-                <!-- Search Input added safely -->
                 <div class="w-full md:w-72">
                     <input type="text" id="novelSearchInput" oninput="filterNovels()" placeholder="🔍 Search novel by title..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-100">
                 </div>
@@ -92,6 +120,7 @@
 
     </div>
 
+    <!-- Modal 1: Add Chapter -->
     <div id="chapterModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
             <h3 class="text-lg font-bold text-indigo-400">➕ Add New Episode/Section</h3>
@@ -107,13 +136,13 @@
                 </div>
                 <div class="flex justify-end space-x-3 pt-2">
                     <button type="button" onclick="closeChapterModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
-                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-50 text-xs font-bold transition">Save Content</button>
+                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition">Save Content</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- New Manage Chapters Modal (Specifically for Deleting Chapters) -->
+    <!-- Modal 2: Manage Chapters -->
     <div id="manageChaptersModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-lg shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -122,7 +151,6 @@
             </div>
             <input type="hidden" id="manageNovelId">
             <div class="max-h-60 overflow-y-auto space-y-2 pr-1" id="chaptersListContainer">
-                <!-- Chapters list will render dynamically here -->
             </div>
             <div class="flex justify-end pt-2">
                 <button type="button" onclick="closeManageChaptersModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Close</button>
@@ -130,9 +158,73 @@
         </div>
     </div>
 
+    <!-- Modal 3: EDIT NOVEL DETAILS -->
+    <div id="editNovelModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 class="text-lg font-bold text-indigo-400">✏️ Edit Details</h3>
+                <button onclick="closeEditNovelModal()" class="text-slate-400 hover:text-slate-200 font-bold text-sm">✕</button>
+            </div>
+            <form id="editNovelForm" class="space-y-3">
+                <input type="hidden" id="editNovelId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Title Name</label>
+                    <input type="text" id="editTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Author / Writer</label>
+                    <input type="text" id="editAuthor" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Type</label>
+                    <select id="editContentType" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                        <option value="novel">📚 Novel</option>
+                        <option value="article">📰 Article</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status</label>
+                    <select id="editStatus" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description / Summary</label>
+                    <textarea id="editDescription" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeEditNovelModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
+                    <button type="submit" id="btnSaveDetails" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4: CHANGE COVER IMAGE -->
+    <div id="changeCoverModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 class="text-lg font-bold text-indigo-400">🖼️ Change Cover Image</h3>
+                <button onclick="closeCoverModal()" class="text-slate-400 hover:text-slate-200 font-bold text-sm">✕</button>
+            </div>
+            <form id="changeCoverForm" class="space-y-4">
+                <input type="hidden" id="coverNovelId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select New Cover Photo</label>
+                    <input type="file" id="newCoverFile" required accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeCoverModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
+                    <button type="submit" id="btnSaveCover" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">Upload New Cover</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        const API_BASE_URL = 'https://noveltube-1.onrender.com';
-        let allNovelsList = []; // Kept to safely search locally
+        const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
+        let allNovelsList = [];
 
         async function checkAdminAccess() {
             if (sessionStorage.getItem('admin_authenticated') === 'true') {
@@ -181,12 +273,25 @@
                 if (!response.ok) throw new Error("Load failed");
                 allNovelsList = await response.json();
                 renderNovelsTable(allNovelsList);
+                populateStandaloneDropdown(allNovelsList); // Auto fill new dropdown
             } catch (error) {
                 document.getElementById('novelsTableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
             }
         }
 
-        // Dedicated render function for search and load
+        // 🔄 NEW FUNCTION: Fill Dropdown Options
+        function populateStandaloneDropdown(list) {
+            const dropdown = document.getElementById('standaloneNovelSelect');
+            if (!dropdown) return;
+            dropdown.innerHTML = '<option value="">-- Choose Novel --</option>';
+            list.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item._id;
+                option.textContent = `${item.title} (${item.chapters ? item.chapters.length : 0} Episodes)`;
+                dropdown.appendChild(option);
+            });
+        }
+
         function renderNovelsTable(list) {
             const tableBody = document.getElementById('novelsTableBody');
             if (list.length === 0) {
@@ -199,9 +304,17 @@
                 return `
                     <tr class="hover:bg-slate-700/20 transition-colors">
                         <td class="p-3">
-                            <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
+                            <div class="relative group w-10 h-14">
+                                <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
+                                <button onclick="openCoverModal('${item._id}')" title="Change Cover" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-bold rounded-md transition">
+                                    🖼️ Edit
+                                </button>
+                            </div>
                         </td>
-                        <td class="p-3 font-semibold text-slate-200">${item.title}</td>
+                        <td class="p-3">
+                            <div class="font-semibold text-slate-200">${item.title}</div>
+                            <div class="text-[11px] text-slate-400">${item.author || 'Unknown Author'}</div>
+                        </td>
                         <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
                         <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
                         <td class="p-3 text-slate-400 text-xs">
@@ -209,20 +322,24 @@
                                 ${item.chapters ? item.chapters.length : 0} Items (Manage)
                             </button>
                         </td>
-                        <td class="p-3 text-center space-x-2">
-                            <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
-                                ➕ Add Part
-                            </button>
-                            <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow transition">
-                                🗑️ Delete
-                            </button>
+                        <td class="p-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                <button onclick="openEditNovelModal('${item._id}')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
+                                    ✏️ Edit
+                                </button>
+                                <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
+                                    ➕ Part
+                                </button>
+                                <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
+                                    🗑️ Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
             }).join('');
         }
 
-        // Search Filter Functionality
         function filterNovels() {
             const query = document.getElementById('novelSearchInput').value.toLowerCase();
             const filtered = allNovelsList.filter(item => item.title.toLowerCase().includes(query));
@@ -237,7 +354,6 @@
             } catch (error) { alert("🚨 Action fail."); }
         }
 
-        // Open specific chapters viewer/deleter
         function openManageChaptersModal(novelId) {
             const novel = allNovelsList.find(n => n._id === novelId);
             if (!novel) return;
@@ -267,31 +383,125 @@
             document.getElementById('manageChaptersModal').classList.add('hidden');
         }
 
-        // Delete specific chapter api integration
-        // Delete specific chapter api integration
-// Delete specific chapter api integration
-async function deleteChapter(novelId, chapterId) {
-    if (!confirm("⚠️ Kya aap is specific chapter ko delete karna chahte hain?")) return;
-    try {
-        // 🔥 Yahan hum ne URL exactly naye backend route ke mutabiq theek kar diya hai
-        // novelId aur chapterId dono paas ho rahe hain
-        const response = await fetch(`${API_BASE_URL}/novels/${novelId}/chapters/${chapterId}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            alert("🎉 Chapter successfully delete ho gaya!");
-            closeManageChaptersModal();
-            initDashboard(); // Yeh data ko refresh kar dega
-        } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert(`❌ Delete failed: ${errorData.message || 'Server ne reject kardia.'}`);
+        async function deleteChapter(novelId, chapterId) {
+            if (!confirm("⚠️ Kya aap is specific chapter ko delete karna chahte hain?")) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels/${novelId}/chapters/${chapterId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert("🎉 Chapter successfully delete ho gaya!");
+                    closeManageChaptersModal();
+                    initDashboard();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(`❌ Delete failed: ${errorData.message || 'Server ne reject kardia.'}`);
+                }
+            } catch (error) {
+                alert("🚨 Connection error! Chapter delete nahi ho saka.");
+            }
         }
-    } catch (error) {
-        alert("🚨 Connection error! Chapter delete nahi ho saka.");
-    }
-}
-        // Users rendering logic stream
+
+        /* ----- EDIT NOVEL DETAILS FEATURE ----- */
+        function openEditNovelModal(novelId) {
+            const novel = allNovelsList.find(n => n._id === novelId);
+            if (!novel) return;
+
+            document.getElementById('editNovelId').value = novelId;
+            document.getElementById('editTitle').value = novel.title || '';
+            document.getElementById('editAuthor').value = novel.author || '';
+            document.getElementById('editContentType').value = novel.contentType || 'novel';
+            document.getElementById('editStatus').value = novel.status || 'Ongoing';
+            document.getElementById('editDescription').value = novel.description || '';
+
+            document.getElementById('editNovelModal').classList.remove('hidden');
+        }
+
+        function closeEditNovelModal() {
+            document.getElementById('editNovelModal').classList.add('hidden');
+        }
+
+        document.getElementById('editNovelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editNovelId').value;
+            const btn = document.getElementById('btnSaveDetails');
+            btn.innerText = "⏳ Saving...";
+            btn.disabled = true;
+
+            const payload = {
+                title: document.getElementById('editTitle').value,
+                author: document.getElementById('editAuthor').value,
+                contentType: document.getElementById('editContentType').value,
+                status: document.getElementById('editStatus').value,
+                description: document.getElementById('editDescription').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert("🎉 Novel details kamyabi se update ho gayi hain!");
+                    closeEditNovelModal();
+                    initDashboard();
+                } else {
+                    alert("❌ Update failed! Check backend API.");
+                }
+            } catch (err) {
+                alert("🚨 Error saving novel details!");
+            } finally {
+                btn.innerText = "Save Changes";
+                btn.disabled = false;
+            }
+        });
+
+        /* ----- COVER UPDATE FEATURE ----- */
+        function openCoverModal(novelId) {
+            document.getElementById('coverNovelId').value = novelId;
+            document.getElementById('changeCoverModal').classList.remove('hidden');
+        }
+
+        function closeCoverModal() {
+            document.getElementById('changeCoverModal').classList.add('hidden');
+            document.getElementById('changeCoverForm').reset();
+        }
+
+        document.getElementById('changeCoverForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('coverNovelId').value;
+            const btn = document.getElementById('btnSaveCover');
+            btn.innerText = "⏳ Uploading...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('coverImage', document.getElementById('newCoverFile').files[0]);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels/${id}/update-cover`, {
+                    method: 'PATCH',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert("🖼️ Cover Image successfully change ho gai hai!");
+                    closeCoverModal();
+                    initDashboard();
+                } else {
+                    alert("❌ Cover upload failed!");
+                }
+            } catch (err) {
+                alert("🚨 Error uploading cover image!");
+            } finally {
+                btn.innerText = "Upload New Cover";
+                btn.disabled = false;
+            }
+        });
+
+        /* ----- USER MANAGEMENT ----- */
         async function loadUsers() {
             const tableBody = document.getElementById('usersTableBody');
             const countBadge = document.getElementById('totalUsersCount');
@@ -331,6 +541,7 @@ async function deleteChapter(novelId, chapterId) {
             } catch (e) { console.log(e); }
         }
 
+        /* ----- MODAL 1 CHAPTER FORM SUBMIT ----- */
         document.getElementById('chapterForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('modalNovelId').value;
@@ -360,10 +571,54 @@ async function deleteChapter(novelId, chapterId) {
                 }
             } catch (error) { 
                 console.error(error); 
-                alert("🚨 Network Error: Server se rabta nahi ho pa raha! Check karein backend chal raha hai ya nahi.");
+                alert("🚨 Network Error: Server se rabta nahi ho pa raha!");
             } finally { 
                 submitBtn.disabled = false; 
                 submitBtn.innerText = originalText;
+            }
+        });
+
+        /* 🚀 NEW EVENT LISTENER: STANDALONE EPISODE ADD FORM */
+        document.getElementById('standaloneEpisodeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const novelId = document.getElementById('standaloneNovelSelect').value;
+            const chapterTitle = document.getElementById('standaloneChapterTitle').value;
+            const fileInput = document.getElementById('standaloneChapterFile');
+            const submitBtn = document.getElementById('standaloneSubmitBtn');
+
+            if(!novelId) {
+                alert("⚠️ Pehle kisi novel ko select karein!");
+                return;
+            }
+
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerText = "⏳ Uploading Episode PDF...";
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('chapterTitle', chapterTitle);
+            formData.append('chapterFile', fileInput.files[0]);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/novels/${novelId}/add-chapter`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert("🎉 Episode successfully upload aur database mein add ho gaya!");
+                    document.getElementById('standaloneEpisodeForm').reset();
+                    initDashboard();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(`❌ Upload Error (${response.status}): ${errorData.message || 'Episode upload fail ho gaya.'}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("🚨 Network Connection Error!");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
             }
         });
 

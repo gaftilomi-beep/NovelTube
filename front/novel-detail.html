@@ -7,30 +7,34 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* Cross-platform robust font declaration */
+        /* Robust Cross-Platform Jameel Noori Nastaleeq Font */
         @font-face {
             font-family: 'Jameel Noori Nastaleeq';
-            src: local('Jameel Noori Nastaleeq'), 
-                 url('https://cdn.jsdelivr.net/gh/Sajjad26/Jameel-Noori-Nastaleeq-Web@master/Jameel%20Noori%20Nastaleeq.woff2') format('woff2'),
+            src: url('https://cdn.jsdelivr.net/gh/Sajjad26/Jameel-Noori-Nastaleeq-Web@master/Jameel%20Noori%20Nastaleeq.woff2') format('woff2'),
                  url('https://cdn.jsdelivr.net/gh/subbanyusuf/jameel-noori-nastaleeq@master/Jameel%20Noori%20Nastaleeq.ttf') format('truetype');
             font-display: swap;
             font-weight: normal;
             font-style: normal;
         }
 
+        /* Urdu Font Force Class */
         .font-urdu {
-            font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Urdu Typesetting', Arial, sans-serif !important;
-            text-rendering: optimizeLegibility;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            line-height: 2.2 !important;
-            font-size: 1.25rem !important;
+            font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Urdu Typesetting', serif !important;
+            line-height: 2.0 !important;
+        }
+
+        /* English/Default Font Class */
+        .smart-text {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
         }
     </style>
 </head>
+<script>(function(s){s.dataset.zone='11420936',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
 <body class="bg-slate-50 min-h-screen font-sans">
 
-    <div class="max-w-4xl mx-auto px-4 py-10">
+    <div class="max-w-4xl mx-auto px-4 py-8">
         
         <div id="loading" class="text-center text-slate-500 font-medium py-20">
             Tafseelat load ho rahi hain... ⏳
@@ -41,12 +45,14 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 items-center md:items-start">
                 <img id="novelCover" src="" alt="Cover" class="w-44 h-60 object-cover rounded-xl shadow-md border border-slate-100 flex-shrink-0">
                 
-                <div class="flex-1 text-center md:text-left space-y-2">
-                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                        <!-- Added font-urdu to title automatically -->
-                        <h1 id="novelTitle" class="text-3xl font-black text-slate-900 tracking-tight font-urdu" style="direction: rtl;"></h1>
+                <!-- Mobile: Centered | PC/Desktop: Left Aligned -->
+                <div class="flex-1 text-center md:text-left space-y-3 w-full">
+                    
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 w-full">
+                        <h1 id="novelTitle" dir="auto" class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight smart-text"></h1>
                         <span id="novelStatus" class="px-2.5 py-1 text-xs font-bold rounded-full"></span>
                     </div>
+
                     <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700"></span></p>
                     
                     <div class="flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 py-1">
@@ -55,8 +61,10 @@
 
                     <div class="pt-2">
                         <h3 id="aboutHeadingText" class="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">About Novel:</h3>
-                        <p id="novelDescription" class="font-urdu text-slate-800 mt-3 text-right" style="direction: rtl;"></p>
+                        <!-- Description auto align (Urdu = Right, English = Left) -->
+                        <p id="novelDescription" dir="auto" class="smart-text text-base text-slate-800 mt-2 leading-relaxed"></p>
                     </div>
+
                 </div>
             </div>
 
@@ -82,7 +90,14 @@
     </div>
 
   <script>
-    const API_BASE_URL = 'https://noveltube-1.onrender.com';
+    const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
+
+    // Urdu Detector Function
+    function isUrduText(text) {
+        if(!text) return false;
+        const urduRegex = /[\u0600-\u06FF]/;
+        return urduRegex.test(text);
+    }
 
     async function triggerGenuineView(id) {
         const storageKey = `view_cooldown_${id}`;
@@ -148,9 +163,30 @@
             }
 
             document.getElementById('novelCover').src = item.coverImage;
-            document.getElementById('novelTitle').innerText = item.title;
+            
+            // Title Urdu / English dynamic styling
+            const titleEl = document.getElementById('novelTitle');
+            titleEl.innerText = item.title;
+            if(isUrduText(item.title)) {
+                titleEl.classList.add('font-urdu');
+                titleEl.classList.remove('smart-text');
+            } else {
+                titleEl.classList.add('smart-text');
+                titleEl.classList.remove('font-urdu');
+            }
+
             document.getElementById('novelAuthor').innerText = item.author;
-            document.getElementById('novelDescription').innerText = item.description;
+            
+            // Description Urdu (Right) / English (Left) styling & Jameel Noori font
+            const descEl = document.getElementById('novelDescription');
+            descEl.innerText = item.description;
+            if(isUrduText(item.description)) {
+                descEl.classList.add('font-urdu', 'text-right');
+                descEl.classList.remove('smart-text', 'text-left');
+            } else {
+                descEl.classList.add('smart-text', 'text-left');
+                descEl.classList.remove('font-urdu', 'text-right');
+            }
             
             const statusBadge = document.getElementById('novelStatus');
             statusBadge.innerText = item.status;
@@ -177,16 +213,20 @@
                     const readUrl = hasChapterPdf ? ch.chapterPdf : '#';
                     
                     const clickHandler = hasChapterPdf ? '' : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
+                    
+                    const isUrduChapter = isUrduText(ch.chapterTitle);
+                    const fontClass = isUrduChapter ? 'font-urdu' : 'smart-text';
 
                     listContainer.innerHTML += `
-                        <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-xs hover:border-indigo-100 transition duration-200">
-                            <!-- Chapter titles par bhi font-urdu laga di -->
-                            <span class="font-urdu text-lg font-bold text-slate-700 truncate max-w-[140px] sm:max-w-[180px]">${ch.chapterTitle}</span>
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                <a href="${readUrl}" ${clickHandler} target="_blank" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl gap-3 hover:border-indigo-200 transition duration-200">
+                            <span dir="auto" class="${fontClass} text-base font-semibold text-slate-800 break-words w-full sm:w-auto">
+                                ${ch.chapterTitle}
+                            </span>
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+                                <a href="${readUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
                                     Read 📖
                                 </a>
-                                <a href="${forceDownloadUrl}" ${clickHandler} target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
+                                <a href="${forceDownloadUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
                                     Download 📥
                                 </a>
                             </div>
