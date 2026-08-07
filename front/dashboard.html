@@ -222,410 +222,415 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
-        let allNovelsList = [];
+   <script>
+    const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
+    let allNovelsList = [];
 
-        async function checkAdminAccess() {
-            if (sessionStorage.getItem('admin_authenticated') === 'true') {
+    async function checkAdminAccess() {
+        if (sessionStorage.getItem('admin_authenticated') === 'true') {
+            initDashboard();
+            return;
+        }
+        const password = prompt("🔐 Admin Security Pin Code:");
+        if (!password) { window.location.href = 'index.html'; return; }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const data = await response.json();
+            if (data.success) {
+                sessionStorage.getItem('admin_authenticated') || sessionStorage.setItem('admin_authenticated', 'true');
                 initDashboard();
-                return;
-            }
-            const password = prompt("🔐 Admin Security Pin Code:");
-            if (!password) { window.location.href = 'index.html'; return; }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/admin/verify`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    sessionStorage.setItem('admin_authenticated', 'true');
-                    initDashboard();
-                } else {
-                    alert("❌ Galat Password!");
-                    window.location.href = 'index.html';
-                }
-            } catch (error) {
+            } else {
+                alert("❌ Galat Password!");
                 window.location.href = 'index.html';
             }
+        } catch (error) {
+            window.location.href = 'index.html';
         }
+    }
 
-        checkAdminAccess();
+    checkAdminAccess();
 
-        async function fetchSystemAnalytics() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/analytics/system`);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('statViews').innerText = data.totalViews || 0;
-                    document.getElementById('statNovels').innerText = data.totalNovels || 0;
-                    document.getElementById('statChapters').innerText = data.totalChapters || 0;
-                }
-            } catch (error) { console.error(error); }
-        }
-
-        async function loadAdminDashboard() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels`);
-                if (!response.ok) throw new Error("Load failed");
-                allNovelsList = await response.json();
-                renderNovelsTable(allNovelsList);
-                populateStandaloneDropdown(allNovelsList); // Auto fill new dropdown
-            } catch (error) {
-                document.getElementById('novelsTableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
+    async function fetchSystemAnalytics() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/analytics/system`);
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('statViews').innerText = data.totalViews || 0;
+                document.getElementById('statNovels').innerText = data.totalNovels || 0;
+                document.getElementById('statChapters').innerText = data.totalChapters || 0;
             }
+        } catch (error) { console.error(error); }
+    }
+
+    async function loadAdminDashboard() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels`);
+            if (!response.ok) throw new Error("Load failed");
+            allNovelsList = await response.json();
+            renderNovelsTable(allNovelsList);
+            populateStandaloneDropdown(allNovelsList);
+        } catch (error) {
+            document.getElementById('novelsTableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
+        }
+    }
+
+    function populateStandaloneDropdown(list) {
+        const dropdown = document.getElementById('standaloneNovelSelect');
+        if (!dropdown) return;
+        dropdown.innerHTML = '<option value="">-- Choose Novel --</option>';
+        list.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item._id;
+            option.textContent = `${item.title} (${item.chapters ? item.chapters.length : 0} Episodes)`;
+            dropdown.appendChild(option);
+        });
+    }
+
+    function renderNovelsTable(list) {
+        const tableBody = document.getElementById('novelsTableBody');
+        if (list.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">No entries found.</td></tr>`;
+            return;
         }
 
-        // 🔄 NEW FUNCTION: Fill Dropdown Options
-        function populateStandaloneDropdown(list) {
-            const dropdown = document.getElementById('standaloneNovelSelect');
-            if (!dropdown) return;
-            dropdown.innerHTML = '<option value="">-- Choose Novel --</option>';
-            list.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item._id;
-                option.textContent = `${item.title} (${item.chapters ? item.chapters.length : 0} Episodes)`;
-                dropdown.appendChild(option);
-            });
-        }
-
-        function renderNovelsTable(list) {
-            const tableBody = document.getElementById('novelsTableBody');
-            if (list.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">No entries found.</td></tr>`;
-                return;
-            }
-
-            tableBody.innerHTML = list.map(item => {
-                const typeLabel = item.contentType === 'article' ? '📰 Article' : '📚 Novel';
-                return `
-                    <tr class="hover:bg-slate-700/20 transition-colors">
-                        <td class="p-3">
-                            <div class="relative group w-10 h-14">
-                                <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
-                                <button onclick="openCoverModal('${item._id}')" title="Change Cover" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-bold rounded-md transition">
-                                    🖼️ Edit
-                                </button>
-                            </div>
-                        </td>
-                        <td class="p-3">
-                            <div class="font-semibold text-slate-200">${item.title}</div>
-                            <div class="text-[11px] text-slate-400">${item.author || 'Unknown Author'}</div>
-                        </td>
-                        <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
-                        <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
-                        <td class="p-3 text-slate-400 text-xs">
-                            <button onclick="openManageChaptersModal('${item._id}')" class="underline text-indigo-400 hover:text-indigo-350 cursor-pointer">
-                                ${item.chapters ? item.chapters.length : 0} Items (Manage)
+        tableBody.innerHTML = list.map(item => {
+            const typeLabel = item.contentType === 'article' ? '📰 Article' : '📚 Novel';
+            return `
+                <tr class="hover:bg-slate-700/20 transition-colors">
+                    <td class="p-3">
+                        <div class="relative group w-10 h-14">
+                            <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
+                            <button onclick="openCoverModal('${item._id}')" title="Change Cover" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-bold rounded-md transition">
+                                🖼️ Edit
                             </button>
-                        </td>
-                        <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                <button onclick="openEditNovelModal('${item._id}')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
-                                    ✏️ Edit
-                                </button>
-                                <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
-                                    ➕ Part
-                                </button>
-                                <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
-                                    🗑️ Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function filterNovels() {
-            const query = document.getElementById('novelSearchInput').value.toLowerCase();
-            const filtered = allNovelsList.filter(item => item.title.toLowerCase().includes(query));
-            renderNovelsTable(filtered);
-        }
-
-        async function deleteNovel(id) {
-            if (!confirm("⚠️ WARNING: Kya aap permanently delete karna chahte hain?")) return;
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${id}`, { method: 'DELETE' });
-                if (response.ok) { alert("🗑️ Entry deleted successfully!"); initDashboard(); }
-            } catch (error) { alert("🚨 Action fail."); }
-        }
-
-        function openManageChaptersModal(novelId) {
-            const novel = allNovelsList.find(n => n._id === novelId);
-            if (!novel) return;
-
-            document.getElementById('manageNovelId').value = novelId;
-            const container = document.getElementById('chaptersListContainer');
-            
-            if (!novel.chapters || novel.chapters.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-500 text-xs py-4">Is novel ka koi chapter nahi hai.</p>`;
-            } else {
-                container.innerHTML = novel.chapters.map((chap, idx) => `
-                    <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700">
-                        <div>
-                            <span class="text-xs font-mono text-indigo-400 mr-2">#${idx + 1}</span>
-                            <span class="text-sm font-semibold text-slate-200">${chap.title}</span>
                         </div>
-                        <button onclick="deleteChapter('${novelId}', '${chap._id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">
-                            🗑️ Delete
+                    </td>
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-200">${item.title}</div>
+                        <div class="text-[11px] text-slate-400">${item.author || 'Unknown Author'}</div>
+                    </td>
+                    <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
+                    <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
+                    <td class="p-3 text-slate-400 text-xs">
+                        <button onclick="openManageChaptersModal('${item._id}')" class="underline text-indigo-400 hover:text-indigo-350 cursor-pointer">
+                            ${item.chapters ? item.chapters.length : 0} Items (Manage)
                         </button>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('manageChaptersModal').classList.remove('hidden');
-        }
-
-        function closeManageChaptersModal() {
-            document.getElementById('manageChaptersModal').classList.add('hidden');
-        }
-
-        async function deleteChapter(novelId, chapterId) {
-            if (!confirm("⚠️ Kya aap is specific chapter ko delete karna chahte hain?")) return;
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${novelId}/chapters/${chapterId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert("🎉 Chapter successfully delete ho gaya!");
-                    closeManageChaptersModal();
-                    initDashboard();
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(`❌ Delete failed: ${errorData.message || 'Server ne reject kardia.'}`);
-                }
-            } catch (error) {
-                alert("🚨 Connection error! Chapter delete nahi ho saka.");
-            }
-        }
-
-        /* ----- EDIT NOVEL DETAILS FEATURE ----- */
-        function openEditNovelModal(novelId) {
-            const novel = allNovelsList.find(n => n._id === novelId);
-            if (!novel) return;
-
-            document.getElementById('editNovelId').value = novelId;
-            document.getElementById('editTitle').value = novel.title || '';
-            document.getElementById('editAuthor').value = novel.author || '';
-            document.getElementById('editContentType').value = novel.contentType || 'novel';
-            document.getElementById('editStatus').value = novel.status || 'Ongoing';
-            document.getElementById('editDescription').value = novel.description || '';
-
-            document.getElementById('editNovelModal').classList.remove('hidden');
-        }
-
-        function closeEditNovelModal() {
-            document.getElementById('editNovelModal').classList.add('hidden');
-        }
-
-        document.getElementById('editNovelForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editNovelId').value;
-            const btn = document.getElementById('btnSaveDetails');
-            btn.innerText = "⏳ Saving...";
-            btn.disabled = true;
-
-            const payload = {
-                title: document.getElementById('editTitle').value,
-                author: document.getElementById('editAuthor').value,
-                contentType: document.getElementById('editContentType').value,
-                status: document.getElementById('editStatus').value,
-                description: document.getElementById('editDescription').value
-            };
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    alert("🎉 Novel details kamyabi se update ho gayi hain!");
-                    closeEditNovelModal();
-                    initDashboard();
-                } else {
-                    alert("❌ Update failed! Check backend API.");
-                }
-            } catch (err) {
-                alert("🚨 Error saving novel details!");
-            } finally {
-                btn.innerText = "Save Changes";
-                btn.disabled = false;
-            }
-        });
-
-        /* ----- COVER UPDATE FEATURE ----- */
-        function openCoverModal(novelId) {
-            document.getElementById('coverNovelId').value = novelId;
-            document.getElementById('changeCoverModal').classList.remove('hidden');
-        }
-
-        function closeCoverModal() {
-            document.getElementById('changeCoverModal').classList.add('hidden');
-            document.getElementById('changeCoverForm').reset();
-        }
-
-        document.getElementById('changeCoverForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('coverNovelId').value;
-            const btn = document.getElementById('btnSaveCover');
-            btn.innerText = "⏳ Uploading...";
-            btn.disabled = true;
-
-            const formData = new FormData();
-            formData.append('coverImage', document.getElementById('newCoverFile').files[0]);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${id}/update-cover`, {
-                    method: 'PATCH',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    alert("🖼️ Cover Image successfully change ho gai hai!");
-                    closeCoverModal();
-                    initDashboard();
-                } else {
-                    alert("❌ Cover upload failed!");
-                }
-            } catch (err) {
-                alert("🚨 Error uploading cover image!");
-            } finally {
-                btn.innerText = "Upload New Cover";
-                btn.disabled = false;
-            }
-        });
-
-        /* ----- USER MANAGEMENT ----- */
-        async function loadUsers() {
-            const tableBody = document.getElementById('usersTableBody');
-            const countBadge = document.getElementById('totalUsersCount');
-            const statUsersElement = document.getElementById('statUsers');
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/users`);
-                if (!response.ok) return;
-                const users = await response.json();
-                countBadge.innerText = `${users.length} Users`;
-                if(statUsersElement) statUsersElement.innerText = users.length;
-                
-                tableBody.innerHTML = users.map(user => `
-                    <tr class="hover:bg-slate-700/30 transition-colors">
-                        <td class="p-3 font-mono text-xs text-slate-500">${user._id}</td>
-                        <td class="p-3 font-semibold text-slate-200">${user.username || 'N/A'}</td>
-                        <td class="p-3 text-slate-400 text-xs">${user.email}</td>
-                        <td class="p-3">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${user.isBlocked ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
-                                ${user.isBlocked ? 'Blocked' : 'Active'}
-                            </span>
-                        </td>
-                        <td class="p-3 text-center space-x-2">
-                            <button onclick="toggleBlockUser('${user._id}', ${user.isBlocked || false})" class="px-2 py-1 text-xs font-bold rounded-lg ${user.isBlocked ? 'bg-emerald-600' : 'bg-amber-600'} text-white">
-                                ${user.isBlocked ? 'Unblock' : 'Block'}
+                    </td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                            <button onclick="openEditNovelModal('${item._id}')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
+                                ✏️ Edit
                             </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) { console.log(e); }
-        }
+                            <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
+                                ➕ Part
+                            </button>
+                            <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
-        async function toggleBlockUser(userId, isBlocked) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/users/${userId}/toggle-block`, { method: 'PATCH' });
-                if (response.ok) loadUsers();
-            } catch (e) { console.log(e); }
-        }
+    function filterNovels() {
+        const query = document.getElementById('novelSearchInput').value.toLowerCase();
+        const filtered = allNovelsList.filter(item => item.title.toLowerCase().includes(query));
+        renderNovelsTable(filtered);
+    }
 
-        /* ----- MODAL 1 CHAPTER FORM SUBMIT ----- */
-        document.getElementById('chapterForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('modalNovelId').value;
-            const submitBtn = document.getElementById('modalSubmitBtn');
+    async function deleteNovel(id) {
+        if (!confirm("⚠️ WARNING: Kya aap permanently delete karna chahte hain?")) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${id}`, { method: 'DELETE' });
+            if (response.ok) { alert("🗑️ Entry deleted successfully!"); initDashboard(); }
+        } catch (error) { alert("🚨 Action fail."); }
+    }
+
+    function openManageChaptersModal(novelId) {
+        const novel = allNovelsList.find(n => n._id === novelId);
+        if (!novel) return;
+
+        document.getElementById('manageNovelId').value = novelId;
+        const container = document.getElementById('chaptersListContainer');
+        
+        if (!novel.chapters || novel.chapters.length === 0) {
+            container.innerHTML = `<p class="text-center text-slate-500 text-xs py-4">Is novel ka koi chapter nahi hai.</p>`;
+        } else {
+            container.innerHTML = novel.chapters.map((chap, idx) => `
+                <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700">
+                    <div>
+                        <span class="text-xs font-mono text-indigo-400 mr-2">#${idx + 1}</span>
+                        <span class="text-sm font-semibold text-slate-200">${chap.title}</span>
+                    </div>
+                    <button onclick="deleteChapter('${novelId}', '${chap._id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">
+                        🗑️ Delete
+                    </button>
+                </div>
+            `).join('');
+        }
+        document.getElementById('manageChaptersModal').classList.remove('hidden');
+    }
+
+    function closeManageChaptersModal() {
+        document.getElementById('manageChaptersModal').classList.add('hidden');
+    }
+
+    async function deleteChapter(novelId, chapterId) {
+        if (!confirm("⚠️ Kya aap is specific chapter ko delete karna chahte hain?")) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${novelId}/chapters/${chapterId}`, {
+                method: 'DELETE'
+            });
             
-            const originalText = submitBtn.innerText;
-            submitBtn.innerText = "⏳ Uploading PDF...";
-            submitBtn.disabled = true;
-
-            const formData = new FormData();
-            formData.append('chapterTitle', document.getElementById('nextChapterTitle').value);
-            formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { 
-                    method: 'POST', 
-                    body: formData 
-                });
-                
-                if (response.ok) { 
-                    alert("🎉 Chapter kamyabi se add ho gaya hai!");
-                    closeChapterModal(); 
-                    initDashboard(); 
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(`❌ Server Error (${response.status}): ${errorData.message || 'Chapter save nahi ho saka. Route check karein.'}`);
-                }
-            } catch (error) { 
-                console.error(error); 
-                alert("🚨 Network Error: Server se rabta nahi ho pa raha!");
-            } finally { 
-                submitBtn.disabled = false; 
-                submitBtn.innerText = originalText;
+            if (response.ok) {
+                alert("🎉 Chapter successfully delete ho gaya!");
+                closeManageChaptersModal();
+                initDashboard();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`❌ Delete failed: ${errorData.message || 'Server ne reject kardia.'}`);
             }
-        });
+        } catch (error) {
+            alert("🚨 Connection error! Chapter delete nahi ho saka.");
+        }
+    }
 
-        /* 🚀 NEW EVENT LISTENER: STANDALONE EPISODE ADD FORM */
-        document.getElementById('standaloneEpisodeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const novelId = document.getElementById('standaloneNovelSelect').value;
-            const chapterTitle = document.getElementById('standaloneChapterTitle').value;
-            const fileInput = document.getElementById('standaloneChapterFile');
-            const submitBtn = document.getElementById('standaloneSubmitBtn');
+    /* ----- EDIT NOVEL DETAILS FEATURE ----- */
+    function openEditNovelModal(novelId) {
+        const novel = allNovelsList.find(n => n._id === novelId);
+        if (!novel) return;
 
-            if(!novelId) {
-                alert("⚠️ Pehle kisi novel ko select karein!");
-                return;
+        document.getElementById('editNovelId').value = novelId;
+        document.getElementById('editTitle').value = novel.title || '';
+        document.getElementById('editAuthor').value = novel.author || '';
+        document.getElementById('editContentType').value = novel.contentType || 'novel';
+        document.getElementById('editStatus').value = novel.status || 'Ongoing';
+        document.getElementById('editDescription').value = novel.description || '';
+
+        document.getElementById('editNovelModal').classList.remove('hidden');
+    }
+
+    function closeEditNovelModal() {
+        document.getElementById('editNovelModal').classList.add('hidden');
+    }
+
+    document.getElementById('editNovelForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editNovelId').value;
+        const btn = document.getElementById('btnSaveDetails');
+        btn.innerText = "⏳ Saving...";
+        btn.disabled = true;
+
+        const payload = {
+            title: document.getElementById('editTitle').value,
+            author: document.getElementById('editAuthor').value,
+            contentType: document.getElementById('editContentType').value,
+            status: document.getElementById('editStatus').value,
+            description: document.getElementById('editDescription').value
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert("🎉 Novel details kamyabi se update ho gayi hain!");
+                closeEditNovelModal();
+                initDashboard();
+            } else {
+                alert("❌ Update failed! Check backend API.");
             }
+        } catch (err) {
+            alert("🚨 Error saving novel details!");
+        } finally {
+            btn.innerText = "Save Changes";
+            btn.disabled = false;
+        }
+    });
 
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerText = "⏳ Uploading Episode PDF...";
-            submitBtn.disabled = true;
+    /* ----- COVER UPDATE FEATURE ----- */
+    function openCoverModal(novelId) {
+        document.getElementById('coverNovelId').value = novelId;
+        document.getElementById('changeCoverModal').classList.remove('hidden');
+    }
 
-            const formData = new FormData();
-            formData.append('chapterTitle', chapterTitle);
-            formData.append('chapterFile', fileInput.files[0]);
+    function closeCoverModal() {
+        document.getElementById('changeCoverModal').classList.add('hidden');
+        document.getElementById('changeCoverForm').reset();
+    }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/novels/${novelId}/add-chapter`, {
-                    method: 'POST',
-                    body: formData
-                });
+    document.getElementById('changeCoverForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('coverNovelId').value;
+        const btn = document.getElementById('btnSaveCover');
+        btn.innerText = "⏳ Uploading...";
+        btn.disabled = true;
 
-                if (response.ok) {
-                    alert("🎉 Episode successfully upload aur database mein add ho gaya!");
-                    document.getElementById('standaloneEpisodeForm').reset();
-                    initDashboard();
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(`❌ Upload Error (${response.status}): ${errorData.message || 'Episode upload fail ho gaya.'}`);
-                }
-            } catch (error) {
-                console.error(error);
-                alert("🚨 Network Connection Error!");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
+        const formData = new FormData();
+        formData.append('coverImage', document.getElementById('newCoverFile').files[0]);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${id}/update-cover`, {
+                method: 'PATCH',
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("🖼️ Cover Image successfully change ho gai hai!");
+                closeCoverModal();
+                initDashboard();
+            } else {
+                alert("❌ Cover upload failed!");
             }
-        });
+        } catch (err) {
+            alert("🚨 Error uploading cover image!");
+        } finally {
+            btn.innerText = "Upload New Cover";
+            btn.disabled = false;
+        }
+    });
 
-        function openChapterModal(id) { document.getElementById('modalNovelId').value = id; document.getElementById('chapterModal').classList.remove('hidden'); }
-        function closeChapterModal() { document.getElementById('chapterModal').classList.add('hidden'); document.getElementById('chapterForm').reset(); }
+    /* ----- USER MANAGEMENT ----- */
+    async function loadUsers() {
+        const tableBody = document.getElementById('usersTableBody');
+        const countBadge = document.getElementById('totalUsersCount');
+        const statUsersElement = document.getElementById('statUsers');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/users`);
+            if (!response.ok) return;
+            const users = await response.json();
+            countBadge.innerText = `${users.length} Users`;
+            if(statUsersElement) statUsersElement.innerText = users.length;
+            
+            tableBody.innerHTML = users.map(user => `
+                <tr class="hover:bg-slate-700/30 transition-colors">
+                    <td class="p-3 font-mono text-xs text-slate-500">${user._id}</td>
+                    <td class="p-3 font-semibold text-slate-200">${user.username || 'N/A'}</td>
+                    <td class="p-3 text-slate-400 text-xs">${user.email}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${user.isBlocked ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                            ${user.isBlocked ? 'Blocked' : 'Active'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="toggleBlockUser('${user._id}', ${user.isBlocked || false})" class="px-2 py-1 text-xs font-bold rounded-lg ${user.isBlocked ? 'bg-emerald-600' : 'bg-amber-600'} text-white">
+                            ${user.isBlocked ? 'Unblock' : 'Block'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) { console.log(e); }
+    }
 
-        function initDashboard() { fetchSystemAnalytics(); loadAdminDashboard(); loadUsers(); }
-    </script>
+    async function toggleBlockUser(userId, isBlocked) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${userId}/toggle-block`, { method: 'PATCH' });
+            if (response.ok) loadUsers();
+        } catch (e) { console.log(e); }
+    }
+
+    /* ----- MODAL 1 CHAPTER FORM SUBMIT (FIXED) ----- */
+    document.getElementById('chapterForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('modalNovelId').value;
+        const submitBtn = document.getElementById('modalSubmitBtn');
+        
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = "⏳ Uploading PDF...";
+        submitBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('chapterTitle', document.getElementById('nextChapterTitle').value);
+        formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { 
+                method: 'POST', 
+                headers: {
+                    'Authorization': `Bearer ${sessionStorage.getItem('admin_authenticated')}`
+                },
+                body: formData 
+            });
+            
+            if (response.ok) { 
+                alert("🎉 Chapter kamyabi se add ho gaya hai!");
+                closeChapterModal(); 
+                initDashboard(); 
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`❌ Server Error (${response.status}): ${errorData.message || 'Chapter save nahi ho saka.'}`);
+            }
+        } catch (error) { 
+            console.error(error); 
+            alert("🚨 Network Error: Server se rabta nahi ho pa raha!");
+        } finally { 
+            submitBtn.disabled = false; 
+            submitBtn.innerText = originalText;
+        }
+    });
+
+    /* ----- STANDALONE EPISODE ADD FORM (FIXED) ----- */
+    document.getElementById('standaloneEpisodeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const novelId = document.getElementById('standaloneNovelSelect').value;
+        const chapterTitle = document.getElementById('standaloneChapterTitle').value;
+        const fileInput = document.getElementById('standaloneChapterFile');
+        const submitBtn = document.getElementById('standaloneSubmitBtn');
+
+        if(!novelId) {
+            alert("⚠️ Pehle kisi novel ko select karein!");
+            return;
+        }
+
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerText = "⏳ Uploading Episode PDF...";
+        submitBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('chapterTitle', chapterTitle);
+        formData.append('chapterFile', fileInput.files[0]);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${novelId}/add-chapter`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${sessionStorage.getItem('admin_authenticated')}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("🎉 Episode successfully upload aur database mein add ho gaya!");
+                document.getElementById('standaloneEpisodeForm').reset();
+                initDashboard();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`❌ Upload Error (${response.status}): ${errorData.message || 'Episode upload fail ho gaya.'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("🚨 Network Connection Error!");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
+
+    function openChapterModal(id) { document.getElementById('modalNovelId').value = id; document.getElementById('chapterModal').classList.remove('hidden'); }
+    function closeChapterModal() { document.getElementById('chapterModal').classList.add('hidden'); document.getElementById('chapterForm').reset(); }
+
+    function initDashboard() { fetchSystemAnalytics(); loadAdminDashboard(); loadUsers(); }
+</script>
 </body>
 </html>
