@@ -421,4 +421,15 @@ app.use((error, req, res, next) => {
     });
 });
 
+// ============================================================
+// START SERVER (Render & Local Compatible)
+// ============================================================
+
+const PORT = process.env.PORT || 5000;
+
+const server = app.listen(PORT, () => {
+    console.log(`🚀 Server successfully running on port ${PORT}`);
+});
+
+// Serverless / Vercel compatibility
 module.exports = app;
