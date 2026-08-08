@@ -1,636 +1,513 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ur">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard & Analytics - NovelTube</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovelTube Admin Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; color: #333; padding: 20px; }
+    
+    /* PASSWORD LOCK SCREEN OVERLAY */
+    #authOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #0f172a;
+      z-index: 999999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .auth-card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .auth-card h3 { margin-bottom: 8px; color: #1e293b; font-size: 22px; }
+    .auth-card p { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+    .auth-card input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 15px;
+      margin-bottom: 15px;
+      outline: none;
+      text-align: center;
+    }
+    .auth-card button {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .auth-card button:hover { background: #1d4ed8; }
+    #authError { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
+
+    /* DASHBOARD LAYOUT */
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .stats-card { background: #4a90e2; color: white; padding: 15px 25px; border-radius: 6px; text-align: right; }
+    .stats-card h3 { font-size: 24px; }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
+    .search-bar { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; outline: none; }
+    .novels-table-container { background: #fff; border-radius: 8px; overflow-x: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    th { background-color: #f8f9fa; color: #555; font-weight: 600; }
+    .novel-cover { width: 50px; height: 70px; object-fit: cover; border-radius: 4px; background: #e0e0e0; }
+    .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; margin-right: 5px; }
+    .btn-edit { background-color: #ffc107; color: #000; }
+    .btn-add-part { background-color: #28a745; color: #fff; }
+    .btn-manage-parts { background-color: #17a2b8; color: #fff; }
+    .btn-delete { background-color: #dc3545; color: #fff; }
+    
+    /* MODALS */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #fff; padding: 25px; border-radius: 8px; width: 100%; max-width: 550px; }
+    .modal-content h3 { margin-bottom: 15px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .btn-close { background-color: #6c757d; color: white; }
+    .btn-save { background-color: #007bff; color: white; }
+
+    /* CHAPTERS TABLE IN MODAL */
+    .ch-list-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .ch-list-table th, .ch-list-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+  </style>
 </head>
-<body class="bg-slate-900 min-h-screen text-slate-100 p-4 md:p-8">
+<body>
 
-    <div class="max-w-6xl mx-auto space-y-6">
-        
-        <div class="flex flex-col sm:flex-row justify-between items-center bg-slate-800 p-6 rounded-2xl border border-slate-700 gap-4 shadow-xl">
-            <div>
-                <h1 class="text-2xl font-black text-indigo-400">🎛️ NovelTube Management Center</h1>
-                <p class="text-xs text-slate-400 mt-0.5">Live Traffic, Views Tracker aur User Control Studio</p>
-            </div>
-            <div class="flex space-x-3">
-                <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">← Website Home</a>
-                <a href="khufya-upload.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Upload Studio</a>
-            </div>
-        </div>
+<!-- 1. PASSWORD AUTH OVERLAY -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <h3>Admin Security Lock</h3>
+    <p>Dashboard kholne ke liye password daakhil karein</p>
+    <input type="password" id="adminPasswordInput" placeholder="Enter Password" onkeypress="handlePassEnter(event)">
+    <button onclick="verifyDashboardPassword()">Login</button>
+    <p id="authError">Ghalat Password! Dobara koshish karein.</p>
+  </div>
+</div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Genuine Total Views</p>
-                <p id="statViews" class="text-2xl font-black text-indigo-400 mt-1">0</p>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Items (Novels/Articles)</p>
-                <p id="statNovels" class="text-2xl font-black text-emerald-400 mt-1">0</p>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Episodes</p>
-                <p id="statChapters" class="text-2xl font-black text-amber-400 mt-1">0</p>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Users</p>
-                <p id="statUsers" class="text-2xl font-black text-purple-400 mt-1">0</p>
-            </div>
-        </div>
+<!-- 2. MAIN DASHBOARD CONTENT -->
+<div class="container">
+  <header>
+    <h2>NovelTube Admin Dashboard</h2>
+    <div class="stats-card">
+      <span>Total Novel Views</span>
+      <h3 id="totalViews">0</h3>
+    </div>
+  </header>
 
-        <!-- 🎬 NEW FEATURE: DEDICATED EPISODE ADD CARD -->
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-            <div class="border-b border-slate-700 pb-2">
-                <h2 class="text-xl font-bold text-indigo-400">➕ Direct Episode Add Studio</h2>
-                <p class="text-xs text-slate-400 mt-0.5">Dropdown se novel select karein aur baghair kisi error ke new episode upload karein.</p>
-            </div>
-            <form id="standaloneEpisodeForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select Target Novel</label>
-                    <select id="standaloneNovelSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                        <option value="">-- Choose Novel --</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Episode / Chapter Title</label>
-                    <input type="text" id="standaloneChapterTitle" required placeholder="e.g., Episode 1 ya Chapter 5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select File (.pdf)</label>
-                    <input type="file" id="standaloneChapterFile" required accept=".pdf" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
-                </div>
-                <div class="md:col-span-3 flex justify-end">
-                    <button type="submit" id="standaloneSubmitBtn" class="w-full md:w-auto px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg">
-                        🚀 Direct Upload Episode
-                    </button>
-                </div>
-            </form>
-        </div>
+  <div class="controls">
+    <input type="text" id="searchInput" class="search-bar" placeholder="Search novel by title or author name..." onkeyup="filterNovels()">
+  </div>
 
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700 pb-2">
-                <h2 class="text-xl font-bold text-indigo-400">📚 Library Studio Content Engine</h2>
-                <div class="w-full md:w-72">
-                    <input type="text" id="novelSearchInput" oninput="filterNovels()" placeholder="🔍 Search novel by title..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-indigo-500 text-slate-100">
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase bg-slate-900/40">
-                            <th class="p-3">Cover</th>
-                            <th class="p-3">Title Name</th>
-                            <th class="p-3">Type</th>
-                            <th class="p-3">Genuine Views</th>
-                            <th class="p-3">Episodes/Parts</th>
-                            <th class="p-3 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="novelsTableBody" class="text-sm divide-y divide-slate-700/50">
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="novels-table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Cover</th>
+          <th>Novel Title</th>
+          <th>Author Name</th>
+          <th>Status</th>
+          <th>Views</th>
+          <th>Chapters</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="novelsTableBody">
+        <tr><td colspan="7" style="text-align:center;">Loading database novels...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <div>
-                    <h2 class="text-xl font-bold text-indigo-400">👥 User Management Center</h2>
-                </div>
-                <span id="totalUsersCount" class="bg-indigo-950 text-indigo-400 text-xs font-bold px-3 py-1 rounded-full border border-indigo-800">0 Users</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-700 text-slate-400 text-xs font-semibold uppercase bg-slate-900/40">
-                            <th class="p-3">User ID</th>
-                            <th class="p-3">Username</th>
-                            <th class="p-3">Email</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody" class="text-sm divide-y divide-slate-700/50">
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<!-- EDIT NOVEL MODAL -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>Edit Novel Details</h3>
+    <input type="hidden" id="editNovelId">
+    <div class="form-group">
+      <label>Novel Title</label>
+      <input type="text" id="editTitle">
+    </div>
+    <div class="form-group">
+      <label>Author Name</label>
+      <input type="text" id="editAuthor">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <input type="text" id="editCategory">
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="editStatus">
+        <option value="Ongoing">Ongoing</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="editDescription" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Change Cover Image (Optional)</label>
+      <input type="file" id="editCover" accept="image/*">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-close" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-save" onclick="saveNovelEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
 
+<!-- ADD CHAPTER MODAL -->
+<div id="chapterModal" class="modal">
+  <div class="modal-content">
+    <h3>Add New Part / Chapter</h3>
+    <input type="hidden" id="chapterNovelId">
+    <div class="form-group">
+      <label>Chapter / Episode Title</label>
+      <input type="text" id="chapterTitle" placeholder="e.g. Episode 1 ya Chapter 5">
+    </div>
+    <div class="form-group">
+      <label>PDF File</label>
+      <input type="file" id="chapterFile" accept=".pdf">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-close" onclick="closeModal('chapterModal')">Cancel</button>
+      <button class="btn btn-save" onclick="saveChapter()">Upload Chapter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE CHAPTERS MODAL (EDIT/DELETE CHAPTERS) -->
+<div id="manageChaptersModal" class="modal">
+  <div class="modal-content">
+    <h3 id="manageChaptersTitle">Manage Chapters</h3>
+    <input type="hidden" id="manageNovelId">
+    
+    <div id="chaptersContainer" style="max-height: 350px; overflow-y: auto; margin-top: 15px;">
+      <!-- Dynamic Chapters List -->
     </div>
 
-    <!-- Modal 1: Add Chapter -->
-    <div id="chapterModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-indigo-400">➕ Add New Episode/Section</h3>
-            <input type="hidden" id="modalNovelId">
-            <form id="chapterForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Title / Label Name</label>
-                    <input type="text" id="nextChapterTitle" required placeholder="e.g., Episode 15" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select File (.pdf)</label>
-                    <input type="file" id="nextChapterFile" required accept=".pdf" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
-                </div>
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeChapterModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
-                    <button type="submit" id="modalSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition">Save Content</button>
-                </div>
-            </form>
-        </div>
+    <div class="modal-actions">
+      <button class="btn btn-close" onclick="closeModal('manageChaptersModal')">Close</button>
     </div>
+  </div>
+</div>
 
-    <!-- Modal 2: Manage Chapters -->
-    <div id="manageChaptersModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-lg shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 class="text-lg font-bold text-indigo-400">📖 Manage & Delete Chapters</h3>
-                <button onclick="closeManageChaptersModal()" class="text-slate-400 hover:text-slate-200 font-bold text-sm">✕</button>
-            </div>
-            <input type="hidden" id="manageNovelId">
-            <div class="max-h-60 overflow-y-auto space-y-2 pr-1" id="chaptersListContainer">
-            </div>
-            <div class="flex justify-end pt-2">
-                <button type="button" onclick="closeManageChaptersModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Close</button>
-            </div>
-        </div>
-    </div>
+<script>
+  // PASSWORD VERIFICATION LOGIC
+  function verifyDashboardPassword() {
+    const enteredPass = document.getElementById('adminPasswordInput').value;
+    if (enteredPass === 'mywifesaba') {
+      document.getElementById('authOverlay').style.display = 'none';
+      sessionStorage.setItem('admin_unlocked', 'true');
+      loadNovelsFromDB();
+    } else {
+      document.getElementById('authError').style.display = 'block';
+    }
+  }
 
-    <!-- Modal 3: EDIT NOVEL DETAILS -->
-    <div id="editNovelModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 class="text-lg font-bold text-indigo-400">✏️ Edit Details</h3>
-                <button onclick="closeEditNovelModal()" class="text-slate-400 hover:text-slate-200 font-bold text-sm">✕</button>
-            </div>
-            <form id="editNovelForm" class="space-y-3">
-                <input type="hidden" id="editNovelId">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Title Name</label>
-                    <input type="text" id="editTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Author / Writer</label>
-                    <input type="text" id="editAuthor" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Type</label>
-                    <select id="editContentType" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                        <option value="novel">📚 Novel</option>
-                        <option value="article">📰 Article</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Status</label>
-                    <select id="editStatus" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100">
-                        <option value="Ongoing">Ongoing</option>
-                        <option value="Completed">Completed</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description / Summary</label>
-                    <textarea id="editDescription" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-100"></textarea>
-                </div>
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeEditNovelModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
-                    <button type="submit" id="btnSaveDetails" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
+  function handlePassEnter(e) {
+    if (e.key === 'Enter') {
+      verifyDashboardPassword();
+    }
+  }
 
-    <!-- Modal 4: CHANGE COVER IMAGE -->
-    <div id="changeCoverModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50 transition-all">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 class="text-lg font-bold text-indigo-400">🖼️ Change Cover Image</h3>
-                <button onclick="closeCoverModal()" class="text-slate-400 hover:text-slate-200 font-bold text-sm">✕</button>
-            </div>
-            <form id="changeCoverForm" class="space-y-4">
-                <input type="hidden" id="coverNovelId">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select New Cover Photo</label>
-                    <input type="file" id="newCoverFile" required accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-900 file:text-indigo-300 hover:file:bg-indigo-800">
-                </div>
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeCoverModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">Cancel</button>
-                    <button type="submit" id="btnSaveCover" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">Upload New Cover</button>
-                </div>
-            </form>
-        </div>
-    </div>
+  // AUTO UNLOCK IF ALREADY LOGGED IN DURING SESSION
+  window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem('admin_unlocked') === 'true') {
+      document.getElementById('authOverlay').style.display = 'none';
+      loadNovelsFromDB();
+    }
+  });
 
-   <script>
-    const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
-    let allNovelsList = [];
+  // Dynamic API Base URL Config
+  const API_BASE_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+    ? 'https://noveltube-2.onrender.com' 
+    : '';
 
-    async function checkAdminAccess() {
-        if (sessionStorage.getItem('admin_authenticated') === 'true') {
-            initDashboard();
-            return;
-        }
-        const password = prompt("🔐 Admin Security Pin Code:");
-        if (!password) { window.location.href = 'index.html'; return; }
+  let novels = [];
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/admin/verify`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const data = await response.json();
-            if (data.success) {
-                sessionStorage.getItem('admin_authenticated') || sessionStorage.setItem('admin_authenticated', 'true');
-                initDashboard();
-            } else {
-                alert("❌ Galat Password!");
-                window.location.href = 'index.html';
-            }
-        } catch (error) {
-            window.location.href = 'index.html';
-        }
+  // Safe Fetch Helper
+  async function safeFetchJson(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, options);
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(`Server error (${response.status}): HTML response mila hai. Backend path check karein.`);
     }
 
-    checkAdminAccess();
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || data.message || `Request failed status ${response.status}`);
+    }
+    return data;
+  }
 
-    async function fetchSystemAnalytics() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/analytics/system`);
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById('statViews').innerText = data.totalViews || 0;
-                document.getElementById('statNovels').innerText = data.totalNovels || 0;
-                document.getElementById('statChapters').innerText = data.totalChapters || 0;
-            }
-        } catch (error) { console.error(error); }
+  // Load Novels from DB
+  async function loadNovelsFromDB() {
+    try {
+      novels = await safeFetchJson('/api/novels');
+      renderNovels(novels);
+    } catch (error) {
+      console.error('Error loading novels:', error);
+      document.getElementById('novelsTableBody').innerHTML = 
+        `<tr><td colspan="7" style="text-align:center; color:red;">Connection fail: ${error.message}</td></tr>`;
+    }
+  }
+
+  // Render Table
+  function renderNovels(dataToRender) {
+    const tbody = document.getElementById('novelsTableBody');
+    tbody.innerHTML = '';
+
+    let totalViews = 0;
+
+    if (!Array.isArray(dataToRender) || dataToRender.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Koi novel nahi mila.</td></tr>`;
+      document.getElementById('totalViews').innerText = '0';
+      return;
     }
 
-    async function loadAdminDashboard() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels`);
-            if (!response.ok) throw new Error("Load failed");
-            allNovelsList = await response.json();
-            renderNovelsTable(allNovelsList);
-            populateStandaloneDropdown(allNovelsList);
-        } catch (error) {
-            document.getElementById('novelsTableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 text-xs">Error loading data.</td></tr>`;
-        }
-    }
+    dataToRender.forEach(novel => {
+      const viewsCount = Number(novel.views) || 0;
+      totalViews += viewsCount;
 
-    function populateStandaloneDropdown(list) {
-        const dropdown = document.getElementById('standaloneNovelSelect');
-        if (!dropdown) return;
-        dropdown.innerHTML = '<option value="">-- Choose Novel --</option>';
-        list.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item._id;
-            option.textContent = `${item.title} (${item.chapters ? item.chapters.length : 0} Episodes)`;
-            dropdown.appendChild(option);
+      const chaptersCount = Array.isArray(novel.chapters) ? novel.chapters.length : 0;
+      const coverUrl = novel.coverImage || 'https://via.placeholder.com/50x70?text=No+Cover';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><img src="${coverUrl}" class="novel-cover" alt="Cover"></td>
+        <td><strong>${novel.title || 'Untitled'}</strong></td>
+        <td>${novel.author || 'Unknown'}</td>
+        <td><span style="padding: 3px 8px; background: #e2e8f0; border-radius: 4px; font-size: 12px;">${novel.status || 'Ongoing'}</span></td>
+        <td>${viewsCount.toLocaleString()}</td>
+        <td>${chaptersCount} Parts</td>
+        <td>
+          <button class="btn btn-edit" onclick="openEditModal('${novel._id}')">Edit</button>
+          <button class="btn btn-add-part" onclick="openChapterModal('${novel._id}')">+ Chapter</button>
+          <button class="btn btn-manage-parts" onclick="openManageChaptersModal('${novel._id}')">Manage Parts</button>
+          <button class="btn btn-delete" onclick="deleteNovel('${novel._id}')">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('totalViews').innerText = totalViews.toLocaleString();
+  }
+
+  function filterNovels() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = novels.filter(novel => {
+      const title = (novel.title || '').toLowerCase();
+      const author = (novel.author || '').toLowerCase();
+      return title.includes(query) || author.includes(query);
+    });
+    renderNovels(filtered);
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+  }
+
+  function openEditModal(id) {
+    const novel = novels.find(n => n._id === id);
+    if (!novel) return;
+
+    document.getElementById('editNovelId').value = novel._id;
+    document.getElementById('editTitle').value = novel.title || '';
+    document.getElementById('editAuthor').value = novel.author || '';
+    document.getElementById('editCategory').value = novel.category || '';
+    document.getElementById('editStatus').value = novel.status || 'Ongoing';
+    document.getElementById('editDescription').value = novel.description || '';
+
+    document.getElementById('editModal').style.display = 'flex';
+  }
+
+  async function saveNovelEdit() {
+    const id = document.getElementById('editNovelId').value;
+    const title = document.getElementById('editTitle').value;
+    const author = document.getElementById('editAuthor').value;
+    const category = document.getElementById('editCategory').value;
+    const status = document.getElementById('editStatus').value;
+    const description = document.getElementById('editDescription').value;
+    const coverFile = document.getElementById('editCover').files[0];
+
+    try {
+      await safeFetchJson(`/api/novels/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, author, category, status, description })
+      });
+
+      if (coverFile) {
+        const coverData = new FormData();
+        coverData.append('coverImage', coverFile);
+
+        await safeFetchJson(`/api/novels/${id}/update-cover`, {
+          method: 'PATCH',
+          body: coverData
         });
+      }
+
+      alert('🎉 Novel update ho gaya!');
+      closeModal('editModal');
+      loadNovelsFromDB();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function openChapterModal(id) {
+    document.getElementById('chapterNovelId').value = id;
+    document.getElementById('chapterTitle').value = '';
+    document.getElementById('chapterFile').value = '';
+    document.getElementById('chapterModal').style.display = 'flex';
+  }
+
+  async function saveChapter() {
+    const novelId = document.getElementById('chapterNovelId').value;
+    const chapterTitle = document.getElementById('chapterTitle').value;
+    const pdfFile = document.getElementById('chapterFile').files[0];
+
+    if (!pdfFile) {
+      alert('PDF file select karein!');
+      return;
     }
 
-    function renderNovelsTable(list) {
-        const tableBody = document.getElementById('novelsTableBody');
-        if (list.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 text-xs">No entries found.</td></tr>`;
-            return;
-        }
+    const formData = new FormData();
+    formData.append('chapterTitle', chapterTitle);
+    formData.append('chapterFile', pdfFile);
 
-        tableBody.innerHTML = list.map(item => {
-            const typeLabel = item.contentType === 'article' ? '📰 Article' : '📚 Novel';
-            return `
-                <tr class="hover:bg-slate-700/20 transition-colors">
-                    <td class="p-3">
-                        <div class="relative group w-10 h-14">
-                            <img src="${item.coverImage || ''}" class="w-10 h-14 object-cover rounded-md shadow" onerror="this.src='https://via.placeholder.com/100x140?text=Cover'">
-                            <button onclick="openCoverModal('${item._id}')" title="Change Cover" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-bold rounded-md transition">
-                                🖼️ Edit
-                            </button>
-                        </div>
-                    </td>
-                    <td class="p-3">
-                        <div class="font-semibold text-slate-200">${item.title}</div>
-                        <div class="text-[11px] text-slate-400">${item.author || 'Unknown Author'}</div>
-                    </td>
-                    <td class="p-3 text-xs font-bold text-indigo-300">${typeLabel}</td>
-                    <td class="p-3 font-mono font-bold text-amber-400 text-xs">${item.views || 0} Views</td>
-                    <td class="p-3 text-slate-400 text-xs">
-                        <button onclick="openManageChaptersModal('${item._id}')" class="underline text-indigo-400 hover:text-indigo-350 cursor-pointer">
-                            ${item.chapters ? item.chapters.length : 0} Items (Manage)
-                        </button>
-                    </td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                            <button onclick="openEditNovelModal('${item._id}')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
-                                ✏️ Edit
-                            </button>
-                            <button onclick="openChapterModal('${item._id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
-                                ➕ Part
-                            </button>
-                            <button onclick="deleteNovel('${item._id}')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg shadow transition">
-                                🗑️ Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+    try {
+      await safeFetchJson(`/api/novels/${novelId}/add-chapter`, {
+        method: 'POST',
+        body: formData
+      });
+
+      alert('🎉 Chapter upload ho gaya!');
+      closeModal('chapterModal');
+      loadNovelsFromDB();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  // MANAGE CHAPTERS (EDIT / DELETE INDIVIDUAL CHAPTERS)
+  function openManageChaptersModal(novelId) {
+    const novel = novels.find(n => n._id === novelId);
+    if (!novel) return;
+
+    document.getElementById('manageNovelId').value = novel._id;
+    document.getElementById('manageChaptersTitle').innerText = `Manage Chapters - ${novel.title}`;
+
+    const container = document.getElementById('chaptersContainer');
+
+    if (!Array.isArray(novel.chapters) || novel.chapters.length === 0) {
+      container.innerHTML = `<p style="text-align:center; color:#666; padding:15px;">Is novel me koi chapter nahi hai.</p>`;
+    } else {
+      let tableHtml = `
+        <table class="ch-list-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Title</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      novel.chapters.forEach((ch, idx) => {
+        const chId = ch._id || ch.id;
+        const title = ch.chapterTitle || ch.title || `Episode ${idx + 1}`;
+
+        tableHtml += `
+          <tr>
+            <td><strong>${idx + 1}</strong></td>
+            <td>${title}</td>
+            <td style="text-align:right;">
+              <button class="btn btn-edit" onclick="editChapterTitle('${novel._id}', '${chId}', '${title.replace(/'/g, "\\'")}')">Edit</button>
+              <button class="btn btn-delete" onclick="deleteChapter('${novel._id}', '${chId}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tableHtml += `</tbody></table>`;
+      container.innerHTML = tableHtml;
     }
 
-    function filterNovels() {
-        const query = document.getElementById('novelSearchInput').value.toLowerCase();
-        const filtered = allNovelsList.filter(item => item.title.toLowerCase().includes(query));
-        renderNovelsTable(filtered);
+    document.getElementById('manageChaptersModal').style.display = 'flex';
+  }
+
+  async function editChapterTitle(novelId, chapterId, oldTitle) {
+    const newTitle = prompt('Naya Chapter Title likhein:', oldTitle);
+    if (!newTitle || newTitle.trim() === '' || newTitle === oldTitle) return;
+
+    try {
+      await safeFetchJson(`/api/novels/${novelId}/chapters/${chapterId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chapterTitle: newTitle })
+      });
+
+      alert('🎉 Chapter title update ho gaya!');
+      await loadNovelsFromDB();
+      openManageChaptersModal(novelId);
+    } catch (error) {
+      alert(error.message);
     }
+  }
 
-    async function deleteNovel(id) {
-        if (!confirm("⚠️ WARNING: Kya aap permanently delete karna chahte hain?")) return;
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${id}`, { method: 'DELETE' });
-            if (response.ok) { alert("🗑️ Entry deleted successfully!"); initDashboard(); }
-        } catch (error) { alert("🚨 Action fail."); }
+  async function deleteChapter(novelId, chapterId) {
+    if (!confirm('Kya aap waqai is chapter ko delete karna chahte hain?')) return;
+
+    try {
+      await safeFetchJson(`/api/novels/${novelId}/chapters/${chapterId}`, {
+        method: 'DELETE'
+      });
+
+      alert('🎉 Chapter delete ho gaya!');
+      await loadNovelsFromDB();
+      openManageChaptersModal(novelId);
+    } catch (error) {
+      alert(error.message);
     }
+  }
 
-    function openManageChaptersModal(novelId) {
-        const novel = allNovelsList.find(n => n._id === novelId);
-        if (!novel) return;
+  async function deleteNovel(id) {
+    if (!confirm('Kya aap waqai is novel ko delete karna chahte hain?')) return;
 
-        document.getElementById('manageNovelId').value = novelId;
-        const container = document.getElementById('chaptersListContainer');
-        
-        if (!novel.chapters || novel.chapters.length === 0) {
-            container.innerHTML = `<p class="text-center text-slate-500 text-xs py-4">Is novel ka koi chapter nahi hai.</p>`;
-        } else {
-            container.innerHTML = novel.chapters.map((chap, idx) => `
-                <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700">
-                    <div>
-                        <span class="text-xs font-mono text-indigo-400 mr-2">#${idx + 1}</span>
-                        <span class="text-sm font-semibold text-slate-200">${chap.title}</span>
-                    </div>
-                    <button onclick="deleteChapter('${novelId}', '${chap._id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1 rounded-lg text-xs font-bold transition">
-                        🗑️ Delete
-                    </button>
-                </div>
-            `).join('');
-        }
-        document.getElementById('manageChaptersModal').classList.remove('hidden');
+    try {
+      await safeFetchJson(`/api/novels/${id}`, { method: 'DELETE' });
+      alert('🎉 Novel delete ho gaya.');
+      loadNovelsFromDB();
+    } catch (error) {
+      alert(error.message);
     }
-
-    function closeManageChaptersModal() {
-        document.getElementById('manageChaptersModal').classList.add('hidden');
-    }
-
-    async function deleteChapter(novelId, chapterId) {
-        if (!confirm("⚠️ Kya aap is specific chapter ko delete karna chahte hain?")) return;
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${novelId}/chapters/${chapterId}`, {
-                method: 'DELETE'
-            });
-            
-            if (response.ok) {
-                alert("🎉 Chapter successfully delete ho gaya!");
-                closeManageChaptersModal();
-                initDashboard();
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(`❌ Delete failed: ${errorData.message || 'Server ne reject kardia.'}`);
-            }
-        } catch (error) {
-            alert("🚨 Connection error! Chapter delete nahi ho saka.");
-        }
-    }
-
-    /* ----- EDIT NOVEL DETAILS FEATURE ----- */
-    function openEditNovelModal(novelId) {
-        const novel = allNovelsList.find(n => n._id === novelId);
-        if (!novel) return;
-
-        document.getElementById('editNovelId').value = novelId;
-        document.getElementById('editTitle').value = novel.title || '';
-        document.getElementById('editAuthor').value = novel.author || '';
-        document.getElementById('editContentType').value = novel.contentType || 'novel';
-        document.getElementById('editStatus').value = novel.status || 'Ongoing';
-        document.getElementById('editDescription').value = novel.description || '';
-
-        document.getElementById('editNovelModal').classList.remove('hidden');
-    }
-
-    function closeEditNovelModal() {
-        document.getElementById('editNovelModal').classList.add('hidden');
-    }
-
-    document.getElementById('editNovelForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('editNovelId').value;
-        const btn = document.getElementById('btnSaveDetails');
-        btn.innerText = "⏳ Saving...";
-        btn.disabled = true;
-
-        const payload = {
-            title: document.getElementById('editTitle').value,
-            author: document.getElementById('editAuthor').value,
-            contentType: document.getElementById('editContentType').value,
-            status: document.getElementById('editStatus').value,
-            description: document.getElementById('editDescription').value
-        };
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                alert("🎉 Novel details kamyabi se update ho gayi hain!");
-                closeEditNovelModal();
-                initDashboard();
-            } else {
-                alert("❌ Update failed! Check backend API.");
-            }
-        } catch (err) {
-            alert("🚨 Error saving novel details!");
-        } finally {
-            btn.innerText = "Save Changes";
-            btn.disabled = false;
-        }
-    });
-
-    /* ----- COVER UPDATE FEATURE ----- */
-    function openCoverModal(novelId) {
-        document.getElementById('coverNovelId').value = novelId;
-        document.getElementById('changeCoverModal').classList.remove('hidden');
-    }
-
-    function closeCoverModal() {
-        document.getElementById('changeCoverModal').classList.add('hidden');
-        document.getElementById('changeCoverForm').reset();
-    }
-
-    document.getElementById('changeCoverForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('coverNovelId').value;
-        const btn = document.getElementById('btnSaveCover');
-        btn.innerText = "⏳ Uploading...";
-        btn.disabled = true;
-
-        const formData = new FormData();
-        formData.append('coverImage', document.getElementById('newCoverFile').files[0]);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${id}/update-cover`, {
-                method: 'PATCH',
-                body: formData
-            });
-
-            if (response.ok) {
-                alert("🖼️ Cover Image successfully change ho gai hai!");
-                closeCoverModal();
-                initDashboard();
-            } else {
-                alert("❌ Cover upload failed!");
-            }
-        } catch (err) {
-            alert("🚨 Error uploading cover image!");
-        } finally {
-            btn.innerText = "Upload New Cover";
-            btn.disabled = false;
-        }
-    });
-
-    /* ----- USER MANAGEMENT ----- */
-    async function loadUsers() {
-        const tableBody = document.getElementById('usersTableBody');
-        const countBadge = document.getElementById('totalUsersCount');
-        const statUsersElement = document.getElementById('statUsers');
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/users`);
-            if (!response.ok) return;
-            const users = await response.json();
-            countBadge.innerText = `${users.length} Users`;
-            if(statUsersElement) statUsersElement.innerText = users.length;
-            
-            tableBody.innerHTML = users.map(user => `
-                <tr class="hover:bg-slate-700/30 transition-colors">
-                    <td class="p-3 font-mono text-xs text-slate-500">${user._id}</td>
-                    <td class="p-3 font-semibold text-slate-200">${user.username || 'N/A'}</td>
-                    <td class="p-3 text-slate-400 text-xs">${user.email}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${user.isBlocked ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
-                            ${user.isBlocked ? 'Blocked' : 'Active'}
-                        </span>
-                    </td>
-                    <td class="p-3 text-center space-x-2">
-                        <button onclick="toggleBlockUser('${user._id}', ${user.isBlocked || false})" class="px-2 py-1 text-xs font-bold rounded-lg ${user.isBlocked ? 'bg-emerald-600' : 'bg-amber-600'} text-white">
-                            ${user.isBlocked ? 'Unblock' : 'Block'}
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (e) { console.log(e); }
-    }
-
-    async function toggleBlockUser(userId, isBlocked) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/${userId}/toggle-block`, { method: 'PATCH' });
-            if (response.ok) loadUsers();
-        } catch (e) { console.log(e); }
-    }
-
-    /* ----- MODAL 1 CHAPTER FORM SUBMIT (FIXED) ----- */
-    document.getElementById('chapterForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('modalNovelId').value;
-        const submitBtn = document.getElementById('modalSubmitBtn');
-        
-        const originalText = submitBtn.innerText;
-        submitBtn.innerText = "⏳ Uploading PDF...";
-        submitBtn.disabled = true;
-
-        const formData = new FormData();
-        formData.append('chapterTitle', document.getElementById('nextChapterTitle').value);
-        formData.append('chapterFile', document.getElementById('nextChapterFile').files[0]);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${id}/add-chapter`, { 
-                method: 'POST', 
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('admin_authenticated')}`
-                },
-                body: formData 
-            });
-            
-            if (response.ok) { 
-                alert("🎉 Chapter kamyabi se add ho gaya hai!");
-                closeChapterModal(); 
-                initDashboard(); 
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(`❌ Server Error (${response.status}): ${errorData.message || 'Chapter save nahi ho saka.'}`);
-            }
-        } catch (error) { 
-            console.error(error); 
-            alert("🚨 Network Error: Server se rabta nahi ho pa raha!");
-        } finally { 
-            submitBtn.disabled = false; 
-            submitBtn.innerText = originalText;
-        }
-    });
-
-    /* ----- STANDALONE EPISODE ADD FORM (FIXED) ----- */
-    document.getElementById('standaloneEpisodeForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const novelId = document.getElementById('standaloneNovelSelect').value;
-        const chapterTitle = document.getElementById('standaloneChapterTitle').value;
-        const fileInput = document.getElementById('standaloneChapterFile');
-        const submitBtn = document.getElementById('standaloneSubmitBtn');
-
-        if(!novelId) {
-            alert("⚠️ Pehle kisi novel ko select karein!");
-            return;
-        }
-
-        const originalBtnText = submitBtn.innerHTML;
-        submitBtn.innerText = "⏳ Uploading Episode PDF...";
-        submitBtn.disabled = true;
-
-        const formData = new FormData();
-        formData.append('chapterTitle', chapterTitle);
-        formData.append('chapterFile', fileInput.files[0]);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${novelId}/add-chapter`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('admin_authenticated')}`
-                },
-                body: formData
-            });
-
-            if (response.ok) {
-                alert("🎉 Episode successfully upload aur database mein add ho gaya!");
-                document.getElementById('standaloneEpisodeForm').reset();
-                initDashboard();
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(`❌ Upload Error (${response.status}): ${errorData.message || 'Episode upload fail ho gaya.'}`);
-            }
-        } catch (error) {
-            console.error(error);
-            alert("🚨 Network Connection Error!");
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
-        }
-    });
-
-    function openChapterModal(id) { document.getElementById('modalNovelId').value = id; document.getElementById('chapterModal').classList.remove('hidden'); }
-    function closeChapterModal() { document.getElementById('chapterModal').classList.add('hidden'); document.getElementById('chapterForm').reset(); }
-
-    function initDashboard() { fetchSystemAnalytics(); loadAdminDashboard(); loadUsers(); }
+  }
 </script>
+
 </body>
 </html>

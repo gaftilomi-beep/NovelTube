@@ -5,6 +5,7 @@
 require('dotenv').config();
 
 const dns = require('dns');
+const fs = require('fs');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -21,18 +22,22 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ============================================================
-// APP
+// APP & UPLOAD DIRECTORY SETUP
 // ============================================================
 
 const app = express();
 
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // ============================================================
-// DATABASE IMPORT (Path fixed: ../config/db.js)
+// DATABASE CONNECTION SETUP
 // ============================================================
 
 const connectDB = require('../config/db.js');
 
-// Database connection middleware for Serverless environment (MUST BE BEFORE ROUTES)
 app.use(async (req, res, next) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -45,22 +50,52 @@ app.use(async (req, res, next) => {
     }
 });
 
+// Helper Function: Safe Model Fetching (Avoids MissingSchemaError)
+const getModel = (modelName) => {
+    try {
+        return mongoose.model(modelName);
+    } catch (e) {
+        return null;
+    }
+};
+
 // ============================================================
-// MULTER FOR SERVER-SIDE IMAGE ROUTES
+// MULTER STORAGE & FILE FILTER (For PDF & Cover Images)
 // ============================================================
 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    }
+});
+
 const upload = multer({
-    dest: path.join(__dirname, '../uploads'),
+    storage: storage,
     limits: {
-        fileSize: 15 * 1024 * 1024
+        fileSize: 25 * 1024 * 1024 // 25 MB Limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type! Sirf JPG, PNG, WEBP aur PDF files allowed hain.'));
+        }
     }
 });
 
 // ============================================================
-// CORS
+// CORS CONFIGURATION
 // ============================================================
 
 const allowedOrigins = [
+    'https://noveltube.online',
+    'https://www.noveltube.online',
     'https://noveltube.netlify.app',
     'http://localhost:3000',
     'http://localhost:5000',
@@ -126,14 +161,23 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// STATIC FILES & UPLOADS
+// STATIC FILES & INLINE PDF SERVING
 // ============================================================
 
 app.use(express.static(path.join(__dirname, '../../front')));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Express Static with Inline Header for PDFs (Prevents Auto-Download)
+app.use('/uploads', express.static(uploadsDir, {
+    setHeaders: (res, filePath) => {
+        if (filePath.toLowerCase().endsWith('.pdf')) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+        }
+    }
+}));
 
 // ============================================================
-// API ROUTES (Paths fixed: ../routes/...)
+// API ROUTES
 // ============================================================
 
 app.use('/api/auth', require('../routes/auth'));
@@ -141,13 +185,18 @@ app.use('/api/novels', require('../routes/novelRoutes'));
 app.use('/api/chapters', require('../routes/chapterRoutes'));
 
 // ============================================================
-// EDIT NOVEL
+// EDIT NOVEL DETAILS
 // ============================================================
 
 app.patch('/api/novels/:id', async (req, res) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ success: false, error: 'Invalid novel ID.' });
+        }
+
+        const Novel = getModel('Novel');
+        if (!Novel) {
+            return res.status(500).json({ success: false, error: 'Novel model load nahi ho saka.' });
         }
 
         const { title, author, contentType, status, description, category } = req.body;
@@ -160,7 +209,7 @@ app.patch('/api/novels/:id', async (req, res) => {
         if (description !== undefined) updateData.description = description;
         if (category !== undefined) updateData.category = category;
 
-        const updatedNovel = await mongoose.model('Novel').findByIdAndUpdate(
+        const updatedNovel = await Novel.findByIdAndUpdate(
             req.params.id,
             { $set: updateData },
             { new: true, runValidators: true }
@@ -195,8 +244,13 @@ app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (re
             return res.status(400).json({ success: false, error: 'Koi image file select nahi ki gayi.' });
         }
 
+        const Novel = getModel('Novel');
+        if (!Novel) {
+            return res.status(500).json({ success: false, error: 'Novel model load nahi ho saka.' });
+        }
+
         const newCoverUrl = `/uploads/${req.file.filename}`;
-        const updatedNovel = await mongoose.model('Novel').findByIdAndUpdate(
+        const updatedNovel = await Novel.findByIdAndUpdate(
             req.params.id,
             { $set: { coverImage: newCoverUrl } },
             { new: true }
@@ -218,12 +272,14 @@ app.patch('/api/novels/:id/update-cover', upload.single('coverImage'), async (re
 });
 
 // ============================================================
-// USERS & MANAGEMENT
+// USERS MANAGEMENT
 // ============================================================
 
 app.get('/api/users', async (req, res) => {
     try {
-        const User = mongoose.model('User');
+        const User = getModel('User');
+        if (!User) return res.json([]);
+
         const users = await User.find({}, '-password');
         return res.json(users);
     } catch (error) {
@@ -234,9 +290,10 @@ app.get('/api/users', async (req, res) => {
 
 app.patch('/api/users/:id/toggle-block', async (req, res) => {
     try {
-        const User = mongoose.model('User');
-        const user = await User.findById(req.params.id);
+        const User = getModel('User');
+        if (!User) return res.status(500).json({ success: false, error: 'User model not found' });
 
+        const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, error: 'User nahi mila.' });
         }
@@ -253,9 +310,10 @@ app.patch('/api/users/:id/toggle-block', async (req, res) => {
 
 app.delete('/api/users/:id', async (req, res) => {
     try {
-        const User = mongoose.model('User');
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        const User = getModel('User');
+        if (!User) return res.status(500).json({ success: false, error: 'User model not found' });
 
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
         if (!deletedUser) {
             return res.status(404).json({ success: false, error: 'User nahi mila.' });
         }
@@ -273,11 +331,11 @@ app.delete('/api/users/:id', async (req, res) => {
 
 app.get('/api/analytics/system', async (req, res) => {
     try {
-        const User = mongoose.model('User');
-        const Novel = mongoose.model('Novel');
+        const User = getModel('User');
+        const Novel = getModel('Novel');
 
-        const totalUsers = await User.countDocuments();
-        const totalNovels = await Novel.countDocuments();
+        const totalUsers = User ? await User.countDocuments() : 0;
+        const totalNovels = Novel ? await Novel.countDocuments() : 0;
 
         let totalChapters = 0;
         let novelViewsTotal = 0;
@@ -287,8 +345,10 @@ app.get('/api/analytics/system', async (req, res) => {
 
         if (db) {
             totalChapters = await db.collection('chapters').countDocuments();
-            const novels = await Novel.find({}, { views: 1 }).lean();
-            novelViewsTotal = novels.reduce((sum, novel) => sum + (Number(novel.views) || 0), 0);
+            if (Novel) {
+                const novels = await Novel.find({}, { views: 1 }).lean();
+                novelViewsTotal = novels.reduce((sum, novel) => sum + (Number(novel.views) || 0), 0);
+            }
 
             const stats = await db.collection('site_stats').findOne({ _id: 'global_views' });
             overallWebsiteViews = stats ? Number(stats.count) || 0 : 0;
@@ -333,7 +393,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================================
-// 404 & ERROR HANDLING
+// 404 & GLOBAL ERROR HANDLING
 // ============================================================
 
 app.use('/api', (req, res) => {
@@ -356,8 +416,8 @@ app.use((error, req, res, next) => {
 
     return res.status(500).json({
         success: false,
-        error: 'Internal server error',
-        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        error: error.message || 'Internal server error',
+        details: process.env.NODE_ENV !== 'production' ? error.stack : undefined
     });
 });
 
