@@ -36,7 +36,7 @@ if (!fs.existsSync(uploadsDir)) {
 // DATABASE CONNECTION SETUP
 // ============================================================
 
-const connectDB = require('../config/db.js');
+const connectDB = require('./config/db.js');
 
 app.use(async (req, res, next) => {
     try {
@@ -180,9 +180,9 @@ app.use('/uploads', express.static(uploadsDir, {
 // API ROUTES
 // ============================================================
 
-app.use('/api/auth', require('../routes/auth'));
-app.use('/api/novels', require('../routes/novelRoutes'));
-app.use('/api/chapters', require('../routes/chapterRoutes'));
+app.use('/api/auth', require('./routes/auth.js'));
+app.use('/api/novels', require('./routes/novelRoutes.js'));
+app.use('/api/chapters', require('./routes/chapterRoutes.js'));
 
 // ============================================================
 // EDIT NOVEL DETAILS
