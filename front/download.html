@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download PDF - NovelTube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MONETAG AD SCRIPT -->
+    <script>(function(s){s.dataset.zone='11420936',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-center items-center p-4">
+
+    <div class="max-w-md w-full bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl text-center space-y-6">
+        
+        <div class="space-y-2">
+            <h1 class="text-2xl font-bold tracking-tight text-white">NovelTube Downloader</h1>
+            <p id="docTitleDisplay" class="text-indigo-400 font-semibold text-lg break-words">Aapki file prepare ho rahi hai...</p>
+        </div>
+
+        <!-- COUNTDOWN TIMER SECTION -->
+        <div id="countdownBox" class="py-6 bg-slate-900/50 rounded-xl border border-slate-700/50 space-y-2">
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-bold">Download Link Tayyar Ho Raha Hai</p>
+            <div id="timer" class="text-5xl font-black text-amber-400">5</div>
+            <p class="text-xs text-slate-500">Kripya countdown khatam hone ka intzar karein...</p>
+        </div>
+
+        <!-- MANUAL DOWNLOAD BUTTON -->
+        <div id="actionArea" class="hidden space-y-3">
+            <p class="text-emerald-400 font-bold text-sm">🎉 Direct Download Ready!</p>
+            <button id="directDownloadBtn" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                <span>📥 Abhi Download Karein</span>
+            </button>
+        </div>
+
+        <!-- AD CONTAINER PLACEHOLDER -->
+        <div class="p-3 bg-slate-900/80 rounded-lg text-xs text-slate-500 border border-slate-800">
+            📢 Sponsored Content
+        </div>
+
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawFileUrl = urlParams.get('file');
+        const rawTitle = urlParams.get('title') || 'NovelTube_Document';
+
+        const titleDisplay = document.getElementById('docTitleDisplay');
+        const timerDisplay = document.getElementById('timer');
+        const actionArea = document.getElementById('actionArea');
+        const downloadBtn = document.getElementById('directDownloadBtn');
+
+        if (!rawFileUrl) {
+            titleDisplay.innerText = "❌ Download Link Misaal Nahi Hua!";
+            document.getElementById('countdownBox').innerHTML = "<p class='text-red-400 font-bold'>Invalid PDF URL</p>";
+        } else {
+            const decodedTitle = decodeURIComponent(rawTitle).trim();
+            
+            // Screen display heading
+            titleDisplay.innerText = decodedTitle;
+
+            // Safe filename for operating system save (e.g. Mavrah_by_Qurat_Episode_1)
+            const safeTitle = decodedTitle.replace(/[\/\\?%*:|"<>]/g, '').trim();
+            const cleanFileName = safeTitle.replace(/\s+/g, '_');
+
+            // Set Cloudinary attachment header with full name
+            let finalDownloadUrl = rawFileUrl;
+            if (finalDownloadUrl.includes('cloudinary.com') && finalDownloadUrl.includes('/upload/')) {
+                const attachmentParam = `fl_attachment:${encodeURIComponent(cleanFileName)}`;
+                if (!finalDownloadUrl.includes('fl_attachment')) {
+                    finalDownloadUrl = finalDownloadUrl.replace('/upload/', `/upload/${attachmentParam}/`);
+                }
+            }
+
+            async function handlePdfDownload() {
+                downloadBtn.innerText = "Downloading... ⏳";
+                downloadBtn.disabled = true;
+
+                try {
+                    const response = await fetch(finalDownloadUrl);
+                    if (!response.ok) throw new Error("Fetch failed");
+
+                    const blob = await response.blob();
+                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                    
+                    const blobUrl = window.URL.createObjectURL(pdfBlob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    
+                    // Output format: "Mavrah_by_Qurat_Episode_1.pdf"
+                    const fullSaveName = cleanFileName.toLowerCase().endsWith('.pdf') 
+                        ? cleanFileName 
+                        : `${cleanFileName}.pdf`;
+
+                    link.setAttribute('download', fullSaveName);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.URL.revokeObjectURL(blobUrl);
+
+                    downloadBtn.innerText = "✅ Download Complete!";
+                    setTimeout(() => {
+                        downloadBtn.innerText = "📥 Dubara Download Karein";
+                        downloadBtn.disabled = false;
+                    }, 3000);
+
+                } catch (err) {
+                    window.location.href = finalDownloadUrl;
+                }
+            }
+
+            downloadBtn.onclick = handlePdfDownload;
+
+            // 5 Seconds Countdown
+            let timeLeft = 5;
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    document.getElementById('countdownBox').classList.add('hidden');
+                    actionArea.classList.remove('hidden');
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

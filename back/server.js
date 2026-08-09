@@ -77,7 +77,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 25 * 1024 * 1024 // 25 MB Limit
+        fileSize: 100 * 1024 * 1024 // 25 MB Limit
     },
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
@@ -131,8 +131,8 @@ app.options(/.*/, cors(corsOptions));
 // BODY PARSERS
 // ============================================================
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // ============================================================
 // WEBSITE VIEW TRACKER

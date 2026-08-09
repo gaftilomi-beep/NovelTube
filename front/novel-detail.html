@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* Robust Cross-Platform Jameel Noori Nastaleeq Font */
         @font-face {
             font-family: 'Jameel Noori Nastaleeq';
             src: url('https://cdn.jsdelivr.net/gh/Sajjad26/Jameel-Noori-Nastaleeq-Web@master/Jameel%20Noori%20Nastaleeq.woff2') format('woff2'),
@@ -17,19 +16,19 @@
             font-style: normal;
         }
 
-        /* Urdu Font Force Class */
         .font-urdu {
             font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Urdu Typesetting', serif !important;
             line-height: 2.0 !important;
         }
 
-        /* English/Default Font Class */
         .smart-text {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
         }
     </style>
 </head>
+
+<!-- MONETAG AD SCRIPT -->
 <script>(function(s){s.dataset.zone='11420936',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
 <body class="bg-slate-50 min-h-screen font-sans">
@@ -45,7 +44,6 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 items-center md:items-start">
                 <img id="novelCover" src="" alt="Cover" class="w-44 h-60 object-cover rounded-xl shadow-md border border-slate-100 flex-shrink-0">
                 
-                <!-- Mobile: Centered | PC/Desktop: Left Aligned -->
                 <div class="flex-1 text-center md:text-left space-y-3 w-full">
                     
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 w-full">
@@ -61,7 +59,6 @@
 
                     <div class="pt-2">
                         <h3 id="aboutHeadingText" class="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">About Novel:</h3>
-                        <!-- Description auto align (Urdu = Right, English = Left) -->
                         <p id="novelDescription" dir="auto" class="smart-text text-base text-slate-800 mt-2 leading-relaxed"></p>
                     </div>
 
@@ -92,11 +89,14 @@
   <script>
     const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
 
-    // Urdu Detector Function
     function isUrduText(text) {
         if(!text) return false;
-        const urduRegex = /[\u0600-\u06FF]/;
-        return urduRegex.test(text);
+        return /[\u0600-\u06FF]/.test(text);
+    }
+
+    function getDownloadPageUrl(pdfUrl, rawTitle) {
+        const cleanTitle = rawTitle ? encodeURIComponent(rawTitle.trim()) : 'NovelTube_PDF';
+        return `download.html?file=${encodeURIComponent(pdfUrl)}&title=${cleanTitle}`;
     }
 
     async function triggerGenuineView(id) {
@@ -109,7 +109,7 @@
                 await fetch(`${API_BASE_URL}/novels/${id}/view`, { method: 'POST' });
                 localStorage.setItem(storageKey, now.toString());
             } catch(err) {
-                console.log("Analytics stream view registration fail.");
+                console.log("Analytics view registration fail.");
             }
         }
     }
@@ -140,11 +140,6 @@
                 document.getElementById('readingOptionsSub').classList.add('hidden');
                 document.getElementById('downloadBtn').innerText = "Download Article PDF";
                 document.getElementById('listSectionHeading').innerText = "📑 Article Parts / Sections List";
-                
-                if (!item.description || item.description.includes("No description required")) {
-                    document.getElementById('novelDescription').classList.add('hidden');
-                    document.getElementById('aboutHeadingText').classList.add('hidden');
-                }
             } else {
                 document.getElementById('aboutHeadingText').innerText = "About Novel:";
                 document.getElementById('readingOptionsHeading').innerText = "📖 Full Novel Reading Options";
@@ -152,9 +147,6 @@
                 document.getElementById('readingOptionsSub').innerText = "Yeh novel mukammal aik hi file mein available hai.";
                 document.getElementById('downloadBtn').innerText = "Download Full PDF";
                 document.getElementById('listSectionHeading').innerText = "📑 Episodes / Chapters List";
-                
-                document.getElementById('novelDescription').classList.remove('hidden');
-                document.getElementById('aboutHeadingText').classList.remove('hidden');
             }
             
             if(item.createdAt) {
@@ -164,7 +156,6 @@
 
             document.getElementById('novelCover').src = item.coverImage;
             
-            // Title Urdu / English dynamic styling
             const titleEl = document.getElementById('novelTitle');
             titleEl.innerText = item.title;
             if(isUrduText(item.title)) {
@@ -177,7 +168,6 @@
 
             document.getElementById('novelAuthor').innerText = item.author;
             
-            // Description Urdu (Right) / English (Left) styling & Jameel Noori font
             const descEl = document.getElementById('novelDescription');
             descEl.innerText = item.description;
             if(isUrduText(item.description)) {
@@ -196,10 +186,13 @@
                 statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
             }
 
+            // Combine Novel Title + Author for Filenames
+            const baseFileName = item.author ? `${item.title} by ${item.author}` : item.title;
+
             const singleSection = document.getElementById('singleNovelSection');
             const chaptersSection = document.getElementById('chaptersSection');
 
-          if (item && (item.hasChapters === true || (item.chapters && item.chapters.length > 0))) {
+            if (item && (item.hasChapters === true || (item.chapters && item.chapters.length > 0))) {
                 singleSection.classList.add('hidden');
                 chaptersSection.classList.remove('hidden');
 
@@ -208,9 +201,11 @@
 
                 item.chapters?.forEach((ch) => {
                     const hasChapterPdf = ch.chapterPdf && ch.chapterPdf.trim() !== "" && ch.chapterPdf !== "#";
-                    const cleanChapterTitle = ch.chapterTitle.trim().replace(/\s+/g, '_');
-                    const forceDownloadUrl = hasChapterPdf ? ch.chapterPdf.replace('/upload/', `/upload/fl_attachment:${cleanChapterTitle}/`) : '#';
-                    const readUrl = hasChapterPdf ? ch.chapterPdf : '#';
+                    const readUrl = hasChapterPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(ch.chapterPdf)}` : '#';
+                    
+                    // Creates title like: "Mavrah by Qurat Episode 1"
+                    const fullChapterTitle = `${baseFileName} ${ch.chapterTitle}`;
+                    const downloadLandPageUrl = hasChapterPdf ? getDownloadPageUrl(ch.chapterPdf, fullChapterTitle) : '#';
                     
                     const clickHandler = hasChapterPdf ? '' : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
                     
@@ -226,7 +221,7 @@
                                 <a href="${readUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
                                     Read 📖
                                 </a>
-                                <a href="${forceDownloadUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
+                                <a href="${downloadLandPageUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
                                     Download 📥
                                 </a>
                             </div>
@@ -240,13 +235,12 @@
                 const hasMainPdf = item.mainPdf && item.mainPdf.trim() !== "" && item.mainPdf !== "#";
 
                 if (hasMainPdf) {
-                    const cleanNovelTitle = item.title.trim().replace(/\s+/g, '_');
-                    const singleDownloadUrl = item.mainPdf.replace('/upload/', `/upload/fl_attachment:${cleanNovelTitle}/`);
-                    document.getElementById('readOnlineBtn').href = item.mainPdf;
-                    document.getElementById('downloadBtn').href = singleDownloadUrl;
-                    
-                    document.getElementById('readOnlineBtn').onclick = null;
-                    document.getElementById('downloadBtn').onclick = null;
+                    const singleReadUrl = `https://docs.google.com/gview?url=${encodeURIComponent(item.mainPdf)}`;
+                    // Creates title like: "Muhal by Hamza Yousafzai"
+                    const mainDownloadPageUrl = getDownloadPageUrl(item.mainPdf, baseFileName);
+
+                    document.getElementById('readOnlineBtn').href = singleReadUrl;
+                    document.getElementById('downloadBtn').href = mainDownloadPageUrl;
                 } else {
                     const missingLinkAlert = (e) => {
                         e.preventDefault();
