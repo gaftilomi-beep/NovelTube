@@ -2,13 +2,15 @@ const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 const Novel = require('../models/Novel');
 
 const router = express.Router();
 
 // ============================================================
-// CLOUDINARY
+// CLOUDINARY CONFIG
 // ============================================================
 
 cloudinary.config({
@@ -18,37 +20,56 @@ cloudinary.config({
 });
 
 // ============================================================
-// MULTER MEMORY STORAGE
+// MULTER DISK STORAGE (Avoids Memory Crash on Large Files)
 // ============================================================
 
+const uploadDir = path.join('/tmp', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: storage,
     limits: {
-        fileSize: 100 * 1024 * 1024 // 15MB
+        fileSize: 100 * 1024 * 1024 // 100MB Strict Limit
     }
 });
 
 // ============================================================
-// CLOUDINARY UPLOAD HELPER (FIXED)
+// CLOUDINARY UPLOAD HELPER (Disk File to Cloudinary)
 // ============================================================
 
-function uploadToCloudinary(buffer, folder, resourceType = 'auto') {
-    return new Promise((resolve, reject) => {
-        const options = {
+async function uploadToCloudinary(filePath, folder, resourceType = 'auto') {
+    try {
+        const result = await cloudinary.uploader.upload(filePath, {
             folder: folder,
-            resource_type: resourceType
-        };
-
-        const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
-            if (error) {
-                console.error('❌ Cloudinary Stream Error:', error);
-                return reject(error);
-            }
-            resolve(result);
+            resource_type: resourceType,
+            timeout: 120000 // 2 min timeout for heavy files
         });
 
-        uploadStream.end(buffer);
-    });
+        // Upload ke baad temporary file delete kar dein
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        return result;
+    } catch (error) {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        console.error('❌ Cloudinary Upload Error:', error);
+        throw error;
+    }
 }
 
 // ============================================================
@@ -89,7 +110,7 @@ router.post(
             if (req.files && req.files.coverImage && req.files.coverImage.length) {
                 const file = req.files.coverImage[0];
                 console.log('🖼️ Uploading cover...');
-                const result = await uploadToCloudinary(file.buffer, 'noveltube/covers', 'image');
+                const result = await uploadToCloudinary(file.path, 'noveltube/covers', 'image');
                 coverImageUrl = result.secure_url;
             }
 
@@ -100,7 +121,7 @@ router.post(
             if (!chaptersEnabled && req.files && req.files.mainPdf && req.files.mainPdf.length) {
                 const file = req.files.mainPdf[0];
                 console.log('📄 Uploading main PDF...');
-                const result = await uploadToCloudinary(file.buffer, 'noveltube/pdfs', 'raw');
+                const result = await uploadToCloudinary(file.path, 'noveltube/pdfs', 'raw');
                 mainPdfUrl = result.secure_url;
             }
 
@@ -114,7 +135,7 @@ router.post(
                 for (let i = 0; i < req.files.chapterFiles.length; i++) {
                     const file = req.files.chapterFiles[i];
                     console.log(`📚 Uploading Chapter ${i + 1}...`);
-                    const result = await uploadToCloudinary(file.buffer, 'noveltube/chapters', 'raw');
+                    const result = await uploadToCloudinary(file.path, 'noveltube/chapters', 'raw');
                     finalChapters.push({
                         chapterTitle: titlesArray[i] || `Chapter ${i + 1}`,
                         chapterPdf: result.secure_url
@@ -256,13 +277,6 @@ router.post(
                 });
             }
 
-            if (req.file.mimetype !== 'application/pdf') {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Sirf PDF file upload karein!'
-                });
-            }
-
             const novel = await Novel.findById(novelId);
             if (!novel) {
                 return res.status(404).json({
@@ -278,7 +292,7 @@ router.post(
             console.log('☁️ Uploading PDF to Cloudinary...');
 
             const result = await uploadToCloudinary(
-                req.file.buffer,
+                req.file.path,
                 'noveltube/chapters',
                 'raw'
             );
@@ -420,7 +434,7 @@ router.use((error, req, res, next) => {
         if (error.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 success: false,
-                error: 'File maximum 15MB ki ho sakti hai.'
+                error: 'File maximum 100MB ki ho sakti hai.'
             });
         }
         return res.status(400).json({
