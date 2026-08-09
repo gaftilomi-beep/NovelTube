@@ -46,54 +46,61 @@ const upload = multer({
 });
 
 // ============================================================
-// CLOUDINARY UPLOAD HELPER (Disk File to Cloudinary)
+// CLOUDINARY UPLOAD HELPER (Supports Files > 10MB & Crash-Proof)
 // ============================================================
 
-// ============================================================
-// CLOUDINARY UPLOAD HELPER (Supports Files > 10MB using Chunking)
-// ============================================================
+function uploadToCloudinary(filePath, folder, resourceType = 'raw') {
+    return new Promise((resolve, reject) => {
+        if (!fs.existsSync(filePath)) {
+            return reject(new Error('Upload file disk par nahi mili!'));
+        }
 
-async function uploadToCloudinary(filePath, folder, resourceType = 'auto') {
-    try {
         const stats = fs.statSync(filePath);
         const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
-        
-        let result;
+        const isLarge = stats.size > 10 * 1024 * 1024; // > 10MB
 
-        // Agar file 10MB (10,485,760 bytes) se bari hai toh upload_large use hoga
-        if (stats.size > 10 * 1024 * 1024) {
+        const uploadOptions = {
+            folder: folder,
+            resource_type: resourceType,
+            timeout: 300000 // 5 minutes timeout
+        };
+
+        if (isLarge) {
             console.log(`📦 Large file detected (${fileSizeMB} MB). Chunking upload using upload_large...`);
-            
-            result = await cloudinary.uploader.upload_large(filePath, {
-                folder: folder,
-                resource_type: resourceType,
-                chunk_size: 6 * 1024 * 1024, // File ko 6MB ke chunks mein tukde karke upload karega
-                timeout: 300000 // 5 minutes timeout
-            });
+            uploadOptions.chunk_size = 6 * 1024 * 1024; // 6MB Chunks
         } else {
             console.log(`📄 Standard upload for file (${fileSizeMB} MB)...`);
-            
-            result = await cloudinary.uploader.upload(filePath, {
-                folder: folder,
-                resource_type: resourceType,
-                timeout: 120000
-            });
         }
 
-        // Upload ke baad temporary file delete kar dein
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
+        const uploadFn = isLarge ? cloudinary.uploader.upload_large : cloudinary.uploader.upload;
 
-        return result;
-    } catch (error) {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-        console.error('❌ Cloudinary Upload Error:', error);
-        throw error;
-    }
+        uploadFn(filePath, uploadOptions, (error, result) => {
+            // Unlink delay function: ReadStream release hone ka wait karta hai taake ENOENT error na aaye
+            setTimeout(() => {
+                if (fs.existsSync(filePath)) {
+                    try {
+                        fs.unlinkSync(filePath);
+                    } catch (e) {
+                        console.error('⚠️ Temp file cleanup error:', e.message);
+                    }
+                }
+            }, 1000);
+
+            if (error) {
+                console.error('❌ Cloudinary Upload Error:', error);
+                return reject(error);
+            }
+
+            const finalUrl = result?.secure_url || result?.url;
+            if (!finalUrl) {
+                return reject(new Error('Cloudinary response mein URL return nahi hua.'));
+            }
+
+            resolve(result);
+        });
+    });
 }
+
 // ============================================================
 // CREATE NOVEL
 // ============================================================
@@ -133,7 +140,7 @@ router.post(
                 const file = req.files.coverImage[0];
                 console.log('🖼️ Uploading cover...');
                 const result = await uploadToCloudinary(file.path, 'noveltube/covers', 'image');
-                coverImageUrl = result.secure_url;
+                coverImageUrl = result.secure_url || result.url;
             }
 
             const chaptersEnabled = hasChapters === 'true' || hasChapters === true;
@@ -144,7 +151,7 @@ router.post(
                 const file = req.files.mainPdf[0];
                 console.log('📄 Uploading main PDF...');
                 const result = await uploadToCloudinary(file.path, 'noveltube/pdfs', 'raw');
-                mainPdfUrl = result.secure_url;
+                mainPdfUrl = result.secure_url || result.url;
             }
 
             // Multiple Chapters Upload
@@ -160,7 +167,7 @@ router.post(
                     const result = await uploadToCloudinary(file.path, 'noveltube/chapters', 'raw');
                     finalChapters.push({
                         chapterTitle: titlesArray[i] || `Chapter ${i + 1}`,
-                        chapterPdf: result.secure_url
+                        chapterPdf: result.secure_url || result.url
                     });
                 }
             }
@@ -249,7 +256,7 @@ router.get('/:id', async (req, res) => {
         const novel = await Novel.findByIdAndUpdate(
             id,
             { $inc: { views: 1 } },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!novel) {
@@ -273,7 +280,18 @@ router.get('/:id', async (req, res) => {
 
 router.post(
     '/:id/add-chapter',
-    upload.single('chapterFile'),
+    (req, res, next) => {
+        upload.single('chapterFile')(req, res, (err) => {
+            if (err) {
+                console.error('🔥 Multer Upload Error:', err.message);
+                return res.status(400).json({
+                    success: false,
+                    error: `File upload fail hua: ${err.message}`
+                });
+            }
+            next();
+        });
+    },
     async (req, res) => {
         console.log('\n==========================================');
         console.log('📚 ADD CHAPTER REQUEST');
@@ -319,12 +337,14 @@ router.post(
                 'raw'
             );
 
-            if (!result || !result.secure_url) {
+            const pdfUrl = result.secure_url || result.url;
+
+            if (!pdfUrl) {
                 throw new Error('Cloudinary ne PDF URL return nahi kiya.');
             }
 
             console.log('✅ Cloudinary upload successful');
-            console.log('PDF URL:', result.secure_url);
+            console.log('PDF URL:', pdfUrl);
 
             const updatedNovel = await Novel.findByIdAndUpdate(
                 novelId,
@@ -332,11 +352,11 @@ router.post(
                     $push: {
                         chapters: {
                             chapterTitle: chapterTitle,
-                            chapterPdf: result.secure_url
+                            chapterPdf: pdfUrl
                         }
                     }
                 },
-                { new: true, runValidators: true }
+                { returnDocument: 'after', runValidators: true }
             );
 
             if (!updatedNovel) {
@@ -382,7 +402,7 @@ router.delete('/:novelId/chapters/:chapterId', async (req, res) => {
         const updatedNovel = await Novel.findByIdAndUpdate(
             novelId,
             { $pull: { chapters: { _id: chapterId } } },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!updatedNovel) {
