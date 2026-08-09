@@ -385,13 +385,20 @@
     document.getElementById('chapterModal').style.display = 'flex';
   }
 
-  async function saveChapter() {
+ async function saveChapter() {
     const novelId = document.getElementById('chapterNovelId').value;
     const chapterTitle = document.getElementById('chapterTitle').value;
     const pdfFile = document.getElementById('chapterFile').files[0];
 
     if (!pdfFile) {
       alert('PDF file select karein!');
+      return;
+    }
+
+    // 🔒 100MB Size Validation Check
+    const MAX_FILE_SIZE = 100 * 1024 * 1024;
+    if (pdfFile.size > MAX_FILE_SIZE) {
+      alert(`⚠️ Error: Chapter PDF ka size 100MB se zyada hai! (${(pdfFile.size / (1024 * 1024)).toFixed(1)}MB)`);
       return;
     }
 

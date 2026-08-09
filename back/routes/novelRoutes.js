@@ -24,7 +24,7 @@ cloudinary.config({
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 15 * 1024 * 1024 // 15MB
+        fileSize: 100 * 1024 * 1024 // 15MB
     }
 });
 

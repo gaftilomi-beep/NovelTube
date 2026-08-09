@@ -142,6 +142,9 @@
     </div>
 
     <script>
+        // MAX UPLOAD SIZE CONSTANT (100 MB)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
         // 🔑 PASSWORD GATE ENGINE
         function checkGatePassword() {
             const inputVal = document.getElementById('gatePasswordInput').value.trim();
@@ -224,9 +227,15 @@
                 return;
             }
 
+            const file = fileInput.files[0];
+            if (file.size > MAX_FILE_SIZE) {
+                alert(`⚠️ Error: Chapter PDF ka size 100MB se zyada hai! (${(file.size / (1024 * 1024)).toFixed(1)}MB)`);
+                return;
+            }
+
             uploadedChaptersList.push({
                 title: titleInput.value,
-                file: fileInput.files[0]
+                file: file
             });
 
             titleInput.value = "";
@@ -312,6 +321,14 @@
             if (hasChaptersValue === 'true' && uploadedChaptersList.length === 0) {
                 alert("⚠️ Error: Aapne Multi-Chapter Mode select kiya hai par queue me koi chapter add nahi kiya!");
                 return;
+            }
+
+            if (hasChaptersValue === 'false') {
+                const mainPdfFile = document.getElementById('mainPdf').files[0];
+                if (mainPdfFile && mainPdfFile.size > MAX_FILE_SIZE) {
+                    alert(`⚠️ Error: Novel PDF ka size 100MB se zyada hai! (${(mainPdfFile.size / (1024 * 1024)).toFixed(1)}MB)`);
+                    return;
+                }
             }
 
             const submitBtn = document.getElementById('submitMasterBtn');
