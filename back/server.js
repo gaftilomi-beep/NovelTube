@@ -22,12 +22,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ============================================================
-// APP & UPLOAD DIRECTORY SETUP
+// APP & UPLOAD DIRECTORY SETUP (/tmp for Render Cloud compatibility)
 // ============================================================
 
 const app = express();
 
-const uploadsDir = path.join(__dirname, '../uploads');
+const uploadsDir = path.join('/tmp', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -50,7 +50,7 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Helper Function: Safe Model Fetching (Avoids MissingSchemaError)
+// Helper Function: Safe Model Fetching
 const getModel = (modelName) => {
     try {
         return mongoose.model(modelName);
@@ -60,7 +60,7 @@ const getModel = (modelName) => {
 };
 
 // ============================================================
-// MULTER STORAGE & FILE FILTER (For PDF & Cover Images)
+// MULTER STORAGE & FILE FILTER (Updated to 100MB+)
 // ============================================================
 
 const storage = multer.diskStorage({
@@ -77,11 +77,17 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 100 * 1024 * 1024 // 25 MB Limit
+        fileSize: 100 * 1024 * 1024 // 100 MB Limit Fixed
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-        if (allowedTypes.includes(file.mimetype)) {
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'application/pdf',
+            'application/octet-stream' // Large PDFs through forms
+        ];
+        if (allowedTypes.includes(file.mimetype) || file.originalname.toLowerCase().endsWith('.pdf')) {
             cb(null, true);
         } else {
             cb(new Error('Invalid file type! Sirf JPG, PNG, WEBP aur PDF files allowed hain.'));
@@ -166,7 +172,6 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '../../front')));
 
-// Express Static with Inline Header for PDFs (Prevents Auto-Download)
 app.use('/uploads', express.static(uploadsDir, {
     setHeaders: (res, filePath) => {
         if (filePath.toLowerCase().endsWith('.pdf')) {
@@ -408,6 +413,12 @@ app.use((error, req, res, next) => {
     console.error('🔥 GLOBAL SERVER ERROR:', error);
 
     if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                success: false,
+                error: 'File size limit exeed ho gayi hai (Max 100MB allowed).'
+            });
+        }
         return res.status(400).json({
             success: false,
             error: `File upload error: ${error.message}`
@@ -422,7 +433,7 @@ app.use((error, req, res, next) => {
 });
 
 // ============================================================
-// START SERVER (Render & Local Compatible)
+// START SERVER
 // ============================================================
 
 const PORT = process.env.PORT || 5000;
@@ -431,5 +442,4 @@ const server = app.listen(PORT, () => {
     console.log(`🚀 Server successfully running on port ${PORT}`);
 });
 
-// Serverless / Vercel compatibility
 module.exports = app;
