@@ -49,13 +49,36 @@ const upload = multer({
 // CLOUDINARY UPLOAD HELPER (Disk File to Cloudinary)
 // ============================================================
 
+// ============================================================
+// CLOUDINARY UPLOAD HELPER (Supports Files > 10MB using Chunking)
+// ============================================================
+
 async function uploadToCloudinary(filePath, folder, resourceType = 'auto') {
     try {
-        const result = await cloudinary.uploader.upload(filePath, {
-            folder: folder,
-            resource_type: resourceType,
-            timeout: 120000 // 2 min timeout for heavy files
-        });
+        const stats = fs.statSync(filePath);
+        const fileSizeMB = (stats.size / (1024 * 1024)).toFixed(2);
+        
+        let result;
+
+        // Agar file 10MB (10,485,760 bytes) se bari hai toh upload_large use hoga
+        if (stats.size > 10 * 1024 * 1024) {
+            console.log(`📦 Large file detected (${fileSizeMB} MB). Chunking upload using upload_large...`);
+            
+            result = await cloudinary.uploader.upload_large(filePath, {
+                folder: folder,
+                resource_type: resourceType,
+                chunk_size: 6 * 1024 * 1024, // File ko 6MB ke chunks mein tukde karke upload karega
+                timeout: 300000 // 5 minutes timeout
+            });
+        } else {
+            console.log(`📄 Standard upload for file (${fileSizeMB} MB)...`);
+            
+            result = await cloudinary.uploader.upload(filePath, {
+                folder: folder,
+                resource_type: resourceType,
+                timeout: 120000
+            });
+        }
 
         // Upload ke baad temporary file delete kar dein
         if (fs.existsSync(filePath)) {
@@ -71,7 +94,6 @@ async function uploadToCloudinary(filePath, folder, resourceType = 'auto') {
         throw error;
     }
 }
-
 // ============================================================
 // CREATE NOVEL
 // ============================================================
