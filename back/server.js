@@ -170,7 +170,7 @@ app.use((req, res, next) => {
 // STATIC FILES & INLINE PDF SERVING
 // ============================================================
 
-const frontendPath = path.join(__dirname, '../../front');
+const frontendPath = path.join(__dirname, '../front');
 app.use(express.static(frontendPath));
 
 app.use('/uploads', express.static(uploadsDir, {
@@ -418,8 +418,8 @@ app.use('/api', (req, res) => {
     });
 });
 
-// Fallback serve index.html for non-API client routes
-app.get('*', (req, res) => {
+// Fallback serve index.html for non-API client routes (Express v5 / path-to-regexp v8 fix)
+app.get('/*splat', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
