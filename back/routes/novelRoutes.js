@@ -9,6 +9,18 @@ const Novel = require('../models/Novel');
 
 const router = express.Router();
 
+// Helper Function: Clean Slug Generator
+const createSlug = (text) => {
+    if (!text) return `novel-${Date.now()}`;
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '') // Special characters remove karein
+        .replace(/[\s_-]+/g, '-')  // Spaces ko '-' se replace karein
+        .replace(/^-+|-+$/g, '');   // Trim hyphens
+};
+
 // ============================================================
 // CLOUDINARY CONFIG
 // ============================================================
@@ -75,7 +87,6 @@ function uploadToCloudinary(filePath, folder, resourceType = 'raw') {
         const uploadFn = isLarge ? cloudinary.uploader.upload_large : cloudinary.uploader.upload;
 
         uploadFn(filePath, uploadOptions, (error, result) => {
-            // Unlink delay function: ReadStream release hone ka wait karta hai taake ENOENT error na aaye
             setTimeout(() => {
                 if (fs.existsSync(filePath)) {
                     try {
@@ -134,6 +145,13 @@ router.post(
                 });
             }
 
+            // Slug Generation
+            let generatedSlug = createSlug(title);
+            const existingSlug = await Novel.findOne({ slug: generatedSlug });
+            if (existingSlug) {
+                generatedSlug = `${generatedSlug}-${Date.now().toString().slice(-4)}`;
+            }
+
             // Cover Image Upload
             let coverImageUrl = '';
             if (req.files && req.files.coverImage && req.files.coverImage.length) {
@@ -175,6 +193,7 @@ router.post(
             // Save to DB
             const newNovel = new Novel({
                 title: title.trim(),
+                slug: generatedSlug,
                 author: author && author.trim() ? author.trim() : 'Unknown Writer',
                 description: description || '',
                 status: status || 'Ongoing',
@@ -239,7 +258,36 @@ router.get('/categories', async (req, res) => {
 });
 
 // ============================================================
-// GET SINGLE NOVEL + VIEW INCREMENT
+// GET SINGLE NOVEL BY SLUG + VIEW INCREMENT
+// ============================================================
+
+router.get('/slug/:slug', async (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        const novel = await Novel.findOneAndUpdate(
+            { slug: slug.toLowerCase() },
+            { $inc: { views: 1 } },
+            { returnDocument: 'after' }
+        );
+
+        if (!novel) {
+            return res.status(404).json({
+                success: false,
+                error: 'Novel nahi mila!'
+            });
+        }
+
+        return res.status(200).json(novel);
+
+    } catch (error) {
+        console.error('🔥 SLUG NOVEL ERROR:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// GET SINGLE NOVEL BY ID + VIEW INCREMENT
 // ============================================================
 
 router.get('/:id', async (req, res) => {

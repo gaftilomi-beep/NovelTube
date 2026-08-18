@@ -8,6 +8,14 @@ const novelSchema = new mongoose.Schema(
             trim: true
         },
 
+        slug: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true
+        },
+
         author: {
             type: String,
             default: 'Unknown Writer',
@@ -74,5 +82,4 @@ const novelSchema = new mongoose.Schema(
     }
 );
 
-module.exports =
-    mongoose.model('Novel', novelSchema);
+module.exports = mongoose.model('Novel', novelSchema);

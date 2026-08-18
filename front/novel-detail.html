@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Details - NovelTube</title>
+    
+    <!-- Dynamic Meta Tags for Google Search -->
+    <meta name="description" id="metaDescription" content="Read novels online on NovelTube.">
+    <meta property="og:title" id="ogTitle" content="Details - NovelTube">
+    <meta property="og:description" id="ogDescription" content="Read novels online on NovelTube.">
+    
+    <!-- Google Book Schema Markup -->
+    <script type="application/ld+json" id="googleSchema">
+    {
+      "@context": "https://schema.org",
+      "@type": "Book",
+      "name": "Novel Details",
+      "publisher": {
+        "@type": "Organization",
+        "name": "NovelTube"
+      }
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -26,58 +45,60 @@
             line-height: 1.6;
         }
     </style>
+    <!-- Dynamic theme override element -->
+    <style id="theme-override"></style>
 </head>
 
 <!-- MONETAG AD SCRIPT -->
 <script>(function(s){s.dataset.zone='11420936',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
-<body class="bg-slate-50 min-h-screen font-sans">
+<body class="bg-slate-50 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
 
     <div class="max-w-4xl mx-auto px-4 py-8">
         
-        <div id="loading" class="text-center text-slate-500 font-medium py-20">
+        <div id="loading" class="text-center text-slate-500 font-medium py-20 theme-subtext">
             Tafseelat load ho rahi hain... ⏳
         </div>
 
         <div id="novelContainer" class="hidden space-y-8">
             
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 items-center md:items-start">
+            <div class="bg-white theme-card p-6 rounded-2xl shadow-xs border border-slate-100 flex flex-col md:flex-row gap-6 items-center md:items-start">
                 <img id="novelCover" src="" alt="Cover" class="w-44 h-60 object-cover rounded-xl shadow-md border border-slate-100 flex-shrink-0">
                 
                 <div class="flex-1 text-center md:text-left space-y-3 w-full">
                     
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 w-full">
-                        <h1 id="novelTitle" dir="auto" class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight smart-text"></h1>
+                        <h1 id="novelTitle" dir="auto" class="text-xl sm:text-2xl font-bold text-slate-900 theme-text tracking-tight smart-text"></h1>
                         <span id="novelStatus" class="px-2.5 py-1 text-xs font-bold rounded-full"></span>
                     </div>
 
-                    <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700"></span></p>
+                    <p class="text-sm font-semibold text-indigo-600">Written by: <span id="novelAuthor" class="text-slate-700 theme-text"></span></p>
                     
-                    <div class="flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 py-1">
-                        <span class="flex items-center gap-1">📅 <span id="dateDisplay" class="text-slate-600">--/--/----</span></span>
+                    <div class="flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 theme-subtext py-1">
+                        <span class="flex items-center gap-1">📅 <span id="dateDisplay" class="text-slate-600 theme-subtext">--/--/----</span></span>
                     </div>
 
                     <div class="pt-2">
-                        <h3 id="aboutHeadingText" class="text-xs font-bold text-slate-400 uppercase tracking-wider text-left">About Novel:</h3>
-                        <p id="novelDescription" dir="auto" class="smart-text text-base text-slate-800 mt-2 leading-relaxed"></p>
+                        <h3 id="aboutHeadingText" class="text-xs font-bold text-slate-400 theme-subtext uppercase tracking-wider text-left">About Novel:</h3>
+                        <p id="novelDescription" dir="auto" class="smart-text text-base text-slate-800 theme-text mt-2 leading-relaxed"></p>
                     </div>
 
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div class="bg-white theme-card p-6 rounded-2xl shadow-xs border border-slate-100">
                 
                 <div id="singleNovelSection" class="hidden text-center py-6 space-y-4">
-                    <h2 id="readingOptionsHeading" class="text-lg font-bold text-slate-800">📖 Full Novel Reading Options</h2>
-                    <p id="readingOptionsSub" class="text-xs text-slate-500">Yeh novel mukammal aik hi file mein available hai.</p>
+                    <h2 id="readingOptionsHeading" class="text-lg font-bold text-slate-800 theme-text">📖 Full Novel Reading Options</h2>
+                    <p id="readingOptionsSub" class="text-xs text-slate-500 theme-subtext">Yeh novel mukammal aik hi file mein available hai.</p>
                     <div class="flex flex-wrap justify-center gap-4">
-                        <a id="readOnlineBtn" href="" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-sm transition">Read Online</a>
-                        <a id="downloadBtn" href="" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl shadow-sm transition">Download Full PDF</a>
+                        <a id="readOnlineBtn" href="" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-xs transition">Read Online</a>
+                        <a id="downloadBtn" href="" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl shadow-xs transition">Download Full PDF</a>
                     </div>
                 </div>
 
                 <div id="chaptersSection" class="hidden space-y-4">
-                    <h2 id="listSectionHeading" class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2">📑 Episodes / Chapters List</h2>
+                    <h2 id="listSectionHeading" class="text-lg font-bold text-slate-800 theme-text border-b border-slate-100 pb-2">📑 Episodes / Chapters List</h2>
                     <div id="chaptersList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
 
@@ -86,8 +107,51 @@
         </div>
     </div>
 
-  <script>
-    const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
+ <script>
+    const API_BASE_URL = 'https://noveltube-3.onrender.com/api';
+
+    // Global Theme Synchronization with Index.html
+    function syncTheme() {
+        const savedTheme = localStorage.getItem('noveltube_theme') || 'light';
+        const styleEl = document.getElementById('theme-override');
+
+        if (savedTheme === 'dark') {
+            document.body.className = 'bg-slate-900 text-slate-100 min-h-screen font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300';
+            styleEl.innerHTML = `
+                .theme-card, .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+                .theme-text, h1, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #f8fafc !important; }
+                .theme-subtext, p, .text-slate-600, .text-slate-500, .text-slate-400 { color: #cbd5e1 !important; }
+                .theme-subcard, .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
+            `;
+        } else if (savedTheme === 'golden') {
+            document.body.className = 'bg-[#181510] text-[#E6D2B5] min-h-screen font-sans selection:bg-[#D4AF37] selection:text-black transition-colors duration-300';
+            styleEl.innerHTML = `
+                .theme-card, .bg-white { background-color: #24201A !important; border-color: #4A3E2C !important; }
+                .theme-text, h1, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #F3E5AB !important; }
+                .theme-subtext, p, .text-slate-600, .text-slate-500, .text-slate-400 { color: #C5A059 !important; }
+                .theme-subcard, .bg-slate-50 { background-color: #12100C !important; border-color: #382F22 !important; }
+            `;
+        } else if (savedTheme === 'silver') {
+            document.body.className = 'bg-[#EBF0F5] text-[#2D3748] min-h-screen font-sans selection:bg-[#718096] selection:text-white transition-colors duration-300';
+            styleEl.innerHTML = `
+                .theme-card, .bg-white { background-color: #FFFFFF !important; border-color: #CBD5E0 !important; }
+                .theme-text, h1, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #1A202C !important; }
+                .theme-subtext, p, .text-slate-600, .text-slate-500, .text-slate-400 { color: #4A5568 !important; }
+                .theme-subcard, .bg-slate-50 { background-color: #E2E8F0 !important; border-color: #CBD5E0 !important; }
+            `;
+        } else if (savedTheme === 'creme') {
+            document.body.className = 'bg-[#FDFBF7] text-[#5C4D3C] min-h-screen font-sans selection:bg-[#D4A373] selection:text-white transition-colors duration-300';
+            styleEl.innerHTML = `
+                .theme-card, .bg-white { background-color: #FAF6ED !important; border-color: #E6D5B8 !important; }
+                .theme-text, h1, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #4A3B28 !important; }
+                .theme-subtext, p, .text-slate-600, .text-slate-500, .text-slate-400 { color: #6C5C4B !important; }
+                .theme-subcard, .bg-slate-50 { background-color: #EFE7D1 !important; border-color: #E6D5B8 !important; }
+            `;
+        } else {
+            document.body.className = 'bg-slate-50 min-h-screen font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300';
+            styleEl.innerHTML = '';
+        }
+    }
 
     function isUrduText(text) {
         if(!text) return false;
@@ -99,14 +163,14 @@
         return `download.html?file=${encodeURIComponent(pdfUrl)}&title=${cleanTitle}`;
     }
 
-    async function triggerGenuineView(id) {
-        const storageKey = `view_cooldown_${id}`;
+    async function triggerGenuineView(identifier) {
+        const storageKey = `view_cooldown_${identifier}`;
         const lastViewTime = localStorage.getItem(storageKey);
         const now = Date.now();
 
         if (!lastViewTime || (now - parseInt(lastViewTime)) > 15 * 60 * 1000) {
             try {
-                await fetch(`${API_BASE_URL}/novels/${id}/view`, { method: 'POST' });
+                await fetch(`${API_BASE_URL}/novels/${identifier}/view`, { method: 'POST' });
                 localStorage.setItem(storageKey, now.toString());
             } catch(err) {
                 console.log("Analytics view registration fail.");
@@ -115,21 +179,61 @@
     }
 
     async function fetchNovelDetails() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const novelId = urlParams.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    // Path name se slug extract karein (e.g. /novel/my-novel-slug) ya Query Param se
+    const pathParts = window.location.pathname.split('/');
+    const slugFromPath = pathParts[pathParts.length - 1];
 
-        if (!novelId) {
-            document.getElementById('loading').innerHTML = "❌ ID nahi mili URL mein!";
-            return;
-        }
+    const novelSlug = (slugFromPath && slugFromPath !== 'novel-detail.html' && slugFromPath !== '') 
+        ? slugFromPath 
+        : (urlParams.get('slug') || urlParams.get('id'));
 
-        await triggerGenuineView(novelId);
+    if (!novelSlug) {
+        document.getElementById('loading').innerHTML = "❌ Novel Slug / ID nahi mila URL mein!";
+        return;
+    }
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/novels/${novelId}`);
-            if (!response.ok) throw new Error('Content nahi mila');
+    await triggerGenuineView(novelSlug);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/novels/${novelSlug}`);
+        if (!response.ok) throw new Error('Content nahi mila');
+
+        const item = await response.json();
+        // ... baqi aapka rendering code yahan continue rahega
+
+            // Dynamic SEO Title & Meta Update for Google Search
+            const formattedTitle = item.author ? `${item.title} by ${item.author} on NovelTube` : `${item.title} on NovelTube`;
+            const cleanDesc = item.description ? item.description.substring(0, 160).replace(/(\r\n|\n|\r)/gm, " ") : `Read ${item.title} online on NovelTube.`;
+
+            document.title = formattedTitle;
             
-            const item = await response.json();
+            const metaDesc = document.getElementById('metaDescription');
+            if (metaDesc) metaDesc.setAttribute('content', cleanDesc);
+
+            const ogTitle = document.getElementById('ogTitle');
+            if (ogTitle) ogTitle.setAttribute('content', formattedTitle);
+
+            const ogDesc = document.getElementById('ogDescription');
+            if (ogDesc) ogDesc.setAttribute('content', cleanDesc);
+
+            const schemaScript = document.getElementById('googleSchema');
+            if (schemaScript) {
+                schemaScript.textContent = JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "Book",
+                    "name": item.title,
+                    "author": {
+                        "@type": "Person",
+                        "name": item.author || "Unknown"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "NovelTube"
+                    },
+                    "image": item.coverImage || ""
+                });
+            }
 
             const itemCategory = item.category ? item.category.toLowerCase() : '';
             const isArticle = (item.contentType && item.contentType.toLowerCase().trim() === 'article') || itemCategory.includes('article');
@@ -186,7 +290,6 @@
                 statusBadge.className = "px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800";
             }
 
-            // Combine Novel Title + Author for Filenames
             const baseFileName = item.author ? `${item.title} by ${item.author}` : item.title;
 
             const singleSection = document.getElementById('singleNovelSection');
@@ -203,7 +306,6 @@
                     const hasChapterPdf = ch.chapterPdf && ch.chapterPdf.trim() !== "" && ch.chapterPdf !== "#";
                     const readUrl = hasChapterPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(ch.chapterPdf)}` : '#';
                     
-                    // Creates title like: "Mavrah by Qurat Episode 1"
                     const fullChapterTitle = `${baseFileName} ${ch.chapterTitle}`;
                     const downloadLandPageUrl = hasChapterPdf ? getDownloadPageUrl(ch.chapterPdf, fullChapterTitle) : '#';
                     
@@ -213,17 +315,11 @@
                     const fontClass = isUrduChapter ? 'font-urdu' : 'smart-text';
 
                     listContainer.innerHTML += `
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl gap-3 hover:border-indigo-200 transition duration-200">
-                            <span dir="auto" class="${fontClass} text-base font-semibold text-slate-800 break-words w-full sm:w-auto">
-                                ${ch.chapterTitle}
-                            </span>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
-                                <a href="${readUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-xs rounded-lg transition">
-                                    Read 📖
-                                </a>
-                                <a href="${downloadLandPageUrl}" ${clickHandler} target="_blank" class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-lg transition shadow-xs">
-                                    Download 📥
-                                </a>
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 theme-subcard border border-slate-200 rounded-xl gap-3 hover:border-indigo-200 transition duration-200">
+                            <span dir="auto" class="${fontClass} text-base font-bold text-slate-800 theme-text">${ch.chapterTitle}</span>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <a href="${readUrl}" target="_blank" ${clickHandler} class="flex-1 sm:flex-initial text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Read</a>
+                                <a href="${downloadLandPageUrl}" ${clickHandler} class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">Download</a>
                             </div>
                         </div>
                     `;
@@ -232,24 +328,23 @@
                 chaptersSection.classList.add('hidden');
                 singleSection.classList.remove('hidden');
 
-                const hasMainPdf = item.mainPdf && item.mainPdf.trim() !== "" && item.mainPdf !== "#";
+                const hasFullPdf = item.pdfUrl && item.pdfUrl.trim() !== "" && item.pdfUrl !== "#";
+                const readUrl = hasFullPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(item.pdfUrl)}` : '#';
+                const downloadLandPageUrl = hasFullPdf ? getDownloadPageUrl(item.pdfUrl, baseFileName) : '#';
 
-                if (hasMainPdf) {
-                    const singleReadUrl = `https://docs.google.com/gview?url=${encodeURIComponent(item.mainPdf)}`;
-                    // Creates title like: "Muhal by Hamza Yousafzai"
-                    const mainDownloadPageUrl = getDownloadPageUrl(item.mainPdf, baseFileName);
+                const readBtn = document.getElementById('readOnlineBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
 
-                    document.getElementById('readOnlineBtn').href = singleReadUrl;
-                    document.getElementById('downloadBtn').href = mainDownloadPageUrl;
-                } else {
-                    const missingLinkAlert = (e) => {
+                readBtn.href = readUrl;
+                downloadBtn.href = downloadLandPageUrl;
+
+                if (!hasFullPdf) {
+                    const alertHandler = (e) => {
                         e.preventDefault();
-                        alert("⚠️ Is novel/article ka main PDF URL database mein mojud nahi hai!");
+                        alert("⚠️ Is novel ka full PDF file mojud nahi hai!");
                     };
-                    document.getElementById('readOnlineBtn').href = "#";
-                    document.getElementById('downloadBtn').href = "#";
-                    document.getElementById('readOnlineBtn').onclick = missingLinkAlert;
-                    document.getElementById('downloadBtn').onclick = missingLinkAlert;
+                    readBtn.onclick = alertHandler;
+                    downloadBtn.onclick = alertHandler;
                 }
             }
 
@@ -257,12 +352,16 @@
             document.getElementById('novelContainer').classList.remove('hidden');
 
         } catch (error) {
-            console.error(error);
-            document.getElementById('loading').innerHTML = "❌ Data load karne mein masla aaya ya backend band hai.";
+            console.error('Error:', error);
+            document.getElementById('loading').innerHTML = "❌ Novel details load karne mein masla hua.";
         }
     }
 
-    window.onload = fetchNovelDetails;
-</script>
+    window.onload = function() {
+        syncTheme();
+        fetchNovelDetails();
+    };
+  </script>
+
 </body>
 </html>

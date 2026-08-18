@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
@@ -30,51 +30,90 @@
 <body class="bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white">
 
     <!-- Header Navigation -->
-    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 header-bg">
-        <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-            <a href="#" class="heading-font text-xl font-black tracking-tight text-indigo-600 flex items-center gap-1.5">
-                <span>⚡</span> NovelTube
-            </a>
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 header-bg">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             
-            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-600">
-                <a href="#" class="text-indigo-600 transition">Home</a>
-                <a href="#about-section" class="hover:text-indigo-600 transition">About Us</a>
-                <a href="#contact-section" class="hover:text-indigo-600 transition">Contact Us</a>
-            </nav>
+            <!-- Left Side: Hamburger Menu Button -->
+            <button onclick="toggleSidebar(true)" class="p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition theme-text focus:outline-none" aria-label="Open Menu">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
             
-            <!-- Theme Switcher Controls -->
-            <div>
-                <select id="themeSwitcher" onchange="applyTheme(this.value)" class="text-xs font-semibold bg-transparent border border-slate-300 text-slate-700 rounded-lg px-2 py-1 outline-none cursor-pointer hover:bg-slate-100 transition">
+            <!-- Right Side: Expanded Themes Selector -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-slate-500 hidden sm:inline theme-subtext">Theme:</span>
+                <select id="themeSwitcher" onchange="applyTheme(this.value)" class="text-xs font-semibold bg-white border border-slate-300 text-slate-700 rounded-xl px-3 py-1.5 outline-none cursor-pointer shadow-xs hover:bg-slate-50 transition theme-card theme-text">
                     <option value="light">☀️ Light</option>
-                    <option value="dark">🌙 Dark</option>
-                    <option value="creme">🍦 Creme</option>
+                    <option value="dark">🌙 Night Mode</option>
+                    <option value="golden">🌟 Golden Mode</option>
+                    <option value="silver">🩶 Silver Mode</option>
+                    <option value="creme">🍦 Creme Mode</option>
                 </select>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-6xl mx-auto px-4 py-8 space-y-12">
-        
-        <!-- Hero Banner Section -->
-        <section class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-6 md:p-10 text-white text-center space-y-4 relative overflow-hidden shadow-xl shadow-indigo-950/20">
-            <div class="relative z-10 max-w-2xl mx-auto space-y-3">
-                <span class="bg-indigo-500/20 text-indigo-300 text-[10px] uppercase font-black tracking-widest px-3 py-1 rounded-full border border-indigo-500/30">WELCOME TO NOVELTUBE v2</span>
-                <h1 class="heading-font text-3xl md:text-5xl font-black tracking-tight leading-tight">Explore Infinite Premium Stories & Articles</h1>
-                <p class="text-xs md:text-sm text-slate-300 max-w-md mx-auto">Parhein behtareen Urdu novels aur exclusive informative articles bina kisi rukawat ke, bilkul muft.</p>
-                
-                <!-- Search Input Field -->
-                <div class="pt-4 max-w-md mx-auto relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">🔍</div>
-                    <input type="text" id="globalSearchInput" oninput="performLiveFilterSearch()" placeholder="Search novel, article or writer name..." class="w-full pl-10 pr-4 py-3 bg-white text-slate-900 text-sm font-medium rounded-2xl shadow-lg border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                </div>
+    <!-- Side Drawer Navigation Modal -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <aside id="sidebarDrawer" class="fixed top-0 left-0 h-full w-72 bg-white theme-card z-50 shadow-2xl -translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <span class="heading-font text-lg font-black tracking-tight text-indigo-600 flex items-center gap-1.5">
+                    <span>⚡</span> NovelTube
+                </span>
+                <button onclick="toggleSidebar(false)" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">✕</button>
             </div>
-            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-2xl"></div>
+            
+            <nav class="space-y-2 font-semibold text-sm">
+                <a href="#" onclick="toggleSidebar(false)" class="block px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 transition">🏠 Home</a>
+                <a href="#about-section" onclick="toggleSidebar(false)" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition theme-subtext">📖 About Us</a>
+                <a href="#contact-section" onclick="toggleSidebar(false)" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition theme-subtext">✉️ Contact Us</a>
+            </nav>
+        </div>
+
+        <div class="space-y-3 pt-6 border-t border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Social Handles</span>
+            <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+                <a href="https://www.facebook.com/share/1DGfhhei5h/" target="_blank" class="p-2.5 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center gap-1 hover:bg-blue-100 transition">
+                    <span>📘</span> Facebook
+                </a>
+                <a href="https://www.instagram.com/noveltube.online/" target="_blank" class="p-2.5 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center gap-1 hover:bg-pink-100 transition">
+                    <span>📷</span> Instagram
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-10">
+        
+        <!-- Custom Hero Section with Logo Image -->
+        <section class="bg-black rounded-3xl p-6 md:p-10 text-center shadow-xl relative overflow-hidden border border-amber-500/20">
+            <div class="max-w-lg mx-auto flex flex-col items-center justify-center space-y-5">
+                
+                <!-- Fixed Responsive Logo Styling -->
+                <div class="flex items-center justify-center w-full">
+                    <img 
+                        src="w.jpeg" 
+                        alt="NovelTube Logo" 
+                        class="h-166 sm:h-200 md:h-24 w-auto max-w-[240px] sm:max-w-[300px] object-contain transition-all duration-300"
+                        onerror="this.onerror=null; console.log('Logo image load nahi hui');"
+                    >
+                </div>
+                
+                <!-- Centered Responsive Search Input Box -->
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 text-sm">🔍</div>
+                    <input type="text" id="globalSearchInput" oninput="performLiveFilterSearch()" placeholder="Search novel, article or writer name..." class="w-full pl-11 pr-4 py-3.5 bg-white text-slate-900 text-sm font-medium rounded-2xl shadow-lg border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
+                </div>
+
+            </div>
         </section>
 
         <!-- Dynamic Category Stream Wrapper -->
         <div id="dynamicFeedSectionsWrapper" class="space-y-8">
-            <p class="text-center text-slate-500 font-medium py-10">Fetching files stream from cloud network... ⏳</p>
+            <p class="text-center text-slate-500 font-medium py-10">Loading... ⏳</p>
         </div>
 
         <hr class="border-slate-200/60 my-6">
@@ -97,14 +136,22 @@
             <p class="text-xs md:text-sm text-slate-600 theme-subtext">
                 Agar aapko kisi novel me error mile, apna novel hamari website par publish karwana ho, ya koi suggestion dena ho, toh aap kisi bhi waqt hamari team se rabta kar sakte hain:
             </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80 theme-subcard">
                     <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Official Email</span>
-                    <a href="mailto:hamza.ali.com122@gmail.com" class="text-xs md:text-sm font-semibold text-indigo-600 hover:underline">hamza.ali.com122@gmail.com</a>
+                    <a href="mailto:hamza.ali.com122@gmail.com" class="text-xs font-semibold text-indigo-600 hover:underline">hamza.ali.com122@gmail.com</a>
                 </div>
                 <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80 theme-subcard">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Whatsapp</span>
-                    <span class="text-xs md:text-sm font-semibold text-slate-700 theme-text">03700933073</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">WhatsApp</span>
+                    <span class="text-xs font-semibold text-slate-700 theme-text">03700933073</span>
+                </div>
+                <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80 theme-subcard">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Facebook</span>
+                    <a href="https://www.facebook.com/share/1DGfhhei5h/" target="_blank" class="text-xs font-semibold text-blue-600 hover:underline">NovelTube Page</a>
+                </div>
+                <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100/80 theme-subcard">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Instagram</span>
+                    <a href="https://www.instagram.com/noveltube.online/" target="_blank" class="text-xs font-semibold text-pink-600 hover:underline">@noveltube.online</a>
                 </div>
             </div>
         </section>
@@ -117,10 +164,23 @@
 
     <!-- Logic Engine Script -->
     <script>
-        const API_BASE_URL = 'https://noveltube-2.onrender.com/api';
+        const API_BASE_URL = 'https://noveltube-3.onrender.com/api';
         let allContentDataMasterArray = []; 
 
-        // Theme Customization Logic
+        // Dynamic Sidebar Controls
+        function toggleSidebar(show) {
+            const drawer = document.getElementById('sidebarDrawer');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (show) {
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+                drawer.classList.add('-translate-x-full');
+            }
+        }
+
+        // Expanded Multi-Theme Support
         function applyTheme(theme) {
             const styleEl = document.getElementById('theme-override');
             const switcher = document.getElementById('themeSwitcher');
@@ -134,6 +194,26 @@
                     .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #cbd5e1 !important; }
                     .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #0f172a !important; border-color: #1e293b !important; }
                     #themeSwitcher { color: #f1f5f9; background-color: #334155; border-color: #475569; }
+                `;
+            } else if (theme === 'golden') {
+                document.body.className = 'bg-[#181510] text-[#E6D2B5] selection:bg-[#D4AF37] selection:text-black transition-colors duration-300';
+                styleEl.innerHTML = `
+                    .theme-card, .bg-white { background-color: #24201A !important; border-color: #4A3E2C !important; }
+                    .header-bg { background-color: rgba(36, 32, 26, 0.9) !important; }
+                    .theme-text, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #F3E5AB !important; }
+                    .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #C5A059 !important; }
+                    .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #12100C !important; border-color: #382F22 !important; }
+                    #themeSwitcher { color: #F3E5AB; background-color: #24201A; border-color: #C5A059; }
+                `;
+            } else if (theme === 'silver') {
+                document.body.className = 'bg-[#EBF0F5] text-[#2D3748] selection:bg-[#718096] selection:text-white transition-colors duration-300';
+                styleEl.innerHTML = `
+                    .theme-card, .bg-white { background-color: #FFFFFF !important; border-color: #CBD5E0 !important; }
+                    .header-bg { background-color: rgba(255, 255, 255, 0.9) !important; }
+                    .theme-text, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #1A202C !important; }
+                    .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #4A5568 !important; }
+                    .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #E2E8F0 !important; border-color: #CBD5E0 !important; }
+                    #themeSwitcher { color: #2D3748; background-color: #FFFFFF; border-color: #A0AEC0; }
                 `;
             } else if (theme === 'creme') {
                 document.body.className = 'bg-[#FDFBF7] text-[#5C4D3C] selection:bg-[#D4A373] selection:text-white transition-colors duration-300';
@@ -230,8 +310,8 @@
                         <div class="flex justify-between items-center">
                             <h2 class="heading-font text-lg font-bold tracking-tight text-slate-900 theme-text">${categoryName}</h2>
                             <div class="flex space-x-1">
-                                <button onclick="scrollSlider('${safeSliderId}', 'left')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold theme-card theme-text">←</button>
-                                <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition active:scale-95 text-xs font-bold theme-card theme-text">→</button>
+                                <button onclick="scrollSlider('${safeSliderId}', 'left')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition active:scale-95 text-xs font-bold theme-card theme-text">←</button>
+                                <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition active:scale-95 text-xs font-bold theme-card theme-text">→</button>
                             </div>  
                         </div>
                         <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide snap-x scroll-smooth w-full">
@@ -242,20 +322,12 @@
             });
         }
 
-        // Card Template
+        // Clean Card Template (Removed Badge)
         function generateCardMarkup(item) {
             const cleanDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : '';
-            
-            const itemCategory = item.category ? item.category.toLowerCase() : '';
-            const isArticle = (item.contentType && item.contentType.toLowerCase().trim() === 'article') || itemCategory.includes('article');
-            const typeBadgeColor = isArticle ? 'bg-amber-500' : 'bg-indigo-600';
-            const typeLabel = isArticle ? 'Article' : 'Novel';
 
             return `
                 <div class="w-[140px] sm:w-[170px] bg-white theme-card rounded-2xl border border-slate-100 p-2 shadow-xs hover:shadow-md transition duration-200 snap-start flex-shrink-0 relative group">
-                    <span class="absolute top-3 left-3 z-10 ${typeBadgeColor} text-white text-[9px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-sm">
-                        ${typeLabel}
-                    </span>
                     <div class="overflow-hidden rounded-xl bg-slate-100 theme-subcard aspect-[3/4] relative">
                         <img src="${item.coverImage || 'https://via.placeholder.com/300x400?text=No+Cover'}" alt="Cover" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">
                     </div>

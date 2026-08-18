@@ -170,7 +170,8 @@ app.use((req, res, next) => {
 // STATIC FILES & INLINE PDF SERVING
 // ============================================================
 
-app.use(express.static(path.join(__dirname, '../../front')));
+const frontendPath = path.join(__dirname, '../../front');
+app.use(express.static(frontendPath));
 
 app.use('/uploads', express.static(uploadsDir, {
     setHeaders: (res, filePath) => {
@@ -180,6 +181,14 @@ app.use('/uploads', express.static(uploadsDir, {
         }
     }
 }));
+
+// ============================================================
+// DYNAMIC FRONTEND ROUTES FOR NOVEL SLUGS
+// ============================================================
+
+app.get(['/novels/:slug', '/novel/:slug'], (req, res) => {
+    res.sendFile(path.join(frontendPath, 'novel-detail.html'));
+});
 
 // ============================================================
 // API ROUTES
@@ -407,6 +416,11 @@ app.use('/api', (req, res) => {
         error: 'API route not found',
         path: req.originalUrl
     });
+});
+
+// Fallback serve index.html for non-API client routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 app.use((error, req, res, next) => {
