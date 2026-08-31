@@ -419,7 +419,7 @@ app.use('/api', (req, res) => {
 });
 
 // Wildcard fallback to serve index.html for non-API client routes (Express v5 safe)
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
