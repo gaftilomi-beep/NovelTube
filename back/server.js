@@ -60,7 +60,7 @@ const getModel = (modelName) => {
 };
 
 // ============================================================
-// MULTER STORAGE & FILE FILTER (Updated to 100MB+)
+// MULTER STORAGE & FILE FILTER (100MB Limit)
 // ============================================================
 
 const storage = multer.diskStorage({
@@ -77,7 +77,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 100 * 1024 * 1024 // 100 MB Limit Fixed
+        fileSize: 100 * 1024 * 1024 // 100 MB Limit
     },
     fileFilter: (req, file, cb) => {
         const allowedTypes = [
@@ -85,7 +85,7 @@ const upload = multer({
             'image/png',
             'image/webp',
             'application/pdf',
-            'application/octet-stream' // Large PDFs through forms
+            'application/octet-stream'
         ];
         if (allowedTypes.includes(file.mimetype) || file.originalname.toLowerCase().endsWith('.pdf')) {
             cb(null, true);
@@ -183,7 +183,7 @@ app.use('/uploads', express.static(uploadsDir, {
 }));
 
 // ============================================================
-// DYNAMIC FRONTEND ROUTES FOR NOVEL SLUGS
+// DYNAMIC FRONTEND ROUTES FOR NOVEL SLUGS (Clean URLs Support)
 // ============================================================
 
 app.get(['/novels/:slug', '/novel/:slug'], (req, res) => {
@@ -418,8 +418,8 @@ app.use('/api', (req, res) => {
     });
 });
 
-// Fallback serve index.html for non-API client routes (Express v5 / path-to-regexp v8 fix)
-app.get('/*splat', (req, res) => {
+// Wildcard fallback to serve index.html for non-API client routes (Express v5 safe)
+app.get('*', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
