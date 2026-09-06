@@ -197,6 +197,7 @@ app.get(['/novels/:slug', '/novel/:slug'], (req, res) => {
 app.use('/api/auth', require('./routes/auth.js'));
 app.use('/api/novels', require('./routes/novelRoutes.js'));
 app.use('/api/chapters', require('./routes/chapterRoutes.js'));
+app.use('/api/writers', require('./routes/writerRoutes.js'));
 
 // ============================================================
 // EDIT NOVEL DETAILS
