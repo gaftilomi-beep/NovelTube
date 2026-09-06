@@ -13,15 +13,12 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         .heading-font { font-family: 'Poppins', sans-serif; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
-    <!-- Dynamic theme styles injected dynamically -->
     <style id="theme-override"></style>
 </head>
 
@@ -40,23 +37,17 @@
                 </svg>
             </button>
             
-            <!-- Right Side: Expanded Themes Selector -->
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-slate-500 hidden sm:inline theme-subtext">Theme:</span>
-                <select id="themeSwitcher" onchange="applyTheme(this.value)" class="text-xs font-semibold bg-white border border-slate-300 text-slate-700 rounded-xl px-3 py-1.5 outline-none cursor-pointer shadow-xs hover:bg-slate-50 transition theme-card theme-text">
-                    <option value="light">☀️ Light</option>
-                    <option value="dark">🌙 Night Mode</option>
-                    <option value="golden">🌟 Golden Mode</option>
-                    <option value="silver">🩶 Silver Mode</option>
-                    <option value="creme">🍦 Creme Mode</option>
-                </select>
-            </div>
+            <!-- Right Side: Sun / Moon Mode Toggle -->
+            <button id="themeToggleBtn" onclick="toggleDarkLightMode()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-amber-400 font-semibold text-xs transition-all shadow-xs theme-card border border-slate-200">
+                <span id="themeIcon">☀️</span>
+                <span id="themeLabel" class="hidden sm:inline">Light</span>
+            </button>
         </div>
     </header>
 
     <!-- Side Drawer Navigation Modal -->
     <div id="sidebarBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
-    <aside id="sidebarDrawer" class="fixed top-0 left-0 h-full w-72 bg-white theme-card z-50 shadow-2xl -translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between">
+    <aside id="sidebarDrawer" class="fixed top-0 left-0 h-full w-72 bg-white theme-card z-50 shadow-2xl -translate-x-full transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between overflow-y-auto">
         <div class="space-y-6">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <span class="heading-font text-lg font-black tracking-tight text-indigo-600 flex items-center gap-1.5">
@@ -66,7 +57,23 @@
             </div>
             
             <nav class="space-y-2 font-semibold text-sm">
-                <a href="#" onclick="toggleSidebar(false)" class="block px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 transition">🏠 Home</a>
+                <!-- Home Option to Reset to Main Screen -->
+                <a href="#" onclick="resetToHome(); toggleSidebar(false);" class="block px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 transition">🏠 Home</a>
+                
+                <!-- Writers Link in Drawer -->
+                <a href="#" onclick="switchMainTypeTab('writer'); toggleSidebar(false);" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition theme-subtext">✍️ Writers & Authors</a>
+
+                <!-- Expandable Categories Dropdown -->
+                <div class="border-y border-slate-100 my-2 py-2">
+                    <button onclick="toggleCategoryAccordion()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition theme-text focus:outline-none">
+                        <span class="flex items-center gap-2">📚 Categories</span>
+                        <span id="accordionArrow" class="text-xs transition-transform duration-200">▼</span>
+                    </button>
+                    <div id="categoriesListDrawer" class="hidden pl-6 pr-2 py-2 space-y-1 text-xs">
+                        <!-- Dynamic Categories -->
+                    </div>
+                </div>
+
                 <a href="#about-section" onclick="toggleSidebar(false)" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition theme-subtext">📖 About Us</a>
                 <a href="#contact-section" onclick="toggleSidebar(false)" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition theme-subtext">✉️ Contact Us</a>
             </nav>
@@ -86,33 +93,57 @@
     </aside>
 
     <!-- Main Container -->
-    <main class="max-w-6xl mx-auto px-4 py-6 space-y-10">
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-8">
         
-        <!-- Custom Hero Section with Logo Image -->
+        <!-- Hero Section -->
         <section class="bg-black rounded-3xl p-6 md:p-10 text-center shadow-xl relative overflow-hidden border border-amber-500/20">
-            <div class="max-w-lg mx-auto flex flex-col items-center justify-center space-y-5">
+            <div class="max-w-lg mx-auto flex flex-col items-center justify-center space-y-6">
                 
-                <!-- Fixed Responsive Logo Styling -->
-                <div class="flex items-center justify-center w-full">
+                <div class="flex items-center justify-center w-full px-2">
                     <img 
                         src="w.jpeg" 
                         alt="NovelTube Logo" 
-                        class="h-166 sm:h-200 md:h-24 w-auto max-w-[240px] sm:max-w-[300px] object-contain transition-all duration-300"
+                        class="w-full h-auto max-h-48 sm:max-h-56 md:max-h-64 object-contain transition-all duration-300 drop-shadow-md"
                         onerror="this.onerror=null; console.log('Logo image load nahi hui');"
                     >
                 </div>
                 
-                <!-- Centered Responsive Search Input Box -->
                 <div class="relative w-full">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 text-sm">🔍</div>
-                    <input type="text" id="globalSearchInput" oninput="performLiveFilterSearch()" placeholder="Search novel, article or writer name..." class="w-full pl-11 pr-4 py-3.5 bg-white text-slate-900 text-sm font-medium rounded-2xl shadow-lg border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
+                    <input type="text" id="globalSearchInput" oninput="performLiveFilterSearch()" placeholder="Search novel, article or writer name..." class="w-full pl-11 pr-4 py-3.5 bg-white text-slate-900 text-sm font-medium rounded-2xl shadow-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
 
             </div>
         </section>
 
-        <!-- Dynamic Category Stream Wrapper -->
-        <div id="dynamicFeedSectionsWrapper" class="space-y-8">
+        <!-- Centered Main Filter Bar Area -->
+        <div class="flex justify-center items-center my-6 min-h-[50px]">
+            <!-- State A: Default Middle Tabs (Novels / Articles / Writers) -->
+            <div id="defaultTypeTabsContainer" class="inline-flex p-1.5 bg-slate-200/70 dark:bg-slate-800 rounded-2xl shadow-inner theme-card gap-1 flex-wrap justify-center">
+                <button id="tab-novel" onclick="switchMainTypeTab('novel')" class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 bg-indigo-600 text-white shadow-md">
+                    📚 Novels
+                </button>
+                <button id="tab-article" onclick="switchMainTypeTab('article')" class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-indigo-600 theme-text">
+                    📰 Articles
+                </button>
+                <button id="tab-writer" onclick="switchMainTypeTab('writer')" class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-indigo-600 theme-text">
+                    ✍️ Writers
+                </button>
+            </div>
+
+            <!-- State B: Active Selected Category Title -->
+            <div id="categoryActiveTitleContainer" class="hidden flex-col items-center justify-center text-center space-y-2">
+                <div class="flex items-center gap-3">
+                    <span id="selectedCategoryTitle" class="heading-font text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight"></span>
+                    <button onclick="resetToHome()" class="p-1.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-rose-500 hover:text-white text-slate-600 transition-all text-xs" title="Clear Category">
+                        ✕
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Grid -->
+        <div id="dynamicFeedSectionsWrapper" class="min-h-[300px]">
             <p class="text-center text-slate-500 font-medium py-10">Loading... ⏳</p>
         </div>
 
@@ -164,10 +195,16 @@
 
     <!-- Logic Engine Script -->
     <script>
-        const API_BASE_URL = 'https://noveltube-3.onrender.com/api';
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:5000/api' 
+            : 'https://noveltube-3.onrender.com/api';
+            
         let allContentDataMasterArray = []; 
+        let allWritersDataArray = [];
+        let activeSelectedType = 'novel'; // 'novel', 'article', or 'writer'
+        let isCategoryActive = false;
+        let currentTheme = 'light';
 
-        // Dynamic Sidebar Controls
         function toggleSidebar(show) {
             const drawer = document.getElementById('sidebarDrawer');
             const backdrop = document.getElementById('sidebarBackdrop');
@@ -180,60 +217,44 @@
             }
         }
 
-        // Expanded Multi-Theme Support
+        function toggleCategoryAccordion() {
+            const list = document.getElementById('categoriesListDrawer');
+            const arrow = document.getElementById('accordionArrow');
+            list.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        }
+
+        function toggleDarkLightMode() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+        }
+
         function applyTheme(theme) {
+            currentTheme = theme;
             const styleEl = document.getElementById('theme-override');
-            const switcher = document.getElementById('themeSwitcher');
+            const iconEl = document.getElementById('themeIcon');
+            const labelEl = document.getElementById('themeLabel');
             
             if (theme === 'dark') {
                 document.body.className = 'bg-slate-900 text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-300';
                 styleEl.innerHTML = `
                     .theme-card, .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
                     .header-bg { background-color: rgba(30, 41, 59, 0.9) !important; }
-                    .theme-text, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #f8fafc !important; }
+                    .theme-text, h1, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #f8fafc !important; }
                     .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #cbd5e1 !important; }
                     .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #0f172a !important; border-color: #1e293b !important; }
-                    #themeSwitcher { color: #f1f5f9; background-color: #334155; border-color: #475569; }
                 `;
-            } else if (theme === 'golden') {
-                document.body.className = 'bg-[#181510] text-[#E6D2B5] selection:bg-[#D4AF37] selection:text-black transition-colors duration-300';
-                styleEl.innerHTML = `
-                    .theme-card, .bg-white { background-color: #24201A !important; border-color: #4A3E2C !important; }
-                    .header-bg { background-color: rgba(36, 32, 26, 0.9) !important; }
-                    .theme-text, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #F3E5AB !important; }
-                    .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #C5A059 !important; }
-                    .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #12100C !important; border-color: #382F22 !important; }
-                    #themeSwitcher { color: #F3E5AB; background-color: #24201A; border-color: #C5A059; }
-                `;
-            } else if (theme === 'silver') {
-                document.body.className = 'bg-[#EBF0F5] text-[#2D3748] selection:bg-[#718096] selection:text-white transition-colors duration-300';
-                styleEl.innerHTML = `
-                    .theme-card, .bg-white { background-color: #FFFFFF !important; border-color: #CBD5E0 !important; }
-                    .header-bg { background-color: rgba(255, 255, 255, 0.9) !important; }
-                    .theme-text, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #1A202C !important; }
-                    .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #4A5568 !important; }
-                    .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #E2E8F0 !important; border-color: #CBD5E0 !important; }
-                    #themeSwitcher { color: #2D3748; background-color: #FFFFFF; border-color: #A0AEC0; }
-                `;
-            } else if (theme === 'creme') {
-                document.body.className = 'bg-[#FDFBF7] text-[#5C4D3C] selection:bg-[#D4A373] selection:text-white transition-colors duration-300';
-                styleEl.innerHTML = `
-                    .theme-card, .bg-white { background-color: #FAF6ED !important; border-color: #E6D5B8 !important; }
-                    .header-bg { background-color: rgba(250, 246, 237, 0.9) !important; }
-                    .theme-text, h2, h3, .text-slate-900, .text-slate-800, .text-slate-700 { color: #4A3B28 !important; }
-                    .theme-subtext, p, .text-slate-600, .text-slate-500 { color: #6C5C4B !important; }
-                    .theme-subcard, .bg-slate-50, .bg-slate-100 { background-color: #EFE7D1 !important; border-color: #E6D5B8 !important; }
-                    #themeSwitcher { color: #5C4D3C; background-color: #FAF6ED; border-color: #E6D5B8; }
-                `;
+                if(iconEl) iconEl.innerText = '🌙';
+                if(labelEl) labelEl.innerText = 'Night';
             } else {
                 document.body.className = 'bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white transition-colors duration-300';
                 styleEl.innerHTML = '';
+                if(iconEl) iconEl.innerText = '☀️';
+                if(labelEl) labelEl.innerText = 'Light';
             }
             localStorage.setItem('noveltube_theme', theme);
-            if(switcher) switcher.value = theme;
         }
 
-        // Fetch Data from Backend
         async function fetchRealNovels() {
             const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
             try {
@@ -241,19 +262,138 @@
                 if (!response.ok) throw new Error("Server failure code returned");
                 
                 allContentDataMasterArray = await response.json();
-                renderCategorizedDataUI(allContentDataMasterArray);
+                populateDrawerCategories(allContentDataMasterArray);
+                switchMainTypeTab('novel');
             } catch (error) {
                 console.error("Fetch Error:", error);
                 wrapper.innerHTML = `<p class="text-xs text-rose-500 p-3 font-medium text-center">Server se connect nahi ho paa raha. Phir se koshish karein!</p>`;
             }
         }
 
-        // Search Filter
+        async function fetchWriters() {
+            const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
+            wrapper.innerHTML = `<p class="text-center text-slate-500 font-medium py-10">Writers loading... ⏳</p>`;
+            try {
+                const response = await fetch(`${API_BASE_URL}/writers`);
+                if (!response.ok) throw new Error("Writers fetch failed");
+                allWritersDataArray = await response.json();
+                renderWritersGridUI(allWritersDataArray);
+            } catch (error) {
+                console.error("Writers Error:", error);
+                wrapper.innerHTML = `<p class="text-xs text-rose-500 p-3 font-medium text-center">Writers load nahi ho sake!</p>`;
+            }
+        }
+
+        function populateDrawerCategories(itemsList) {
+            const drawerCatBox = document.getElementById('categoriesListDrawer');
+            if(!drawerCatBox) return;
+
+            const categoriesSet = new Set();
+            itemsList.forEach(item => {
+                if(item.category) categoriesSet.add(item.category);
+            });
+
+            let htmlMarkup = `
+                <button onclick="resetToHome(); toggleSidebar(false);" class="w-full text-left py-2 px-3 rounded-lg text-indigo-600 hover:bg-indigo-50 font-bold transition">
+                    🏠 Home (All Content)
+                </button>
+            `;
+
+            categoriesSet.forEach(cat => {
+                htmlMarkup += `
+                    <button onclick="filterByCategory('${cat}'); toggleSidebar(false);" class="w-full text-left py-2 px-3 rounded-lg text-slate-600 hover:bg-slate-100 theme-subtext transition font-medium">
+                        ${cat}
+                    </button>
+                `;
+            });
+
+            drawerCatBox.innerHTML = htmlMarkup;
+        }
+
+        function resetToHome() {
+            isCategoryActive = false;
+            document.getElementById('categoryActiveTitleContainer').classList.add('hidden');
+            document.getElementById('defaultTypeTabsContainer').classList.remove('hidden');
+            document.getElementById('defaultTypeTabsContainer').classList.add('inline-flex');
+            switchMainTypeTab('novel');
+        }
+
+        function switchMainTypeTab(type) {
+            isCategoryActive = false;
+            activeSelectedType = type;
+            document.getElementById('globalSearchInput').value = '';
+
+            document.getElementById('categoryActiveTitleContainer').classList.add('hidden');
+            document.getElementById('defaultTypeTabsContainer').classList.remove('hidden');
+            document.getElementById('defaultTypeTabsContainer').classList.add('inline-flex');
+
+            const btnNovel = document.getElementById('tab-novel');
+            const btnArticle = document.getElementById('tab-article');
+            const btnWriter = document.getElementById('tab-writer');
+
+            const activeClass = "px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 bg-indigo-600 text-white shadow-md";
+            const inactiveClass = "px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-indigo-600 theme-text";
+
+            if (btnNovel) btnNovel.className = inactiveClass;
+            if (btnArticle) btnArticle.className = inactiveClass;
+            if (btnWriter) btnWriter.className = inactiveClass;
+
+            if (type === 'writer') {
+                if(btnWriter) btnWriter.className = activeClass;
+                fetchWriters();
+                return;
+            }
+
+            if (type === 'article') {
+                if(btnArticle) btnArticle.className = activeClass;
+                const filtered = allContentDataMasterArray.filter(i => (i.category && i.category.toLowerCase().includes('article')) || (i.contentType && i.contentType.toLowerCase() === 'article'));
+                renderMainGridUI(filtered);
+            } else {
+                if(btnNovel) btnNovel.className = activeClass;
+                const filtered = allContentDataMasterArray.filter(i => (i.category && i.category.toLowerCase().includes('novel')) || (i.contentType && i.contentType.toLowerCase() === 'novel') || !i.category.toLowerCase().includes('article'));
+                renderMainGridUI(filtered);
+            }
+        }
+
+        function filterByCategory(catName) {
+            document.getElementById('globalSearchInput').value = '';
+            
+            if(!catName || catName === 'all') {
+                resetToHome();
+                return;
+            }
+
+            isCategoryActive = true;
+
+            document.getElementById('defaultTypeTabsContainer').classList.add('hidden');
+            document.getElementById('defaultTypeTabsContainer').classList.remove('inline-flex');
+            
+            const titleBox = document.getElementById('selectedCategoryTitle');
+            const titleContainer = document.getElementById('categoryActiveTitleContainer');
+            
+            if(titleBox) titleBox.innerText = catName;
+            if(titleContainer) titleContainer.classList.remove('hidden');
+
+            const filtered = allContentDataMasterArray.filter(i => i.category === catName);
+            renderMainGridUI(filtered);
+        }
+
         function performLiveFilterSearch() {
             const query = document.getElementById('globalSearchInput').value.toLowerCase().trim();
             
             if(!query) {
-                renderCategorizedDataUI(allContentDataMasterArray);
+                if(isCategoryActive) {
+                    const currentCat = document.getElementById('selectedCategoryTitle').innerText;
+                    filterByCategory(currentCat);
+                } else {
+                    switchMainTypeTab(activeSelectedType);
+                }
+                return;
+            }
+
+            if (activeSelectedType === 'writer') {
+                const filteredWriters = allWritersDataArray.filter(w => w.name && w.name.toLowerCase().includes(query));
+                renderWritersGridUI(filteredWriters);
                 return;
             }
 
@@ -264,97 +404,79 @@
                 return matchTitle || matchAuthor || matchCategory;
             });
 
-            renderCategorizedDataUI(filtered, true);
+            renderMainGridUI(filtered);
         }
 
-        // Render UI
-        function renderCategorizedDataUI(itemsList, isSearching = false) {
+        function renderMainGridUI(itemsList) {
             const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
             
             if (!itemsList || itemsList.length === 0) {
-                wrapper.innerHTML = `<p class="text-xs text-slate-400 p-10 italic text-center theme-subtext">Koi matching novel ya article nahi mila! 📚</p>`;
+                wrapper.innerHTML = `<p class="text-xs text-slate-400 p-10 italic text-center theme-subtext">Is category me abhi koi content nahi mila! 📚</p>`;
                 return;
             }
 
-            if (isSearching) {
-                let cardsHTML = itemsList.map(item => generateCardMarkup(item)).join('');
-                wrapper.innerHTML = `
-                    <section class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h2 class="heading-font text-lg font-bold tracking-tight text-slate-900 theme-text">🔍 Search Results (${itemsList.length})</h2>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                            ${cardsHTML}
-                        </div>
-                    </section>
-                `;
-                return;
-            }
-
-            const groups = {};
-            itemsList.forEach(item => {
-                const cat = item.category || 'General';
-                if (!groups[cat]) groups[cat] = [];
-                groups[cat].push(item);
-            });
-
-            wrapper.innerHTML = "";
-            Object.keys(groups).forEach((categoryName, idx) => {
-                const categoryItems = groups[categoryName];
-                const safeSliderId = `slider_${idx}`;
-                
-                let cardsHTML = categoryItems.map(item => generateCardMarkup(item)).join('');
-
-                wrapper.innerHTML += `
-                    <section class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <h2 class="heading-font text-lg font-bold tracking-tight text-slate-900 theme-text">${categoryName}</h2>
-                            <div class="flex space-x-1">
-                                <button onclick="scrollSlider('${safeSliderId}', 'left')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition active:scale-95 text-xs font-bold theme-card theme-text">←</button>
-                                <button onclick="scrollSlider('${safeSliderId}', 'right')" class="bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition active:scale-95 text-xs font-bold theme-card theme-text">→</button>
-                            </div>  
-                        </div>
-                        <div id="${safeSliderId}" class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide snap-x scroll-smooth w-full">
-                            ${cardsHTML}
-                        </div>
-                    </section>
-                `;
-            });
-        }
-
-        // Clean Card Template (Removed Badge)
-        function generateCardMarkup(item) {
-            const cleanDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : '';
-
-            return `
-                <div class="w-[140px] sm:w-[170px] bg-white theme-card rounded-2xl border border-slate-100 p-2 shadow-xs hover:shadow-md transition duration-200 snap-start flex-shrink-0 relative group">
-                    <div class="overflow-hidden rounded-xl bg-slate-100 theme-subcard aspect-[3/4] relative">
-                        <img src="${item.coverImage || 'https://via.placeholder.com/300x400?text=No+Cover'}" alt="Cover" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">
-                    </div>
-                    <div class="mt-2 space-y-0.5 px-0.5">
-                        <h3 class="text-xs font-bold text-slate-900 theme-text truncate tracking-tight">${item.title}</h3>
-                        <p class="text-[10px] text-slate-500 theme-subtext font-medium truncate">By ${item.author}</p>
-                        
-                        <div class="flex items-center justify-between text-[9px] font-bold text-slate-400 theme-subtext pt-1 border-t border-slate-50 mt-1">
-                            <span>Published</span>
-                            <span>${cleanDate}</span>
-                        </div>
-                    </div>
-                    <a href="novel-detail.html?id=${item._id}" class="absolute inset-0 z-20"></a>
+            let cardsHTML = itemsList.map(item => generateCardMarkup(item)).join('');
+            wrapper.innerHTML = `
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
+                    ${cardsHTML}
                 </div>
             `;
         }
 
-        // Slider Scroll Control
-        function scrollSlider(id, direction) {
-            const slider = document.getElementById(id);
-            if (slider) {
-                const amt = direction === 'left' ? -200 : 200;
-                slider.scrollBy({ left: amt, behavior: 'smooth' });
-            }
+        function generateCardMarkup(item) {
+            const cleanDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : '';
+            const categoryBadge = item.category ? item.category : 'General';
+
+            return `
+                <div class="bg-white theme-card rounded-2xl border border-slate-200/70 p-2.5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group flex flex-col justify-between overflow-hidden">
+                    <div>
+                        <div class="overflow-hidden rounded-xl bg-slate-100 theme-subcard aspect-[3/4] relative">
+                            <img src="${item.coverImage || 'https://via.placeholder.com/300x400?text=No+Cover'}" alt="Cover" class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out" loading="lazy">
+                            <span class="absolute top-2 left-2 text-[9px] font-extrabold bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-md uppercase tracking-wider">${categoryBadge}</span>
+                        </div>
+                        
+                        <div class="mt-2.5 space-y-0.5 px-0.5">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-900 theme-text truncate tracking-tight group-hover:text-indigo-600 transition-colors">${item.title}</h3>
+                            <p class="text-[11px] text-slate-500 theme-subtext font-medium truncate">By ${item.author}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 theme-subtext pt-2 border-t border-slate-100/80 mt-2.5">
+                        <span>Read Online</span>
+                        <span>${cleanDate}</span>
+                    </div>
+
+                    <a href="novel-detail.html?id=${item._id}" class="absolute inset-0 z-20" aria-label="Open ${item.title}"></a>
+                </div>
+            `;
         }
 
-        // On Load Initializations
+        function renderWritersGridUI(writersList) {
+            const wrapper = document.getElementById('dynamicFeedSectionsWrapper');
+            if (!writersList || writersList.length === 0) {
+                wrapper.innerHTML = `<p class="text-xs text-slate-400 p-10 italic text-center theme-subtext">Abhi tak koi writer shamil nahi kiya gaya! ✍️</p>`;
+                return;
+            }
+
+            let cardsHTML = writersList.map(writer => {
+                const photo = writer.photoUrl || 'https://via.placeholder.com/150?text=Writer';
+                const bio = writer.bio || 'NovelTube writer';
+                return `
+                    <div class="bg-white theme-card rounded-2xl border border-slate-200/70 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center">
+                        <img src="${photo}" alt="${writer.name}" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 shadow-md mb-3">
+                        <h3 class="text-sm font-bold text-slate-900 theme-text truncate w-full">${writer.name}</h3>
+                        <p class="text-xs text-slate-500 theme-subtext mt-1 line-clamp-2">${bio}</p>
+                    </div>
+                `;
+            }).join('');
+
+            wrapper.innerHTML = `
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
+                    ${cardsHTML}
+                </div>
+            `;
+        }
+
         window.onload = function() {
             const savedTheme = localStorage.getItem('noveltube_theme') || 'light';
             applyTheme(savedTheme);

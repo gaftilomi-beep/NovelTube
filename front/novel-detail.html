@@ -93,7 +93,7 @@
                     <p id="readingOptionsSub" class="text-xs text-slate-500 theme-subtext">Yeh novel mukammal aik hi file mein available hai.</p>
                     <div class="flex flex-wrap justify-center gap-4">
                         <a id="readOnlineBtn" href="" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-xs transition">Read Online</a>
-                        <a id="downloadBtn" href="" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl shadow-xs transition">Download Full PDF</a>
+                        <a id="downloadBtn" href="" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl shadow-xs transition">Download Full PDF</a>
                     </div>
                 </div>
 
@@ -163,6 +163,27 @@
         return `download.html?file=${encodeURIComponent(pdfUrl)}&title=${cleanTitle}`;
     }
 
+    // Direct External Browser Redirection for Instagram/Facebook In-App Browsers
+    function handleDownloadRedirect(targetUrl, event) {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isInAppBrowser = /Instagram|FBAN|FBAV/i.test(userAgent);
+
+        if (isInAppBrowser) {
+            if (event) event.preventDefault();
+
+            // Full URL path creation
+            const absoluteUrl = new URL(targetUrl, window.location.href).href;
+            const cleanUrl = absoluteUrl.replace(/^https?:\/\//, '');
+
+            // Android Intent for forcing Google Chrome opening
+            const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
+            window.location.href = chromeIntent;
+        } else {
+            // Normal Browser Execution
+            window.location.href = targetUrl;
+        }
+    }
+
     async function triggerGenuineView(identifier) {
         const storageKey = `view_cooldown_${identifier}`;
         const lastViewTime = localStorage.getItem(storageKey);
@@ -179,28 +200,26 @@
     }
 
     async function fetchNovelDetails() {
-    const urlParams = new URLSearchParams(window.location.search);
-    // Path name se slug extract karein (e.g. /novel/my-novel-slug) ya Query Param se
-    const pathParts = window.location.pathname.split('/');
-    const slugFromPath = pathParts[pathParts.length - 1];
+        const urlParams = new URLSearchParams(window.location.search);
+        const pathParts = window.location.pathname.split('/');
+        const slugFromPath = pathParts[pathParts.length - 1];
 
-    const novelSlug = (slugFromPath && slugFromPath !== 'novel-detail.html' && slugFromPath !== '') 
-        ? slugFromPath 
-        : (urlParams.get('slug') || urlParams.get('id'));
+        const novelSlug = (slugFromPath && slugFromPath !== 'novel-detail.html' && slugFromPath !== '') 
+            ? slugFromPath 
+            : (urlParams.get('slug') || urlParams.get('id'));
 
-    if (!novelSlug) {
-        document.getElementById('loading').innerHTML = "❌ Novel Slug / ID nahi mila URL mein!";
-        return;
-    }
+        if (!novelSlug) {
+            document.getElementById('loading').innerHTML = "❌ Novel Slug / ID nahi mila URL mein!";
+            return;
+        }
 
-    await triggerGenuineView(novelSlug);
+        await triggerGenuineView(novelSlug);
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/novels/${novelSlug}`);
-        if (!response.ok) throw new Error('Content nahi mila');
+        try {
+            const response = await fetch(`${API_BASE_URL}/novels/${novelSlug}`);
+            if (!response.ok) throw new Error('Content nahi mila');
 
-        const item = await response.json();
-        // ... baqi aapka rendering code yahan continue rahega
+            const item = await response.json();
 
             // Dynamic SEO Title & Meta Update for Google Search
             const formattedTitle = item.author ? `${item.title} by ${item.author} on NovelTube` : `${item.title} on NovelTube`;
@@ -295,6 +314,7 @@
             const singleSection = document.getElementById('singleNovelSection');
             const chaptersSection = document.getElementById('chaptersSection');
 
+            // Check if novel has chapters
             if (item && (item.hasChapters === true || (item.chapters && item.chapters.length > 0))) {
                 singleSection.classList.add('hidden');
                 chaptersSection.classList.remove('hidden');
@@ -303,13 +323,17 @@
                 listContainer.innerHTML = ""; 
 
                 item.chapters?.forEach((ch) => {
-                    const hasChapterPdf = ch.chapterPdf && ch.chapterPdf.trim() !== "" && ch.chapterPdf !== "#";
-                    const readUrl = hasChapterPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(ch.chapterPdf)}` : '#';
+                    const chPdf = ch.chapterPdf || ch.pdf || ch.file || ch.pdfUrl;
+                    const hasChapterPdf = chPdf && chPdf.trim() !== "" && chPdf !== "#";
+                    const readUrl = hasChapterPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(chPdf)}` : '#';
                     
                     const fullChapterTitle = `${baseFileName} ${ch.chapterTitle}`;
-                    const downloadLandPageUrl = hasChapterPdf ? getDownloadPageUrl(ch.chapterPdf, fullChapterTitle) : '#';
+                    const downloadLandPageUrl = hasChapterPdf ? getDownloadPageUrl(chPdf, fullChapterTitle) : '#';
                     
-                    const clickHandler = hasChapterPdf ? '' : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
+                    const readClickHandler = hasChapterPdf ? '' : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
+                    const downloadClickHandler = hasChapterPdf 
+                        ? `onclick="handleDownloadRedirect('${downloadLandPageUrl}', event)"`
+                        : `onclick="event.preventDefault(); alert('⚠️ Is episode ka PDF URL database mein mojud nahi hai!');"`;
                     
                     const isUrduChapter = isUrduText(ch.chapterTitle);
                     const fontClass = isUrduChapter ? 'font-urdu' : 'smart-text';
@@ -318,25 +342,31 @@
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 theme-subcard border border-slate-200 rounded-xl gap-3 hover:border-indigo-200 transition duration-200">
                             <span dir="auto" class="${fontClass} text-base font-bold text-slate-800 theme-text">${ch.chapterTitle}</span>
                             <div class="flex gap-2 w-full sm:w-auto">
-                                <a href="${readUrl}" target="_blank" ${clickHandler} class="flex-1 sm:flex-initial text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Read</a>
-                                <a href="${downloadLandPageUrl}" ${clickHandler} class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">Download</a>
+                                <a href="${readUrl}" target="_blank" ${readClickHandler} class="flex-1 sm:flex-initial text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Read</a>
+                                <a href="${downloadLandPageUrl}" ${downloadClickHandler} class="flex-1 sm:flex-initial text-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition">Download</a>
                             </div>
                         </div>
                     `;
                 });
             } else {
+                // Complete single PDF novel handling
                 chaptersSection.classList.add('hidden');
                 singleSection.classList.remove('hidden');
 
-                const hasFullPdf = item.pdfUrl && item.pdfUrl.trim() !== "" && item.pdfUrl !== "#";
-                const readUrl = hasFullPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(item.pdfUrl)}` : '#';
-                const downloadLandPageUrl = hasFullPdf ? getDownloadPageUrl(item.pdfUrl, baseFileName) : '#';
+                const rawPdfUrl = item.mainPdf || item.pdfUrl || item.pdf || item.file || item.driveUrl;
+                const hasFullPdf = Boolean(rawPdfUrl && rawPdfUrl.trim() !== "" && rawPdfUrl !== "#");
+
+                const readUrl = hasFullPdf ? `https://docs.google.com/gview?url=${encodeURIComponent(rawPdfUrl)}` : '#';
+                const downloadLandPageUrl = hasFullPdf ? getDownloadPageUrl(rawPdfUrl, baseFileName) : '#';
 
                 const readBtn = document.getElementById('readOnlineBtn');
                 const downloadBtn = document.getElementById('downloadBtn');
 
                 readBtn.href = readUrl;
                 downloadBtn.href = downloadLandPageUrl;
+
+                // Reset event handlers to clean state
+                readBtn.onclick = null;
 
                 if (!hasFullPdf) {
                     const alertHandler = (e) => {
@@ -345,6 +375,10 @@
                     };
                     readBtn.onclick = alertHandler;
                     downloadBtn.onclick = alertHandler;
+                } else {
+                    downloadBtn.onclick = function(e) {
+                        handleDownloadRedirect(downloadLandPageUrl, e);
+                    };
                 }
             }
 
@@ -361,7 +395,7 @@
         syncTheme();
         fetchNovelDetails();
     };
-  </script>
+ </script>
 
 </body>
 </html>
