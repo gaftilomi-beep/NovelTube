@@ -408,21 +408,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================================
-// 404 & GLOBAL ERROR HANDLING
+// GLOBAL ERROR HANDLING
 // ============================================================
-
-app.use('/api', (req, res) => {
-    return res.status(404).json({
-        success: false,
-        error: 'API route not found',
-        path: req.originalUrl
-    });
-});
-
-// Wildcard fallback to serve index.html for non-API client routes (Express v5 safe)
-app.get('/{*splat}', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
-});
 
 app.use((error, req, res, next) => {
     console.error('🔥 GLOBAL SERVER ERROR:', error);
@@ -431,7 +418,7 @@ app.use((error, req, res, next) => {
         if (error.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 success: false,
-                error: 'File size limit exeed ho gayi hai (Max 100MB allowed).'
+                error: 'File size limit exceed ho gayi hai (Max 100MB allowed).'
             });
         }
         return res.status(400).json({
@@ -447,13 +434,18 @@ app.use((error, req, res, next) => {
     });
 });
 
+// Wildcard fallback to serve index.html for non-API client routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 // ============================================================
 // START SERVER
 // ============================================================
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`🚀 Server successfully running on port ${PORT}`);
 });
 

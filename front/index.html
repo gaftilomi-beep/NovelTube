@@ -13,11 +13,19 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         .heading-font { font-family: 'Poppins', sans-serif; }
+        .urdu-text { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
+        
+        /* Font Clarity Fix for Modal Text */
+        #writerModalCard p, #writerModalCard h2, #writerModalCard span {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-shadow: none !important;
+        }
     </style>
     <style id="theme-override"></style>
 </head>
@@ -57,13 +65,9 @@
             </div>
             
             <nav class="space-y-2 font-semibold text-sm">
-                <!-- Home Option to Reset to Main Screen -->
                 <a href="#" onclick="resetToHome(); toggleSidebar(false);" class="block px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 transition">🏠 Home</a>
-                
-                <!-- Writers Link in Drawer -->
                 <a href="#" onclick="switchMainTypeTab('writer'); toggleSidebar(false);" class="block px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition theme-subtext">✍️ Writers & Authors</a>
 
-                <!-- Expandable Categories Dropdown -->
                 <div class="border-y border-slate-100 my-2 py-2">
                     <button onclick="toggleCategoryAccordion()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-50 transition theme-text focus:outline-none">
                         <span class="flex items-center gap-2">📚 Categories</span>
@@ -118,7 +122,6 @@
 
         <!-- Centered Main Filter Bar Area -->
         <div class="flex justify-center items-center my-6 min-h-[50px]">
-            <!-- State A: Default Middle Tabs (Novels / Articles / Writers) -->
             <div id="defaultTypeTabsContainer" class="inline-flex p-1.5 bg-slate-200/70 dark:bg-slate-800 rounded-2xl shadow-inner theme-card gap-1 flex-wrap justify-center">
                 <button id="tab-novel" onclick="switchMainTypeTab('novel')" class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 bg-indigo-600 text-white shadow-md">
                     📚 Novels
@@ -131,7 +134,6 @@
                 </button>
             </div>
 
-            <!-- State B: Active Selected Category Title -->
             <div id="categoryActiveTitleContainer" class="hidden flex-col items-center justify-center text-center space-y-2">
                 <div class="flex items-center gap-3">
                     <span id="selectedCategoryTitle" class="heading-font text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight"></span>
@@ -188,6 +190,57 @@
         </section>
 
     </main>
+
+    <!-- WRITER PROFILE MODAL VIEW -->
+    <div id="writerModalBackdrop" onclick="closeWriterModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 md:p-6 overflow-y-auto">
+        <div id="writerModalCard" onclick="event.stopPropagation()" class="bg-white theme-card w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-100 transform scale-95 transition-all duration-300 max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <!-- Modal Header / Close Button -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b border-slate-100">
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-1.5">
+                    <span>✨</span> Writer Profile
+                </span>
+                <button onclick="closeWriterModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-rose-500 hover:text-white flex items-center justify-center font-bold transition">✕</button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-5 md:p-8 space-y-8 overflow-y-auto">
+                
+                <!-- Fixed Solid High-Contrast Profile Container -->
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-6 bg-slate-100 dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
+                    <img id="modalWriterImg" src="" alt="Writer Profile" class="w-28 h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-indigo-600 shadow-md shrink-0">
+                    
+                    <div class="space-y-3 text-center md:text-left flex-1">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                            <h2 id="modalWriterName" class="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight"></h2>
+                            <span id="modalWriterWorksCount" class="inline-flex items-center self-center md:self-auto px-3.5 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-xs">
+                                0 Works
+                            </span>
+                        </div>
+                        
+                        <!-- High Contrast Sharp Text -->
+                        <p id="modalWriterBio" class="text-sm md:text-base font-normal text-slate-800 dark:text-slate-100 leading-relaxed antialiased"></p>
+                    </div>
+                </div>
+
+                <!-- Writer's Work Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700 pb-3">
+                        <h3 id="modalWorksHeaderTitle" class="heading-font text-lg md:text-xl font-bold text-slate-900 theme-text flex items-center gap-2">
+                            <span>📚</span> <span id="modalWorksAuthorName">Author</span>'s Work
+                        </h3>
+                    </div>
+
+                    <!-- Works Grid View -->
+                    <div id="modalWriterWorksGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <!-- Dynamic Cards Inserted Here -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
 
     <footer class="bg-white border-t border-slate-100 mt-12 py-6 text-center text-xs text-slate-400 font-medium theme-card">
         &copy; 2026 NovelTube Network Platform. All rights reserved.
@@ -460,11 +513,16 @@
 
             let cardsHTML = writersList.map(writer => {
                 const photo = writer.photoUrl || 'https://via.placeholder.com/150?text=Writer';
-                const bio = writer.bio || 'NovelTube writer';
+                const bio = writer.bio || 'NovelTube official writer';
+                const writerJsonString = encodeURIComponent(JSON.stringify(writer));
+
                 return `
-                    <div class="bg-white theme-card rounded-2xl border border-slate-200/70 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center">
-                        <img src="${photo}" alt="${writer.name}" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 shadow-md mb-3">
-                        <h3 class="text-sm font-bold text-slate-900 theme-text truncate w-full">${writer.name}</h3>
+                    <div onclick="openWriterProfileModal('${writerJsonString}')" class="bg-white theme-card rounded-2xl border border-slate-200/70 p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center cursor-pointer group">
+                        <div class="relative mb-3">
+                            <img src="${photo}" alt="${writer.name}" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 shadow-md group-hover:scale-105 transition-transform duration-300">
+                            <span class="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full text-[10px] shadow-sm">✍️</span>
+                        </div>
+                        <h3 class="text-sm font-bold text-slate-900 theme-text truncate w-full group-hover:text-indigo-600 transition-colors">${writer.name}</h3>
                         <p class="text-xs text-slate-500 theme-subtext mt-1 line-clamp-2">${bio}</p>
                     </div>
                 `;
@@ -475,6 +533,46 @@
                     ${cardsHTML}
                 </div>
             `;
+        }
+
+        /* Writer Profile Modal Functions */
+        function openWriterProfileModal(encodedWriterData) {
+            const writer = JSON.parse(decodeURIComponent(encodedWriterData));
+            
+            document.getElementById('modalWriterImg').src = writer.photoUrl || 'https://via.placeholder.com/150?text=Writer';
+            document.getElementById('modalWriterName').innerText = writer.name || 'Author';
+            document.getElementById('modalWriterBio').innerText = writer.bio || 'Aap is writer ki tamam tahriraat nechy parh sakte hain.';
+            document.getElementById('modalWorksAuthorName').innerText = writer.name || 'Writer';
+
+            const writerWorks = allContentDataMasterArray.filter(item => {
+                if(!item.author) return false;
+                return item.author.toLowerCase().trim() === writer.name.toLowerCase().trim();
+            });
+
+            document.getElementById('modalWriterWorksCount').innerText = `${writerWorks.length} Published Work${writerWorks.length === 1 ? '' : 's'}`;
+
+            const worksContainer = document.getElementById('modalWriterWorksGrid');
+            if (writerWorks.length === 0) {
+                worksContainer.innerHTML = `<p class="col-span-full text-xs text-slate-400 p-6 italic text-center theme-subtext">Is writer ka koi novel ya article filhal upload nahi hua! 📚</p>`;
+            } else {
+                worksContainer.innerHTML = writerWorks.map(item => generateCardMarkup(item)).join('');
+            }
+
+            const modal = document.getElementById('writerModalBackdrop');
+            const modalCard = document.getElementById('writerModalCard');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-95');
+            modalCard.classList.add('scale-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeWriterModal() {
+            const modal = document.getElementById('writerModalBackdrop');
+            const modalCard = document.getElementById('writerModalCard');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-100');
+            modalCard.classList.add('scale-95');
+            document.body.style.overflow = 'auto';
         }
 
         window.onload = function() {

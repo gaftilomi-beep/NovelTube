@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writers Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-4 md:p-8">
+
+    <!-- Security Auth Modal -->
+    <div id="authBox" class="max-w-md mx-auto my-20 bg-slate-800 p-8 rounded-3xl border border-slate-700 text-center space-y-4">
+        <h2 class="text-xl font-bold">🔐 Security Access</h2>
+        <input type="password" id="adminPassInput" placeholder="Enter Security Password" class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-center text-sm focus:outline-none">
+        <button onclick="verifyAccess()" class="w-full py-3 bg-indigo-600 font-bold rounded-xl text-sm hover:bg-indigo-700 transition">Access Dashboard</button>
+        <p id="errorMsg" class="text-xs text-rose-500 hidden">Ghalat password!</p>
+    </div>
+
+    <!-- Writers Management Panel -->
+    <div id="dashboardContent" class="hidden max-w-6xl mx-auto space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-400">✍️ Writers Management</h1>
+                <p class="text-xs text-slate-400">Manage, Edit & Delete registered writers</p>
+            </div>
+            <a href="add-writer.html" class="px-4 py-2.5 bg-emerald-600 font-semibold rounded-xl text-xs hover:bg-emerald-700 transition">+ Add New Writer</a>
+        </div>
+
+        <!-- Writers Grid -->
+        <div id="writersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Writers Cards Rendered Here -->
+        </div>
+    </div>
+
+    <!-- EDIT WRITER MODAL -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+            <h3 class="text-lg font-bold text-indigo-400">✏️ Edit Writer Profile</h3>
+            <form onsubmit="saveWriterEdit(event)" class="space-y-4">
+                <input type="hidden" id="editWriterId">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Writer Name</label>
+                    <input type="text" id="editName" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Bio / Description</label>
+                    <textarea id="editBio" rows="3" class="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Update Pic (From PC)</label>
+                    <input type="file" id="editFile" accept="image/*" class="w-full text-xs text-slate-400 bg-slate-900 border border-slate-700 rounded-xl file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-indigo-600 file:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Or Direct Image URL</label>
+                    <input type="url" id="editUrl" placeholder="https://..." class="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeEditModal()" class="w-1/2 py-2.5 bg-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-600">Cancel</button>
+                    <button type="submit" id="saveEditBtn" class="w-1/2 py-2.5 bg-indigo-600 rounded-xl text-sm font-semibold hover:bg-indigo-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:5000/api' 
+            : 'https://noveltube-3.onrender.com/api';
+
+        let adminPassword = '';
+        let writersList = [];
+
+        function verifyAccess() {
+            const pass = document.getElementById('adminPassInput').value;
+            if (pass === 'mywifesaba') {
+                adminPassword = pass;
+                document.getElementById('authBox').classList.add('hidden');
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                fetchWriters();
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
+            }
+        }
+
+        async function fetchWriters() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/writers`);
+                writersList = await res.json();
+                renderWriters();
+            } catch (err) {
+                alert('Writers fetch karne me error!');
+            }
+        }
+
+        function renderWriters() {
+            const grid = document.getElementById('writersGrid');
+            if (!writersList.length) {
+                grid.innerHTML = `<p class="col-span-full text-center text-slate-500 py-10">Koi writer nahi mila.</p>`;
+                return;
+            }
+
+            grid.innerHTML = writersList.map(writer => {
+                const img = writer.photoUrl || writer.image || 'https://via.placeholder.com/150?text=Writer';
+                return `
+                    <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl flex flex-col justify-between gap-4">
+                        <div class="flex items-start gap-4">
+                            <img src="${img}" class="w-16 h-16 rounded-full object-cover border-2 border-indigo-500 shrink-0" alt="${writer.name}">
+                            <div class="overflow-hidden">
+                                <h3 class="font-bold text-base text-white truncate">${writer.name}</h3>
+                                <p class="text-xs text-slate-400 line-clamp-2 mt-1">${writer.bio || 'No bio available'}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-700/50">
+                            <button onclick="openEditModal('${writer._id}')" class="w-1/2 py-2 bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600 hover:text-white rounded-xl text-xs font-semibold transition">Edit Profile</button>
+                            <button onclick="deleteWriter('${writer._id}')" class="w-1/2 py-2 bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-semibold transition">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openEditModal(id) {
+            const writer = writersList.find(w => w._id === id);
+            if (!writer) return;
+
+            document.getElementById('editWriterId').value = writer._id;
+            document.getElementById('editName').value = writer.name;
+            document.getElementById('editBio').value = writer.bio || '';
+            document.getElementById('editUrl').value = writer.photoUrl || writer.image || '';
+            document.getElementById('editFile').value = '';
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        async function saveWriterEdit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editWriterId').value;
+            const btn = document.getElementById('saveEditBtn');
+            btn.innerText = 'Saving... ⏳';
+            btn.disabled = true;
+
+            const fileInput = document.getElementById('editFile');
+            const file = fileInput.files[0];
+            const urlInput = document.getElementById('editUrl').value;
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('editName').value);
+            formData.append('bio', document.getElementById('editBio').value);
+            formData.append('password', adminPassword);
+
+            if (file) {
+                formData.append('photo', file);
+            } else if (urlInput) {
+                formData.append('photoUrl', urlInput);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/writers/${id}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    alert('Writer updated successfully! 🎉');
+                    closeEditModal();
+                    fetchWriters();
+                } else {
+                    alert('Update nahi ho saka.');
+                }
+            } catch (err) {
+                alert('Server Error!');
+            } finally {
+                btn.innerText = 'Save Changes';
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteWriter(id) {
+            if (!confirm('Kya aap is writer ko delete karna chahte hain?')) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/writers/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: adminPassword })
+                });
+
+                if (res.ok) {
+                    alert('Writer deleted successfully!');
+                    fetchWriters();
+                } else {
+                    alert('Delete nahi ho saka.');
+                }
+            } catch (err) {
+                alert('Server Error!');
+            }
+        }
+    </script>
+</body>
+</html>
