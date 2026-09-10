@@ -33,6 +33,13 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // ============================================================
+// RENDER HEALTH CHECK ENDPOINTS (DEPLOYMENT FIX)
+// ============================================================
+
+app.get('/healthz', (req, res) => res.status(200).send('OK'));
+app.get('/ping', (req, res) => res.status(200).send('PONG'));
+
+// ============================================================
 // DATABASE CONNECTION SETUP
 // ============================================================
 
@@ -445,7 +452,7 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server successfully running on port ${PORT}`);
 });
 

@@ -178,26 +178,23 @@
             }
         }
 
-        async function deleteWriter(id) {
-            if (!confirm('Kya aap is writer ko delete karna chahte hain?')) return;
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/writers/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: adminPassword })
-                });
-
-                if (res.ok) {
-                    alert('Writer deleted successfully!');
-                    fetchWriters();
-                } else {
-                    alert('Delete nahi ho saka.');
-                }
-            } catch (err) {
-                alert('Server Error!');
-            }
+        // Example Delete Request:
+async function deleteWriter(writerId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/writers/${writerId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('Writer deleted successfully!');
+            location.reload();
+        } else {
+            alert(data.error || 'Delete failed');
         }
+    } catch (error) {
+        console.error('Error deleting writer:', error);
+    }
+}
     </script>
 </body>
 </html>
