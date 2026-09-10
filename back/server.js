@@ -441,8 +441,8 @@ app.use((error, req, res, next) => {
     });
 });
 
-// Wildcard fallback to serve index.html for non-API client routes
-app.get('*', (req, res) => {
+// Wildcard fallback to serve index.html for non-API client routes (Fixed Syntax)
+app.get('{*path}', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
